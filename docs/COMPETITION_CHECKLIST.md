@@ -60,7 +60,7 @@ external uploaded-post checks later in this document.
 | App remains free and unrestricted through judging      | Signed-out/judge-access test                                                                | [ ]  |
 | Rights cleared for every submitted component           | [Asset/source/license ledger](ASSET_LEDGER.md) plus entrant attestation                     | [ ]  |
 | Optional public video under one minute                 | `[DEMO_VIDEO_URL]`                                                                          | [ ]  |
-| Optional public source repository                      | `[PUBLIC_REPOSITORY_URL]`                                                                   | [ ]  |
+| Optional public source repository                      | `https://github.com/BoneShaman/RAMAGEDDON`                                                  | [x]  |
 | Optional actionable Devvit feedback form               | Submitted-form confirmation                                                                 | [ ]  |
 
 The rules recommend a judging post in a **public subreddit with fewer than 200

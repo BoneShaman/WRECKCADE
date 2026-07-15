@@ -271,3 +271,6 @@ Live competition links:
 - App listing: <https://developers.reddit.com/apps/ramageddon-game>
 - Demo subreddit: <https://www.reddit.com/r/ramageddon_game_dev>
 - Running demo post: <https://www.reddit.com/r/ramageddon_game_dev/comments/1uws1an/ramageddon_daily_wreckpile/>
+- Public source: <https://github.com/BoneShaman/RAMAGEDDON>
+- Privacy policy: <https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/PRIVACY.md>
+- Terms: <https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/TERMS.md>

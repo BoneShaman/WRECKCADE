@@ -13,7 +13,9 @@ build or remove that claim before submission.
 | Demo subreddit                     | `https://www.reddit.com/r/ramageddon_game_dev`                                              |
 | Running demo post                  | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uws1an/ramageddon_daily_wreckpile/` |
 | Public demo video                  | `[DEMO_VIDEO_URL]`                                                                          |
-| Public source repository, optional | `[PUBLIC_REPOSITORY_URL]`                                                                   |
+| Public source repository, optional | `https://github.com/BoneShaman/RAMAGEDDON`                                                  |
+| Privacy policy                     | `https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/PRIVACY.md`                        |
+| Terms                              | `https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/TERMS.md`                          |
 
 Do not replace the running demo post with a standalone web-hosting link. Judges
 need the game running as a Reddit Interactive Post.

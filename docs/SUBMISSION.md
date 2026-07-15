@@ -62,11 +62,9 @@ in the final refreshed submission.
 - A prior live mobile-sized 0.0.5 run completed at 1,778 score, 12 wrecks, x7
   best combo, and 24 scrap; its result synced and rendered the Wreckpile and
   Blueprint Vote flow without a corresponding production error log entry.
-- The Devvit app profile still requires a manual metadata refresh: name
-  **WRECKCADE: Wrecks Become Weapons**; description **A three-minute
-  destruction-derby survivor where every wreck becomes a high-speed weapon.**;
-  and the verified WRECKCADE privacy-policy and terms URLs listed above. This
-  document does not treat the profile rebrand as complete.
+- The Devvit app profile now displays the verified name **WRECKCADE: Wrecks
+  Become Weapons**, final three-minute destruction-derby-survivor description,
+  and public WRECKCADE privacy-policy and terms URLs.
 - A complete ordinary-user run, native Reddit mobile, and two-account
   shared-state testing remain recommended evidence rather than submission
   blockers.

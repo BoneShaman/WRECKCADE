@@ -28,8 +28,9 @@ leaderboards, and **Blueprint Vote** are the engine around it.
 > current tree is published on `origin/main`. The public Devpost page displays
 > WRECKCADE, all 11 final captioned images, the live/project links, and its
 > **SUBMITTED TO** state; the project editor remains **SUBMITTED 5/5**.
-> Correcting the app-profile display metadata and
-> completing entrant-only eligibility and rights confirmations remain tracked in
+> The WRECKCADE app profile now displays the verified final name, description,
+> privacy-policy URL, and terms URL. Entrant-only eligibility and rights
+> confirmations remain tracked in
 > [the competition checklist](docs/COMPETITION_CHECKLIST.md).
 
 ## The hook: wrecks become weapons
@@ -295,7 +296,7 @@ that ledger before release.
 
 Live competition links:
 
-- Technical app listing (display-name correction pending): <https://developers.reddit.com/apps/ramageddon-game>
+- Technical app listing (WRECKCADE profile verified; legacy technical slug retained): <https://developers.reddit.com/apps/ramageddon-game>
 - Demo subreddit: <https://www.reddit.com/r/ramageddon_game_dev>
 - Running WRECKCADE post: <https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/>
 - Public source (current `origin/main`): <https://github.com/BoneShaman/WRECKCADE>

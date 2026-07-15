@@ -148,13 +148,13 @@ completed by repository code alone.
 - [x] Repository copy and in-game surfaces use the WRECKCADE name; the legacy
       technical slug is retained only for install/state continuity and no
       template placeholder remains.
-- [ ] Replace the legacy Devvit app-profile metadata with name **WRECKCADE:
+- [x] Saved and visually verified the Devvit app profile with name **WRECKCADE:
       Wrecks Become Weapons**; description **A three-minute destruction-derby
       survivor where every wreck becomes a high-speed weapon.**; privacy URL
       `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md`; and
       terms URL `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md`.
-      This manual account step remains pending and must not be inferred from the
-      in-game rebrand.
+      The General profile and both policy links reflected the saved values on
+      July 15, 2026 AEST; the legacy technical slug remains unchanged.
 - [x] Reddit rejected the taken `ramageddon` slug; `ramageddon-game` passed the
       live uniqueness check and remains the technical Devvit app name. The
       in-game player-facing title is **WRECKCADE**.
@@ -431,8 +431,10 @@ verification. Those rows remain open above.
 - [ ] Confirm leaderboard, crew, Wreckpile, and vote updates from two accounts.
 - [x] Open the new WRECKCADE post without relying on a Reddit login and verify its
       0.0.8 splash, launch action, and Crew Garage inside the Reddit modal.
-- [ ] Repeat the complete signed-out/public-link audit after the app-profile
-      display-name correction and Devpost refresh.
+- [x] Complete the final public-surface audit: the exact WRECKCADE post passed
+      signed-out 0.0.8 verification, the refreshed Devpost page passed its
+      signed-out visual check, and the current Devvit profile displays the exact
+      final metadata and policy links.
 - [x] No optional video is attached, so the one-minute video gate is not
       applicable to the submitted entry.
 - [x] The earlier submitted description was read against the visible 0.0.5 build.

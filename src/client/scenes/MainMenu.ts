@@ -66,12 +66,20 @@ const VEHICLE_ATLAS_URL = new URL(
   import.meta.url
 ).href;
 
+const DISPLAY_FONT =
+  'Impact, Haettenschweiler, "Arial Narrow", "Roboto Condensed", Roboto, Arial, sans-serif';
+const MONO_FONT =
+  '"Roboto Mono", "Noto Sans Mono", ui-monospace, Menlo, Consolas, monospace';
+
+type DeleteState = 'idle' | 'confirming' | 'deleting' | 'success' | 'failed';
+
 const textStyle = (
   size: number,
   color: string,
   align: 'left' | 'center' | 'right' = 'left'
 ): Phaser.Types.GameObjects.Text.TextStyle => ({
-  fontFamily: 'Impact, Haettenschweiler, sans-serif',
+  fontFamily: DISPLAY_FONT,
+  fontStyle: 'bold',
   fontSize: `${size}px`,
   color,
   align,
@@ -93,6 +101,12 @@ export class MainMenu extends Scene {
   private crewTexts: GameObjects.Text[] = [];
   private actionText: GameObjects.Text;
   private dataText: GameObjects.Text;
+  private crewLockText: GameObjects.Text;
+  private deleteOverlay: GameObjects.Graphics;
+  private deleteTitleText: GameObjects.Text;
+  private deleteBodyText: GameObjects.Text;
+  private deleteCancelText: GameObjects.Text;
+  private deleteConfirmText: GameObjects.Text;
   private selectedCrew = 0;
   private elapsed = 0;
   private meta: CommunityState = offlineCommunityState();
@@ -101,8 +115,13 @@ export class MainMenu extends Scene {
   private cardRects: Phaser.Geom.Rectangle[] = [];
   private actionRect = new Phaser.Geom.Rectangle();
   private dataRect = new Phaser.Geom.Rectangle();
-  private deleteConfirmUntil = 0;
+  private deletePanelRect = new Phaser.Geom.Rectangle();
+  private deleteCancelRect = new Phaser.Geom.Rectangle();
+  private deleteConfirmRect = new Phaser.Geom.Rectangle();
+  private deleteConfirmationOpen = false;
+  private deleteState: DeleteState = 'idle';
   private deletingData = false;
+  private crewLockNoticeUntil = 0;
 
   constructor() {
     super('MainMenu');
@@ -120,8 +139,10 @@ export class MainMenu extends Scene {
   create(): void {
     this.alive = true;
     this.metaReady = false;
-    this.deleteConfirmUntil = 0;
+    this.deleteConfirmationOpen = false;
+    this.deleteState = 'idle';
     this.deletingData = false;
+    this.crewLockNoticeUntil = 0;
     this.cardRects = [];
     this.cameras.main.setBackgroundColor(0x080b12);
     this.backdrop = this.add
@@ -149,21 +170,21 @@ export class MainMenu extends Scene {
     );
     this.dailyBody = this.add.text(0, 0, '', {
       ...textStyle(17, '#f7f3df'),
-      fontFamily: 'ui-monospace, Menlo, monospace',
+      fontFamily: MONO_FONT,
       wordWrap: { width: 380 },
     });
     this.communityText = this.add.text(0, 0, '', {
       ...textStyle(17, '#ffc928'),
-      fontFamily: 'ui-monospace, Menlo, monospace',
+      fontFamily: MONO_FONT,
     });
     this.leaderboardText = this.add.text(0, 0, '', {
       ...textStyle(15, '#c7d0d9'),
-      fontFamily: 'ui-monospace, Menlo, monospace',
+      fontFamily: MONO_FONT,
       lineSpacing: 7,
     });
     this.profileText = this.add.text(0, 0, '', {
       ...textStyle(14, '#f7f3df'),
-      fontFamily: 'ui-monospace, Menlo, monospace',
+      fontFamily: MONO_FONT,
       lineSpacing: 5,
     });
     this.actionText = this.add
@@ -173,20 +194,65 @@ export class MainMenu extends Scene {
     this.dataText = this.add
       .text(0, 0, 'PRIVACY: DELETE MY DATA', {
         ...textStyle(13, '#8fa3b8', 'center'),
-        fontFamily: 'ui-monospace, Menlo, monospace',
+        fontFamily: MONO_FONT,
       })
       .setOrigin(0.5);
+
+    this.crewLockText = this.add
+      .text(0, 0, 'CREW LOCKED UNTIL TOMORROW', {
+        ...textStyle(15, '#ffc928', 'center'),
+        fontFamily: MONO_FONT,
+      })
+      .setOrigin(0.5)
+      .setDepth(8)
+      .setVisible(false);
 
     this.crewTexts = CREWS.map((crew) =>
       this.add
         .text(0, 0, `${crew.name}\n${crew.perk}`, {
           ...textStyle(18, crew.colorCss, 'center'),
-          fontFamily: 'Impact, Haettenschweiler, sans-serif',
+          fontFamily: DISPLAY_FONT,
           lineSpacing: 8,
         })
         .setOrigin(0.5)
         .setDepth(3)
     );
+
+    this.deleteOverlay = this.add.graphics().setDepth(20).setVisible(false);
+    this.deleteTitleText = this.add
+      .text(0, 0, 'DELETE REDDIT GAME DATA?', {
+        ...textStyle(28, '#f7f3df', 'center'),
+        fontFamily: DISPLAY_FONT,
+      })
+      .setOrigin(0.5)
+      .setDepth(21)
+      .setVisible(false);
+    this.deleteBodyText = this.add
+      .text(
+        0,
+        0,
+        'This permanently removes your WRECKCADE profile and daily entries.\nThis cannot be undone.',
+        {
+          ...textStyle(15, '#c7d0d9', 'center'),
+          fontFamily: MONO_FONT,
+          lineSpacing: 6,
+        }
+      )
+      .setOrigin(0.5)
+      .setDepth(21)
+      .setVisible(false);
+    this.deleteCancelText = this.add
+      .text(0, 0, 'CANCEL', textStyle(18, '#f7f3df', 'center'))
+      .setOrigin(0.5)
+      .setDepth(21)
+      .setVisible(false);
+    this.deleteConfirmText = this.add
+      .text(0, 0, 'DELETE MY DATA', textStyle(17, '#f7f3df', 'center'))
+      .setOrigin(0.5)
+      .setDepth(21)
+      .setVisible(false);
+
+    this.applyTextResolution();
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) =>
       this.handlePointer(pointer)
@@ -202,8 +268,14 @@ export class MainMenu extends Scene {
     );
     this.input.keyboard?.on('keydown-ENTER', () => this.startRun());
     this.input.keyboard?.on('keydown-SPACE', () => this.startRun());
-    this.input.keyboard?.on('keydown-D', () => this.handleDataDelete());
-    const resizeHandler = (): void => this.layout();
+    this.input.keyboard?.on('keydown-D', () => this.openDeleteConfirmation());
+    this.input.keyboard?.on('keydown-ESC', () =>
+      this.closeDeleteConfirmation()
+    );
+    const resizeHandler = (): void => {
+      this.applyTextResolution();
+      this.layout();
+    };
     this.scale.on('resize', resizeHandler);
     this.events.once('shutdown', () => {
       this.alive = false;
@@ -240,6 +312,27 @@ export class MainMenu extends Scene {
         bestScore: this.meta.profile.bestScore,
         streak: this.meta.profile.streak,
         careerWrecks: this.meta.profile.careerWrecks,
+        dailyRuns: this.meta.profile.dailyRuns,
+      },
+      crewLocked: this.isCrewLocked(),
+      crewFeedback: this.crewLockText.visible ? this.crewLockText.text : '',
+      crewCards: this.cardRects.map((rect, index) => ({
+        id: CREWS[index]?.id ?? 'iron',
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        selected: index === this.selectedCrew,
+        locked: this.isCrewLocked() && index !== this.selectedCrew,
+      })),
+      actionRect: this.rectState(this.actionRect),
+      privacyDelete: {
+        state: this.deleteState,
+        modalOpen: this.deleteConfirmationOpen,
+        triggerRect: this.rectState(this.dataRect),
+        panelRect: this.rectState(this.deletePanelRect),
+        cancelRect: this.rectState(this.deleteCancelRect),
+        confirmRect: this.rectState(this.deleteConfirmRect),
       },
       crewStandings: this.meta.crewStandings.map((crew) => ({
         id: crew.id,
@@ -259,25 +352,44 @@ export class MainMenu extends Scene {
   override update(_time: number, delta: number): void {
     this.elapsed += Math.min(50, delta) / 1000;
     if (
-      this.deleteConfirmUntil > 0 &&
-      this.elapsed > this.deleteConfirmUntil &&
-      !this.deletingData
+      this.crewLockNoticeUntil > 0 &&
+      this.elapsed > this.crewLockNoticeUntil
     ) {
-      this.deleteConfirmUntil = 0;
-      this.dataText.setText('PRIVACY: DELETE MY DATA');
+      this.crewLockNoticeUntil = 0;
+      this.crewLockText.setVisible(false);
     }
     this.draw();
   }
 
   private selectCrew(index: number): void {
-    if (!this.metaReady || this.meta.profile.dailyRuns > 0) return;
-    this.selectedCrew = (index + CREWS.length) % CREWS.length;
+    if (!this.metaReady || this.deleteConfirmationOpen || this.deletingData)
+      return;
+    const nextCrew = (index + CREWS.length) % CREWS.length;
+    if (this.isCrewLocked()) {
+      if (nextCrew !== this.selectedCrew) this.showCrewLockNotice();
+      return;
+    }
+    this.selectedCrew = nextCrew;
     this.layout();
   }
 
   private handlePointer(pointer: Phaser.Input.Pointer): void {
+    if (this.deletingData) return;
+    if (this.deleteConfirmationOpen) {
+      if (this.deleteState === 'confirming') {
+        if (this.deleteConfirmRect.contains(pointer.x, pointer.y)) {
+          this.confirmDataDelete();
+        } else if (
+          this.deleteCancelRect.contains(pointer.x, pointer.y) ||
+          !this.deletePanelRect.contains(pointer.x, pointer.y)
+        ) {
+          this.closeDeleteConfirmation();
+        }
+      }
+      return;
+    }
     if (this.dataRect.contains(pointer.x, pointer.y)) {
-      this.handleDataDelete();
+      this.openDeleteConfirmation();
       return;
     }
     const card = this.cardRects.findIndex((rect) =>
@@ -292,7 +404,8 @@ export class MainMenu extends Scene {
   }
 
   private startRun(): void {
-    if (!this.metaReady) return;
+    if (!this.metaReady || this.deleteConfirmationOpen || this.deletingData)
+      return;
     showBootOverlay('UNLOCKING THE SCRAPSTORM');
     audio.ensure();
     this.scene.start('Game', {
@@ -301,30 +414,278 @@ export class MainMenu extends Scene {
     });
   }
 
-  private handleDataDelete(): void {
-    if (!this.metaReady || this.deletingData) return;
-    if (this.deleteConfirmUntil < this.elapsed) {
-      this.deleteConfirmUntil = this.elapsed + 5;
-      this.dataText.setText('PRESS AGAIN: DELETE PROFILE + DAILY ENTRIES');
-      this.draw();
+  private openDeleteConfirmation(): void {
+    if (!this.metaReady || this.deletingData || this.deleteConfirmationOpen)
       return;
-    }
+    this.deleteConfirmationOpen = true;
+    this.deleteState = 'confirming';
+    this.deleteTitleText.setText('DELETE REDDIT GAME DATA?');
+    this.deleteBodyText.setText(
+      'This permanently removes your WRECKCADE profile and daily entries.\nThis cannot be undone.'
+    );
+    this.setDeleteConfirmationVisible(true);
+    this.layoutDeleteConfirmation(this.scale.width, this.scale.height);
+    this.draw();
+  }
+
+  private closeDeleteConfirmation(): void {
+    if (!this.deleteConfirmationOpen || this.deletingData) return;
+    this.deleteConfirmationOpen = false;
+    this.deleteState = 'idle';
+    this.setDeleteConfirmationVisible(false);
+    this.draw();
+  }
+
+  private confirmDataDelete(): void {
+    if (
+      !this.metaReady ||
+      this.deletingData ||
+      !this.deleteConfirmationOpen ||
+      this.deleteState !== 'confirming'
+    )
+      return;
     this.deletingData = true;
+    this.deleteState = 'deleting';
     this.dataText.setText('DELETING REDDIT GAME DATA...');
+    this.deleteTitleText.setText('DELETING GAME DATA...');
+    this.deleteBodyText.setText(
+      'Please wait while Reddit clears your records.'
+    );
+    this.deleteCancelText.setVisible(false);
+    this.deleteConfirmText.setVisible(false);
+    this.draw();
     void deletePlayerData().then(async (deleted) => {
       if (!this.alive) return;
       this.deletingData = false;
-      this.deleteConfirmUntil = 0;
+      this.deleteConfirmationOpen = false;
+      this.setDeleteConfirmationVisible(false);
       if (deleted) {
         this.meta = await loadCommunityState();
         if (!this.alive) return;
+        this.deleteState = 'success';
         this.dataText.setText('DATA DELETED — FRESH GARAGE');
         this.refreshMetaText();
         this.layout();
       } else {
+        this.deleteState = 'failed';
         this.dataText.setText('DELETE FAILED — TAP TO RETRY');
+        this.draw();
       }
     });
+  }
+
+  private isCrewLocked(): boolean {
+    return this.metaReady && this.meta.profile.dailyRuns > 0;
+  }
+
+  private showCrewLockNotice(): void {
+    this.crewLockNoticeUntil = this.elapsed + 2.5;
+    this.crewLockText.setVisible(true);
+    this.draw();
+  }
+
+  private rectState(rect: Phaser.Geom.Rectangle): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } {
+    return {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+    };
+  }
+
+  private applyTextResolution(): void {
+    const resolution = Phaser.Math.Clamp(window.devicePixelRatio || 1, 1, 2);
+    [
+      this.title,
+      this.subtitle,
+      this.dailyTitle,
+      this.dailyBody,
+      this.communityText,
+      this.leaderboardText,
+      this.profileText,
+      this.actionText,
+      this.dataText,
+      this.crewLockText,
+      ...this.crewTexts,
+      this.deleteTitleText,
+      this.deleteBodyText,
+      this.deleteCancelText,
+      this.deleteConfirmText,
+    ].forEach((label) => label.setResolution(resolution));
+  }
+
+  private setDeleteConfirmationVisible(visible: boolean): void {
+    this.deleteOverlay.setVisible(visible);
+    this.deleteTitleText.setVisible(visible);
+    this.deleteBodyText.setVisible(visible);
+    const showActions = visible && this.deleteState === 'confirming';
+    this.deleteCancelText.setVisible(showActions);
+    this.deleteConfirmText.setVisible(showActions);
+  }
+
+  private layoutDeleteConfirmation(width: number, height: number): void {
+    const panelWidth = Math.min(520, width - 32);
+    const desiredHeight = height < 600 ? 220 : 250;
+    const safeBottom = Math.max(205, this.dataRect.y - 16);
+    const panelHeight = Math.min(
+      desiredHeight,
+      height - 36,
+      Math.max(185, safeBottom - 18)
+    );
+    const panelY = Phaser.Math.Clamp(
+      height * 0.12,
+      18,
+      Math.max(18, safeBottom - panelHeight)
+    );
+    this.deletePanelRect.setTo(
+      (width - panelWidth) / 2,
+      panelY,
+      panelWidth,
+      panelHeight
+    );
+
+    const buttonGap = 12;
+    const buttonWidth = (panelWidth - 48 - buttonGap) / 2;
+    const buttonY = this.deletePanelRect.bottom - 60;
+    this.deleteCancelRect.setTo(
+      this.deletePanelRect.x + 24,
+      buttonY,
+      buttonWidth,
+      42
+    );
+    this.deleteConfirmRect.setTo(
+      this.deleteCancelRect.right + buttonGap,
+      buttonY,
+      buttonWidth,
+      42
+    );
+
+    const textScale = width < 420 ? 0.78 : 1;
+    this.deleteTitleText
+      .setPosition(this.deletePanelRect.centerX, this.deletePanelRect.y + 40)
+      .setScale(textScale);
+    this.deleteBodyText
+      .setPosition(this.deletePanelRect.centerX, this.deletePanelRect.y + 103)
+      .setScale(width < 420 ? 0.76 : 0.92)
+      .setWordWrapWidth(Math.max(230, panelWidth - 50), true);
+    this.deleteCancelText
+      .setPosition(this.deleteCancelRect.centerX, this.deleteCancelRect.centerY)
+      .setScale(width < 420 ? 0.8 : 1);
+    this.deleteConfirmText
+      .setPosition(
+        this.deleteConfirmRect.centerX,
+        this.deleteConfirmRect.centerY
+      )
+      .setScale(width < 420 ? 0.72 : 0.9);
+  }
+
+  private drawDeleteConfirmation(): void {
+    const graphics = this.deleteOverlay;
+    graphics.clear();
+    if (!this.deleteConfirmationOpen) {
+      graphics.setVisible(false);
+      return;
+    }
+    graphics.setVisible(true);
+    graphics
+      .fillStyle(0x020304, 0.88)
+      .fillRect(0, 0, this.scale.width, this.scale.height);
+    graphics
+      .fillStyle(0x000000, 0.62)
+      .fillRect(
+        this.deletePanelRect.x + 7,
+        this.deletePanelRect.y + 8,
+        this.deletePanelRect.width,
+        this.deletePanelRect.height
+      );
+    graphics
+      .fillStyle(0x151719, 1)
+      .fillRect(
+        this.deletePanelRect.x,
+        this.deletePanelRect.y,
+        this.deletePanelRect.width,
+        this.deletePanelRect.height
+      );
+    graphics
+      .lineStyle(3, 0xff365e, 1)
+      .strokeRect(
+        this.deletePanelRect.x,
+        this.deletePanelRect.y,
+        this.deletePanelRect.width,
+        this.deletePanelRect.height
+      );
+    graphics
+      .fillStyle(0xff365e, 1)
+      .fillRect(
+        this.deletePanelRect.x + 18,
+        this.deletePanelRect.y + 8,
+        Math.min(120, this.deletePanelRect.width * 0.34),
+        5
+      );
+
+    if (this.deleteState === 'confirming') {
+      graphics
+        .fillStyle(0x24282d, 1)
+        .fillRect(
+          this.deleteCancelRect.x,
+          this.deleteCancelRect.y,
+          this.deleteCancelRect.width,
+          this.deleteCancelRect.height
+        );
+      graphics
+        .lineStyle(2, 0xc7d0d9, 0.9)
+        .strokeRect(
+          this.deleteCancelRect.x,
+          this.deleteCancelRect.y,
+          this.deleteCancelRect.width,
+          this.deleteCancelRect.height
+        );
+      graphics
+        .fillStyle(0xa8112f, 1)
+        .fillRect(
+          this.deleteConfirmRect.x,
+          this.deleteConfirmRect.y,
+          this.deleteConfirmRect.width,
+          this.deleteConfirmRect.height
+        );
+      graphics
+        .lineStyle(3, 0xff365e, 1)
+        .strokeRect(
+          this.deleteConfirmRect.x,
+          this.deleteConfirmRect.y,
+          this.deleteConfirmRect.width,
+          this.deleteConfirmRect.height
+        );
+    } else {
+      const progressWidth = Math.max(42, this.deletePanelRect.width * 0.24);
+      const travel = Math.max(
+        1,
+        this.deletePanelRect.width - progressWidth - 36
+      );
+      const progressX =
+        this.deletePanelRect.x + 18 + ((this.elapsed * 170) % travel);
+      graphics
+        .fillStyle(0x080b12, 1)
+        .fillRect(
+          this.deletePanelRect.x + 18,
+          this.deletePanelRect.bottom - 48,
+          this.deletePanelRect.width - 36,
+          8
+        );
+      graphics
+        .fillStyle(0xff365e, 1)
+        .fillRect(
+          progressX,
+          this.deletePanelRect.bottom - 48,
+          progressWidth,
+          8
+        );
+    }
   }
 
   private refreshMetaText(): void {
@@ -380,7 +741,7 @@ export class MainMenu extends Scene {
     this.profileText.setText(
       shortNarrow
         ? `PIT // u/${profile.username} · PB ${profile.bestScore.toLocaleString()} · STREAK ${profile.streak}D\nCAREER ${profile.careerWrecks.toLocaleString()} WRECKS · ${profile.totalScrap.toLocaleString()} SCRAP`
-        : `PIT REPORT // u/${profile.username}\nSTREAK ${profile.streak}D  ·  PB ${profile.bestScore.toLocaleString()}  ·  x${profile.bestCombo} COMBO\nCAREER ${profile.careerWrecks.toLocaleString()} WRECKS  ·  ${profile.totalScrap.toLocaleString()} SCRAP\n\nCREW SHOWDOWN\n${crewLines}${profile.dailyRuns > 0 ? '\nDAILY ALLEGIANCE LOCKED' : ''}`
+        : `PIT REPORT // u/${profile.username}\nSTREAK ${profile.streak}D  ·  PB ${profile.bestScore.toLocaleString()}  ·  x${profile.bestCombo} COMBO\nCAREER ${profile.careerWrecks.toLocaleString()} WRECKS  ·  ${profile.totalScrap.toLocaleString()} SCRAP\n\nCREW SHOWDOWN\n${crewLines}${profile.dailyRuns > 0 ? '\nCREW LOCKED UNTIL TOMORROW' : ''}`
     );
     this.actionText.setText(
       !this.metaReady
@@ -483,6 +844,9 @@ export class MainMenu extends Scene {
             ? 0.68
             : Math.max(0.72, scale)
       );
+    this.crewLockText
+      .setPosition(width / 2, this.dataRect.y - 14)
+      .setScale(shortNarrow ? 0.58 : portrait ? 0.7 : Math.max(0.76, scale));
     const totalWidth = Math.min(width - (shortNarrow ? 30 : 48), 960 * scale);
     const gap = shortNarrow ? 6 : 14 * scale;
     const cardWidth = (totalWidth - gap * 2) / 3;
@@ -499,6 +863,9 @@ export class MainMenu extends Scene {
     );
     this.crewTexts.forEach((label, index) => {
       const rect = this.cardRects[index]!;
+      const crew = CREWS[index]!;
+      const selected = index === this.selectedCrew;
+      const locked = this.isCrewLocked() && !selected;
       const labelScale = shortNarrow
         ? shortScale *
           (width < 360 ? 0.82 : index === this.selectedCrew ? 0.95 : 0.84)
@@ -506,10 +873,11 @@ export class MainMenu extends Scene {
           ? portraitScale * (index === this.selectedCrew ? 0.72 : 0.64)
           : scale * (index === this.selectedCrew ? 1.04 : 0.9);
       label
+        .setText(`${crew.name}\n${locked ? 'LOCKED TODAY' : crew.perk}`)
         .setPosition(rect.centerX, rect.y + rect.height * 0.73)
         .setScale(labelScale)
+        .setAlpha(locked ? 0.4 : 1)
         .setWordWrapWidth(Math.max(80, rect.width / labelScale - 16), true);
-      const selected = index === this.selectedCrew;
       const shortNarrowCarScale = Phaser.Math.Clamp(
         cardWidth / 220,
         0.52,
@@ -526,7 +894,7 @@ export class MainMenu extends Scene {
       this.crewCarImages[index]
         ?.setPosition(rect.centerX, rect.y + rect.height * 0.29)
         .setScale(carScale)
-        .setAlpha(selected ? 1 : 0.68)
+        .setAlpha(selected ? 1 : locked ? 0.24 : 0.68)
         .setRotation(index === 0 ? -0.035 : index === 2 ? 0.035 : 0)
         .setVisible(true);
     });
@@ -541,6 +909,7 @@ export class MainMenu extends Scene {
     this.actionText
       .setPosition(width / 2, height - 37)
       .setScale(shortNarrow ? 0.62 : portrait ? 0.72 : Math.max(0.75, scale));
+    this.layoutDeleteConfirmation(width, height);
     this.layoutBackdrop(width, height);
     this.draw();
   }
@@ -584,10 +953,32 @@ export class MainMenu extends Scene {
       const rect = this.cardRects[index]!;
       const crew = CREWS[index]!;
       const selected = index === this.selectedCrew;
-      this.drawCrewPlate(graphics, rect, crew, index, selected, height);
+      const locked = this.isCrewLocked() && !selected;
+      this.drawCrewPlate(graphics, rect, crew, index, selected, locked, height);
     }
 
-    const dataAlert = this.deleteConfirmUntil > this.elapsed;
+    if (this.crewLockText.visible) {
+      const lockBounds = this.crewLockText.getBounds();
+      graphics
+        .fillStyle(0x050608, 0.94)
+        .fillRect(
+          Math.max(8, lockBounds.x - 12),
+          lockBounds.y - 6,
+          Math.min(width - 16, lockBounds.width + 24),
+          lockBounds.height + 12
+        );
+      graphics
+        .lineStyle(2, 0xffc928, 0.92)
+        .strokeRect(
+          Math.max(8, lockBounds.x - 12),
+          lockBounds.y - 6,
+          Math.min(width - 16, lockBounds.width + 24),
+          lockBounds.height + 12
+        );
+    }
+
+    const dataAlert =
+      this.deleteState === 'failed' || this.deleteState === 'deleting';
     graphics
       .fillStyle(0x050608, 0.78)
       .fillRect(
@@ -637,6 +1028,7 @@ export class MainMenu extends Scene {
     );
     this.drawIgnitionEnd(graphics, action.x + 9, action.centerY, -1);
     this.drawIgnitionEnd(graphics, action.right - 9, action.centerY, 1);
+    this.drawDeleteConfirmation();
   }
 
   private layoutBackdrop(width: number, height: number): void {
@@ -804,6 +1196,7 @@ export class MainMenu extends Scene {
     crew: CrewDefinition,
     index: number,
     selected: boolean,
+    locked: boolean,
     height: number
   ): void {
     const platePoints = this.crewPlatePoints(rect, index);
@@ -825,13 +1218,20 @@ export class MainMenu extends Scene {
       graphics,
       platePoints.map((point) => ({ x: point.x + 4, y: point.y + 5 }))
     );
-    graphics.fillStyle(selected ? crew.color : 0x121518, selected ? 0.2 : 0.92);
+    graphics.fillStyle(
+      selected ? crew.color : 0x121518,
+      selected ? 0.2 : locked ? 0.98 : 0.92
+    );
     this.fillPolygon(graphics, platePoints);
-    graphics.lineStyle(selected ? 4 : 2, crew.color, selected ? 1 : 0.52);
+    graphics.lineStyle(
+      selected ? 4 : 2,
+      crew.color,
+      selected ? 1 : locked ? 0.2 : 0.52
+    );
     this.strokePolygon(graphics, platePoints);
 
     graphics
-      .fillStyle(crew.color, selected ? 1 : 0.7)
+      .fillStyle(crew.color, selected ? 1 : locked ? 0.24 : 0.7)
       .fillRect(rect.x + 12, rect.y + 5, Math.min(64, rect.width * 0.32), 4);
     graphics.lineStyle(1, 0xf7f3df, selected ? 0.28 : 0.1);
     graphics.lineBetween(

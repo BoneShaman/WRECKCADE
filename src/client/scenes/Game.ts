@@ -292,6 +292,17 @@ const VEHICLE_DAMAGE_COLUMNS = 4;
 const BARREL_HP = 24;
 const BARREL_RADIUS = 19;
 const REPAIR_FRAME_START = 12;
+const PLAYER_BASE_HP = 200;
+const REPAIR_PICKUP_HEAL = 30;
+const PERSISTENT_REPAIR_CASE_COUNT = 5;
+const TEXT_RESOLUTION = Math.min(
+  2,
+  Math.max(1, globalThis.devicePixelRatio || 1)
+);
+const DISPLAY_FONT =
+  'Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Narrow", "Roboto Condensed", Roboto, Arial, sans-serif';
+const MONO_FONT =
+  '"Roboto Mono", "Noto Sans Mono", ui-monospace, Menlo, Consolas, monospace';
 
 const LANDMARK_DEFINITIONS: LandmarkDefinition[] = [
   { frame: 0, edge: 'top', along: 520, size: 288, rotation: -0.08 },
@@ -643,11 +654,12 @@ export class Game extends Scene {
     this.uiGraphics = this.add.graphics().setDepth(100);
     this.modalGraphics = this.add.graphics().setDepth(200);
 
-    const impactFont = 'Impact, Haettenschweiler, sans-serif';
-    const monoFont = 'ui-monospace, Menlo, monospace';
+    const impactFont = DISPLAY_FONT;
+    const monoFont = MONO_FONT;
     this.timerText = this.add
       .text(0, 0, '03:00', {
         fontFamily: impactFont,
+        fontStyle: 'bold',
         fontSize: '34px',
         color: '#f7f3df',
         stroke: '#080b12',
@@ -665,7 +677,7 @@ export class Game extends Scene {
       .setOrigin(0.5, 0)
       .setDepth(120);
     this.hpText = this.add
-      .text(0, 0, 'BODY 140 / 140', {
+      .text(0, 0, `BODY ${PLAYER_BASE_HP} / ${PLAYER_BASE_HP}`, {
         fontFamily: monoFont,
         fontSize: '15px',
         color: '#f7f3df',
@@ -674,6 +686,7 @@ export class Game extends Scene {
     this.scoreText = this.add
       .text(0, 0, '0', {
         fontFamily: impactFont,
+        fontStyle: 'bold',
         fontSize: '30px',
         color: '#ffc928',
         stroke: '#080b12',
@@ -691,6 +704,7 @@ export class Game extends Scene {
     this.comboText = this.add
       .text(0, 0, '', {
         fontFamily: impactFont,
+        fontStyle: 'bold',
         fontSize: '42px',
         color: '#f7f3df',
         stroke: '#080b12',
@@ -769,6 +783,7 @@ export class Game extends Scene {
     this.announcementText = this.add
       .text(0, 0, '', {
         fontFamily: impactFont,
+        fontStyle: 'bold',
         fontSize: '54px',
         color: '#ffc928',
         stroke: '#080b12',
@@ -778,6 +793,23 @@ export class Game extends Scene {
       .setOrigin(0.5)
       .setDepth(130)
       .setVisible(false);
+
+    this.sharpenTexts([
+      this.timerText,
+      this.waveText,
+      this.hpText,
+      this.scoreText,
+      this.levelText,
+      this.comboText,
+      this.crewText,
+      this.hintText,
+      this.touchPauseText,
+      this.touchMuteText,
+      this.touchDriveText,
+      this.touchDriftText,
+      this.desktopTelemetryText,
+      this.announcementText,
+    ]);
 
     this.keys = this.input.keyboard?.addKeys({
       up: 'W',
@@ -954,7 +986,8 @@ export class Game extends Scene {
       Object.assign(window.__ramageddonQA, {
         showVehicleDamage: (tier = 1) => this.qaShowVehicleDamage(tier),
         primeBarrelChain: () => this.qaPrimeBarrelChain(),
-        collectPersistentRepair: () => this.qaCollectPersistentRepair(),
+        collectPersistentRepair: (missingBody = 50) =>
+          this.qaCollectPersistentRepair(missingBody),
       });
     }
     hideBootOverlayAfterPaint();
@@ -1041,13 +1074,16 @@ export class Game extends Scene {
     this.announcementText?.setVisible(false);
   }
 
-  private qaCollectPersistentRepair(): void {
+  private qaCollectPersistentRepair(missingBody: number): void {
     const repair = this.pickups.find(
       (pickup) => pickup.kind === 'repair' && pickup.persistent
     );
     if (!repair) return;
     this.mode = 'playing';
-    this.player.hp = Math.min(this.player.hp, this.player.maxHp - 20);
+    this.player.hp = Math.min(
+      this.player.hp,
+      this.player.maxHp - clamp(missingBody, 1, this.player.maxHp)
+    );
     this.player.x = repair.x;
     this.player.y = repair.y;
     this.player.vx = 0;
@@ -1120,7 +1156,7 @@ export class Game extends Scene {
     const tierBonus = clamp(this.meta.community.tier, 0, 6);
     const crewHp = this.crew === 'iron' ? 20 : 0;
     const blueprintHp = this.meta.communityUpgrade === 'armor' ? 15 : 0;
-    const maxHp = 140 + crewHp + blueprintHp + tierBonus * 2;
+    const maxHp = PLAYER_BASE_HP + crewHp + blueprintHp + tierBonus * 2;
     this.player = {
       x: WORLD_WIDTH / 2,
       y: WORLD_HEIGHT / 2,
@@ -1309,7 +1345,7 @@ export class Game extends Scene {
       y,
       vx,
       vy,
-      value,
+      value: kind === 'repair' ? REPAIR_PICKUP_HEAL : value,
       kind,
       age: 0,
       persistent,
@@ -1332,9 +1368,9 @@ export class Game extends Scene {
     ];
     const start =
       this.cosmeticHash(this.meta.seed, 0x2fe86ca1) % anchors.length;
-    for (let index = 0; index < 3; index += 1) {
-      const anchor = anchors[(start + index * 2) % anchors.length]!;
-      const value = 10 + (this.cosmeticHash(index + 1, 0x7d44a93b) % 3);
+    const anchorOffsets = [0, 2, 4, 1, 3] as const;
+    for (let index = 0; index < PERSISTENT_REPAIR_CASE_COUNT; index += 1) {
+      const anchor = anchors[(start + anchorOffsets[index]!) % anchors.length]!;
       this.pickups.push(
         this.makePickup(
           'repair',
@@ -1342,7 +1378,7 @@ export class Game extends Scene {
           WORLD_HEIGHT * anchor[1],
           0,
           0,
-          value,
+          REPAIR_PICKUP_HEAL,
           true
         )
       );
@@ -2759,14 +2795,7 @@ export class Game extends Scene {
             : 0.003;
     if (repairNeeded && this.random() < repairChance) {
       this.pickups.push(
-        this.makePickup(
-          'repair',
-          enemy.x,
-          enemy.y,
-          0,
-          -80,
-          enemy.kind === 'boss' ? 16 : enemy.kind === 'elite' ? 10 : 6
-        )
+        this.makePickup('repair', enemy.x, enemy.y, 0, -80, REPAIR_PICKUP_HEAL)
       );
     }
     if (this.environmentalBlast && this.meta.modifier.id === 'crusher-shift') {
@@ -2917,12 +2946,14 @@ export class Game extends Scene {
           continue;
         pickup.age = -999;
         if (pickup.kind === 'repair') {
+          const hpBeforeRepair = this.player.hp;
           this.player.hp = Math.min(
             this.player.maxHp,
             this.player.hp + pickup.value
           );
+          const repairedBody = Math.round(this.player.hp - hpBeforeRepair);
           this.popWorldText(
-            `+${pickup.value} BODY`,
+            `+${repairedBody} BODY`,
             this.player.x,
             this.player.y - 42,
             '#6ee7a8',
@@ -3367,7 +3398,8 @@ export class Game extends Scene {
     if (this.floatTexts.length > 24) return;
     const object = this.add
       .text(0, 0, label, {
-        fontFamily: 'Impact, Haettenschweiler, sans-serif',
+        fontFamily: DISPLAY_FONT,
+        fontStyle: 'bold',
         fontSize: `${size}px`,
         color,
         stroke: '#080b12',
@@ -3389,7 +3421,8 @@ export class Game extends Scene {
   private popScreenText(label: string, color: string): void {
     const object = this.add
       .text(this.scale.width / 2, this.scale.height * 0.22, label, {
-        fontFamily: 'Impact, Haettenschweiler, sans-serif',
+        fontFamily: DISPLAY_FONT,
+        fontStyle: 'bold',
         fontSize: `${Math.max(26, Math.min(44, this.scale.width * 0.04))}px`,
         color,
         stroke: '#080b12',
@@ -5440,7 +5473,8 @@ export class Game extends Scene {
     this.modalTexts.push(
       this.add
         .text(width / 2, titleY, 'BOLT SOMETHING STUPID ON', {
-          fontFamily: 'Impact, Haettenschweiler, sans-serif',
+          fontFamily: DISPLAY_FONT,
+          fontStyle: 'bold',
           fontSize: `${titleSize}px`,
           color: '#f7f3df',
           stroke: '#080b12',
@@ -5511,7 +5545,8 @@ export class Game extends Scene {
               rect.y + rect.height * 0.27,
               `${index + 1} · ${choice.title}`,
               {
-                fontFamily: 'Impact, Haettenschweiler, sans-serif',
+                fontFamily: DISPLAY_FONT,
+                fontStyle: 'bold',
                 fontSize: `${titleFont}px`,
                 color: choice.colorCss,
                 stroke: '#080b12',
@@ -5523,7 +5558,7 @@ export class Game extends Scene {
             .setDepth(220),
           this.add
             .text(contentX, rect.y + rect.height * 0.52, choice.promise, {
-              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontFamily: MONO_FONT,
               fontSize: `${narrow ? 10 : 12}px`,
               color: '#f7f3df',
               wordWrap: { width: copyWidth, useAdvancedWrap: true },
@@ -5532,7 +5567,7 @@ export class Game extends Scene {
             .setDepth(220),
           this.add
             .text(contentX + 4, rect.bottom - 17.5, mark, {
-              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontFamily: MONO_FONT,
               fontSize: `${narrow ? 9 : 10}px`,
               color: choice.colorCss,
             })
@@ -5543,7 +5578,7 @@ export class Game extends Scene {
         this.modalTexts.push(
           this.add
             .text(rect.x + 38, rect.y + 33, `[${index + 1}]`, {
-              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontFamily: MONO_FONT,
               fontSize: '18px',
               fontStyle: 'bold',
               color: '#f7f3df',
@@ -5554,7 +5589,8 @@ export class Game extends Scene {
             .setDepth(220),
           this.add
             .text(rect.centerX, rect.y + 138, choice.title, {
-              fontFamily: 'Impact, Haettenschweiler, sans-serif',
+              fontFamily: DISPLAY_FONT,
+              fontStyle: 'bold',
               fontSize: '25px',
               color: choice.colorCss,
               stroke: '#080b12',
@@ -5566,7 +5602,7 @@ export class Game extends Scene {
             .setDepth(220),
           this.add
             .text(rect.centerX, rect.y + 178, choice.promise, {
-              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontFamily: MONO_FONT,
               fontSize: '14px',
               color: '#f7f3df',
               align: 'center',
@@ -5576,7 +5612,7 @@ export class Game extends Scene {
             .setDepth(220),
           this.add
             .text(rect.centerX, rect.bottom - 24.5, mark, {
-              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontFamily: MONO_FONT,
               fontSize: '11px',
               color: choice.colorCss,
             })
@@ -5585,6 +5621,7 @@ export class Game extends Scene {
         );
       }
     });
+    this.sharpenTexts(this.modalTexts);
   }
 
   private buildPauseModal(): void {
@@ -5595,7 +5632,8 @@ export class Game extends Scene {
     this.modalTexts.push(
       this.add
         .text(width / 2, height / 2 - 30, 'ENGINE STALLED', {
-          fontFamily: 'Impact, Haettenschweiler, sans-serif',
+          fontFamily: DISPLAY_FONT,
+          fontStyle: 'bold',
           fontSize: `${Math.min(62, width * (compact ? 0.12 : 0.1))}px`,
           color: '#ffc928',
           stroke: '#080b12',
@@ -5606,7 +5644,7 @@ export class Game extends Scene {
         .setDepth(220),
       this.add
         .text(width / 2, height / 2 + 45, 'PRESS P OR TAP TO GET BACK IN IT', {
-          fontFamily: 'ui-monospace, Menlo, monospace',
+          fontFamily: MONO_FONT,
           fontSize: `${compact ? 11 : 16}px`,
           color: '#f7f3df',
           align: 'center',
@@ -5615,6 +5653,7 @@ export class Game extends Scene {
         .setOrigin(0.5)
         .setDepth(220)
     );
+    this.sharpenTexts(this.modalTexts);
   }
 
   private buildResultsModal(): void {
@@ -5623,28 +5662,79 @@ export class Game extends Scene {
     const height = this.scale.height;
     const portrait = width < 660;
     const shortNarrow = width < 360 && height < 650;
-    const titleY = portrait ? 36 : height * 0.078;
+    const compactResult = portrait && height < 650;
+    const titleY = compactResult
+      ? shortNarrow
+        ? 19
+        : 22
+      : portrait
+        ? 26
+        : height * 0.065;
     const title = this.victory
       ? 'ROAD KING DETHRONED'
-      : 'TOTALLED — BUT NOT FORGOTTEN';
+      : portrait
+        ? 'TOTALLED'
+        : 'TOTALLED — BUT NOT FORGOTTEN';
     const titleColor = this.victory ? '#ffc928' : '#ff365e';
-    this.modalTexts.push(
-      this.add
-        .text(width / 2, titleY, title, {
-          fontFamily: 'Impact, Haettenschweiler, sans-serif',
-          fontSize: `${shortNarrow ? 22 : portrait ? 28 : 48}px`,
-          color: titleColor,
+    const titleText = this.add
+      .text(width / 2, titleY, title, {
+        fontFamily: DISPLAY_FONT,
+        fontStyle: 'bold',
+        fontSize: `${shortNarrow ? 19 : portrait ? 24 : 48}px`,
+        color: titleColor,
+        stroke: '#080b12',
+        strokeThickness: portrait ? 6 : 8,
+        align: 'center',
+        wordWrap: { width: width - 24, useAdvancedWrap: true },
+      })
+      .setOrigin(0.5)
+      .setDepth(220);
+    this.modalTexts.push(titleText);
+
+    const ticketInset = portrait ? 12 : Math.max(46, width * 0.08);
+    const ticketTop = portrait
+      ? Math.ceil(titleText.getBounds().bottom + (compactResult ? 4 : 6))
+      : height * 0.105;
+    const scoreLabelY = portrait
+      ? ticketTop + (compactResult ? 10 : 14)
+      : height * 0.245;
+    const scoreLabelText = this.add
+      .text(width / 2, scoreLabelY, 'FINAL SCORE', {
+        fontFamily: MONO_FONT,
+        fontStyle: 'bold',
+        fontSize: `${compactResult ? 8 : portrait ? 10 : 13}px`,
+        color: '#8fa3b8',
+        letterSpacing: 2,
+      })
+      .setOrigin(0.5)
+      .setDepth(220);
+    const scoreText = this.add
+      .text(
+        width / 2,
+        portrait ? 0 : height * 0.175,
+        this.player.score.toLocaleString(),
+        {
+          fontFamily: DISPLAY_FONT,
+          fontStyle: 'bold',
+          fontSize: `${shortNarrow ? 34 : compactResult ? 40 : portrait ? 46 : 66}px`,
+          color: '#ffc928',
           stroke: '#080b12',
-          strokeThickness: 8,
+          strokeThickness: compactResult ? 6 : portrait ? 7 : 9,
           align: 'center',
-          ...(shortNarrow
-            ? { wordWrap: { width: width - 20, useAdvancedWrap: true } }
-            : {}),
-        })
-        .setOrigin(0.5)
-        .setDepth(220)
-    );
-    const statsY = portrait ? 70 : height * 0.145;
+        }
+      )
+      .setOrigin(0.5)
+      .setDepth(221);
+    if (portrait) {
+      scoreText.setY(
+        Math.ceil(
+          scoreLabelText.getBounds().bottom +
+            (compactResult ? 2 : 3) +
+            scoreText.displayHeight / 2
+        )
+      );
+    }
+    this.modalTexts.push(scoreLabelText, scoreText);
     const syncLine =
       this.runSyncState === 'practice'
         ? 'PRACTICE RUN — RESULTS STAY ON THIS DEVICE'
@@ -5676,53 +5766,69 @@ export class Game extends Scene {
               ? 'SYNC FAILED — RETRY'
               : 'PACKING...';
     const compactPitReport = `${CREW_NAMES[this.crew].split(' ')[0]} #${crewRank} ${crewScore.toLocaleString()} · PILE ${this.meta.community.scrap.toLocaleString()}/${this.meta.community.target.toLocaleString()}`;
-    const resultReport = shortNarrow
-      ? `${this.player.score.toLocaleString()} SCORE · ${this.player.kills} WRECKS · x${this.player.bestCombo}\n${this.player.scrap} SCRAP · ${compactSyncLine}\n${compactPitReport}`
-      : `${this.player.score.toLocaleString()} SCORE  •  ${this.player.kills} WRECKS  •  x${this.player.bestCombo} BEST COMBO  •  ${this.player.scrap} SCRAP\n${syncLine}\n${pitReport}\n${profileReport}`;
-    this.modalTexts.push(
-      this.add
-        .text(width / 2, statsY, resultReport, {
-          fontFamily: 'ui-monospace, Menlo, monospace',
-          fontSize: `${portrait ? 10 : 13}px`,
-          color: '#f7f3df',
-          align: 'center',
-          lineSpacing: portrait ? 4 : 6,
-          wordWrap: { width: width - 34 },
-        })
-        .setOrigin(0.5, 0)
-        .setDepth(220)
-    );
-    const voteHeadingY = portrait ? 158 : height * 0.37;
-    const ticketInset = portrait ? 12 : Math.max(46, width * 0.08);
+    const survivedSeconds =
+      this.pendingRun?.survivedSeconds ??
+      Math.min(RUN_SECONDS + 120, Math.round(this.elapsed));
+    const survivalClock = `${Math.floor(survivedSeconds / 60)}:${(survivedSeconds % 60).toString().padStart(2, '0')}`;
+    const resultReport = compactResult
+      ? `SURVIVED ${survivalClock} · ${this.player.kills} WRECKS · x${this.player.bestCombo} COMBO\n${this.player.scrap} SCRAP · ${compactSyncLine}\n${compactPitReport}`
+      : `SURVIVED ${survivalClock}  •  ${this.player.kills} WRECKS  •  x${this.player.bestCombo} BEST COMBO  •  ${this.player.scrap} SCRAP\n${syncLine}\n${pitReport}\n${profileReport}`;
+    const statsY = portrait
+      ? Math.ceil(scoreText.getBounds().bottom + (compactResult ? 3 : 6))
+      : height * 0.285;
+    const statsText = this.add
+      .text(width / 2, statsY, resultReport, {
+        fontFamily: MONO_FONT,
+        fontSize: `${portrait ? (compactResult ? 9 : 10) : 13}px`,
+        color: '#f7f3df',
+        align: 'center',
+        lineSpacing: portrait ? (compactResult ? 3 : 4) : 6,
+        wordWrap: { width: width - 34 },
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(220);
+    this.modalTexts.push(statsText);
+    const statsBottom = statsText.getBounds().bottom;
+    const voteHeadingY = portrait
+      ? Math.ceil(statsBottom + (compactResult ? 24 : 32))
+      : Math.max(height * 0.43, statsY + 92);
+    const ticketBottom = portrait
+      ? Math.ceil(statsBottom + (compactResult ? 7 : 9))
+      : voteHeadingY - 16;
     this.resultTicketRect.setTo(
       ticketInset,
-      statsY - 10,
+      ticketTop,
       width - ticketInset * 2,
-      Math.max(58, voteHeadingY - statsY - (portrait ? 14 : 16))
+      Math.max(78, ticketBottom - ticketTop)
     );
-    this.modalTexts.push(
-      this.add
-        .text(
-          width / 2,
-          voteHeadingY,
-          this.meta.runtimeMode === 'practice'
-            ? 'PRACTICE — RELOAD REDDIT TO VOTE'
-            : "VOTE: WHAT SHOULD TOMORROW'S GARAGE BUILD?",
-          {
-            fontFamily: 'Impact, Haettenschweiler, sans-serif',
-            fontSize: `${shortNarrow ? 14 : portrait ? 17 : 24}px`,
-            color: '#2ef2e2',
-            stroke: '#080b12',
-            strokeThickness: 5,
-            align: 'center',
-            ...(shortNarrow
-              ? { wordWrap: { width: width - 20, useAdvancedWrap: true } }
-              : {}),
-          }
-        )
-        .setOrigin(0.5)
-        .setDepth(220)
-    );
+    const voteHeadingText = this.add
+      .text(
+        width / 2,
+        voteHeadingY,
+        this.meta.runtimeMode === 'practice'
+          ? 'PRACTICE — RELOAD REDDIT TO VOTE'
+          : "VOTE: WHAT SHOULD TOMORROW'S GARAGE BUILD?",
+        {
+          fontFamily: DISPLAY_FONT,
+          fontStyle: 'bold',
+          fontSize: `${shortNarrow ? 13 : portrait ? 16 : 24}px`,
+          color: '#2ef2e2',
+          stroke: '#080b12',
+          strokeThickness: portrait ? 4 : 5,
+          align: 'center',
+          ...(portrait
+            ? {
+                wordWrap: {
+                  width: width - 28,
+                  useAdvancedWrap: true,
+                },
+              }
+            : {}),
+        }
+      )
+      .setOrigin(0.5)
+      .setDepth(220);
+    this.modalTexts.push(voteHeadingText);
     const ids: BlueprintId[] = ['magnet', 'armor', 'nitro'];
     const names = ['MAG-CRANE', 'ROLL CAGE', 'NITRO KIT'];
     const promises = ['MORE SCRAP REACH', '+15 STARTING BODY', '+35 TOP SPEED'];
@@ -5730,14 +5836,19 @@ export class Game extends Scene {
     const tightSyncRetry =
       this.runSyncState === 'failed' && portrait && height < 620;
     const gap = tightSyncRetry ? 6 : shortNarrow ? 6 : portrait ? 8 : 14;
+    const bottomY = height - (shortNarrow ? 62 : portrait ? 90 : 72);
     if (portrait) {
       const cardWidth = width - 34;
+      const voteTop = Math.ceil(
+        voteHeadingText.getBounds().bottom + (tightSyncRetry ? 7 : 10)
+      );
+      const availableCardHeight =
+        (bottomY - (tightSyncRetry ? 66 : 34) - voteTop - gap * 2) / 3;
       const cardHeight = tightSyncRetry
-        ? 58
+        ? clamp(availableCardHeight, 48, 58)
         : shortNarrow
           ? 60
-          : Math.min(86, (height - 300) / 3);
-      const voteTop = voteHeadingY + (tightSyncRetry ? 24 : 28);
+          : clamp(availableCardHeight, 64, 138);
       this.voteRects = ids.map(
         (_id, index) =>
           new Phaser.Geom.Rectangle(
@@ -5782,7 +5893,8 @@ export class Game extends Scene {
             rect.centerY,
             `${index + 1}  ${names[index]}\n${promises[index]}${voteStatus}`,
             {
-              fontFamily: 'Impact, Haettenschweiler, sans-serif',
+              fontFamily: DISPLAY_FONT,
+              fontStyle: 'bold',
               fontSize: `${shortNarrow ? 14 : portrait ? 16 : 20}px`,
               color: colors[index] ?? '#f7f3df',
               stroke: '#080b12',
@@ -5799,7 +5911,6 @@ export class Game extends Scene {
           .setDepth(220)
       );
     });
-    const bottomY = height - (shortNarrow ? 62 : portrait ? 90 : 72);
     const buttonWidth = Math.min(310, width * 0.42);
     this.replayRect.setTo(
       width / 2 - buttonWidth - 7,
@@ -5824,7 +5935,8 @@ export class Game extends Scene {
             this.syncRect.centerY,
             'RETRY PIT RADIO  [S]',
             {
-              fontFamily: 'Impact, Haettenschweiler, sans-serif',
+              fontFamily: DISPLAY_FONT,
+              fontStyle: 'bold',
               fontSize: `${tightSyncRetry ? 14 : portrait ? 16 : 20}px`,
               color: '#2ef2e2',
             }
@@ -5842,7 +5954,8 @@ export class Game extends Scene {
           this.replayRect.centerY,
           'RUN IT BACK  [R]',
           {
-            fontFamily: 'Impact, Haettenschweiler, sans-serif',
+            fontFamily: DISPLAY_FONT,
+            fontStyle: 'bold',
             fontSize: `${portrait ? 17 : 23}px`,
             color: '#080b12',
           }
@@ -5851,13 +5964,19 @@ export class Game extends Scene {
         .setDepth(220),
       this.add
         .text(this.menuRect.centerX, this.menuRect.centerY, 'CREW GARAGE', {
-          fontFamily: 'Impact, Haettenschweiler, sans-serif',
+          fontFamily: DISPLAY_FONT,
+          fontStyle: 'bold',
           fontSize: `${portrait ? 17 : 23}px`,
           color: '#c7d0d9',
         })
         .setOrigin(0.5)
         .setDepth(220)
     );
+    this.sharpenTexts(this.modalTexts);
+  }
+
+  private sharpenTexts(texts: readonly GameObjects.Text[]): void {
+    for (const text of texts) text.setResolution(TEXT_RESOLUTION);
   }
 
   private clearModal(): void {

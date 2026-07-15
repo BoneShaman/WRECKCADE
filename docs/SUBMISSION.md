@@ -34,9 +34,9 @@ in the final refreshed submission.
   confirmed it is publicly reachable without session cookies at the retained
   legacy URL `https://devpost.com/software/ramageddon`; the project editor
   remains **SUBMITTED 5/5**.
-- Devvit 0.0.9 is uploaded and installed to `r/ramageddon_game_dev`; the CLI
-  install listing confirms 0.0.9 is active. Live readback of the existing post
-  confirms its iframe source contains `0-0-9-webview` and renders the refreshed
+- Devvit 0.0.10 is uploaded and installed to `r/ramageddon_game_dev`; the CLI
+  install listing confirms 0.0.10 is active. Live readback of the existing post
+  confirms its asset source contains `0-0-10-webview` and renders the refreshed
   collision-art launch card with real daily/community data.
 - A prior visibly signed-out 0.0.8 in-app-browser audit opened the exact
   **WRECKCADE: Daily Wreckpile** post, activated **WRECK THE HORDE**, and rendered
@@ -48,15 +48,16 @@ in the final refreshed submission.
   signed Devvit token. That production run started with active audio and
   produced an x7 opening wreck cascade; the preceding 0.0.2 gameplay audit
   reached the first upgrade without a visible client error.
-- Current 0.0.9 local QA additionally covers the Crew Garage lifecycle repair,
-  branded cold and scene-transition loaders, repeated replay after pending and
-  saved network work, 140 base BODY, and compact keyboard-driven desktop
-  wheel/shifter telemetry. It also retains coverage for the generated scrapyard
-  environment, nine
-  vehicle models with four damage states, barrel chains, sparse repair cases,
-  restart-safe sprite pools, exact 613×512 and 333×515 layouts, desktop input
-  parity, visible `1`/`2`/`3` upgrade shortcuts, and two-thumb steering-wheel /
-  throttle-drift-shifter input without console or page errors.
+- Current 0.0.10 QA additionally covers safe separate Cancel/Delete privacy
+  confirmation, explicit daily crew-lock feedback, capped-DPR mobile text,
+  scored-result presentation including `SURVIVED M:SS`, 200 base BODY (220 for
+  Iron), five deterministic persistent repair cases, and exact 30-BODY healing
+  from every persistent or enemy-dropped repair. It retains Crew Garage lifecycle,
+  branded loader, repeated replay, desktop wheel/shifter, generated environment,
+  vehicle-damage, barrel-chain, exact-viewport, keyboard, and two-thumb touch
+  coverage without console or page errors. The v0.0.10 mobile regression proved
+  same-position, outside, and Cancel taps issue zero deletes, while the separate
+  deliberate Delete target issues exactly one.
 - A prior natural 180-second local run defeated the Road King and remained
   playable at approximately 54 fps under 4× CPU throttling. In the final harder
   balance, an offense-prioritized active policy destroyed the Road King at
@@ -226,8 +227,8 @@ Check each claim against the uploaded build before pasting the description:
 - [x] Type-check, lint, and production build pass.
 - [ ] All shared systems work from at least two separate Reddit accounts.
 - [x] The post's prior 0.0.8 build launched through the exact link in a signed-out
-      desktop browser and reached the Crew Garage; the same post now serves 0.0.9.
-- [ ] The final 0.0.9 WRECKCADE post is exercised on native Reddit mobile.
+      desktop browser and reached the Crew Garage; the same post now serves 0.0.10.
+- [ ] The final 0.0.10 WRECKCADE post is exercised on native Reddit mobile.
 - [ ] Every visual in the video is captured from the actual uploaded build.
 
 If an unchecked item cannot be repaired before the deadline, remove the feature

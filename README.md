@@ -20,12 +20,13 @@ leaderboards, and **Blueprint Vote** are the engine around it.
 > client and Hono/Redis server pass type-check, lint, and production build.
 > Controlled playtesting reached first impact in under five seconds, first
 > level-up at 21.6 seconds, and a confirmed x21 wreck combo/cascade with 18 hot
-> wrecks active simultaneously. Devvit CLI verification reports version 0.0.9
+> wrecks active simultaneously. Devvit CLI verification reports version 0.0.10
 > installed to the public demo subreddit, and live readback of the existing post
-> confirms its `0-0-9-webview` and refreshed collision-art splash. The 0.0.9
-> release gate covers branded cold/scene loading, vote/wait-to-garage recovery,
-> repeated mouse/touch replay, desktop keyboard telemetry, and the 140-BODY base
-> tune without a browser error. A prior visibly signed-out 0.0.8 audit launched
+> confirms its `0-0-10-webview` and refreshed collision-art splash. The 0.0.10
+> release gate covers safe separate Cancel/Delete privacy confirmation, explicit
+> locked-crew feedback, capped-DPR mobile text and `SURVIVED M:SS` result polish,
+> a 200-BODY base tune (220 for Iron), five persistent repair cases, and exact
+> 30-BODY repair pickups without a browser error. A prior visibly signed-out 0.0.8 audit launched
 > **WRECK THE HORDE** and reached the generated-car Crew Garage inside the Reddit
 > modal. The public repository is renamed to WRECKCADE and its
 > current tree is published on `origin/main`. The public Devpost page displays
@@ -72,7 +73,7 @@ The control set is deliberately small:
 | Fullscreen                              | `F`                                                    | —                                                     |
 | Start                                   | `Enter` or `Space`                                     | Tap the primary ignition plate                        |
 | Replay after a run                      | `R` or `Enter`                                         | Tap **Run It Back**                                   |
-| Delete stored player data from garage   | Press `D` twice within five seconds                    | Tap **Privacy: Delete My Data** twice                 |
+| Delete stored player data from garage   | Press `D` to open confirmation; `Esc` cancels          | Tap **Privacy** once, then the separate Delete target |
 
 Weapons fire automatically so attention stays on driving, momentum, drift
 angles, and lining one wreck up with the next victim.
@@ -212,14 +213,16 @@ analytics or leaderboard service. Public boards may display the Reddit username
 already associated with the play session, score, crew, and contribution.
 
 Players can delete their stored WRECKCADE data directly from the Crew Garage:
-press `D` twice within five seconds or tap **Privacy: Delete My Data** twice. The
-action removes the account-keyed profile, retained player-scoped daily records,
-leaderboard positions, and daily Blueprint Vote selections. Shared crew and
-Wreckpile totals contain no username or account ID and may remain as anonymous
-community aggregates. WRECKCADE does not create comments or posts as the
-player. Automatic platform account-deletion behavior must still be verified
-against the current [Devvit Rules](https://developers.reddit.com/docs/devvit_rules)
-before a public app-directory launch.
+press `D` or tap **Privacy: Delete My Data** once to open a dedicated confirmation
+panel. **Cancel**, `Esc`, or tapping outside closes it; only the separate
+**Delete My Data** target performs deletion. The action removes the account-keyed
+profile, retained player-scoped daily records, leaderboard positions, and daily
+Blueprint Vote selections. Shared crew and Wreckpile totals contain no username
+or account ID and may remain as anonymous community aggregates. WRECKCADE does
+not create comments or posts as the player. Automatic platform account-deletion
+behavior must still be verified against the current
+[Devvit Rules](https://developers.reddit.com/docs/devvit_rules) before a public
+app-directory launch.
 
 If external fetch, user-posting, or additional personal-data collection is added
 later, the app will require the relevant consent, policy, and Reddit approval

@@ -529,8 +529,8 @@ const runDesktop = async (browser, url) => {
   const desktopStart = await state(page);
   assert.equal(
     desktopStart.player.maxHp,
-    160,
-    'Iron Howlers should begin with 140 base BODY plus the truthful +20 perk'
+    220,
+    'Iron Howlers should begin with 200 base BODY plus the truthful +20 perk'
   );
   assert.equal(
     desktopStart.controls.desktopTelemetryVisible,

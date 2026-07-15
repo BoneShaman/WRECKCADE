@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#171411" />
+    <link rel="stylesheet" href="splash.css" />
+    <title>RAMAGEDDON — Wreck the Horde</title>
+  </head>
+  <body>
+    <main class="launch-card" aria-labelledby="game-title">
+      <div class="arena-art" aria-hidden="true">
+        <div class="floodlight floodlight-left"></div>
+        <div class="floodlight floodlight-right"></div>
+        <div class="skid skid-one"></div>
+        <div class="skid skid-two"></div>
+        <div class="dust dust-one"></div>
+        <div class="dust dust-two"></div>
+        <div class="hero-car">
+          <span class="wheel wheel-front-top"></span>
+          <span class="wheel wheel-front-bottom"></span>
+          <span class="wheel wheel-back-top"></span>
+          <span class="wheel wheel-back-bottom"></span>
+          <span class="car-shell">
+            <span class="windshield"></span>
+            <span class="number-plate">13</span>
+          </span>
+          <span class="ram-bar"></span>
+          <span class="exhaust"></span>
+        </div>
+        <span class="spark spark-one"></span>
+        <span class="spark spark-two"></span>
+        <span class="spark spark-three"></span>
+        <span class="impact-word">KRAK!</span>
+      </div>
+
+      <section class="hero-copy" aria-label="Game introduction">
+        <p class="event-kicker">
+          <span class="live-light" aria-hidden="true"></span>
+          TODAY'S COMMUNITY WRECKFEST
+        </p>
+        <h1 id="game-title" class="logo-word">
+          <span>RAMA</span><span class="logo-hot">GEDDON</span>
+        </h1>
+        <p class="hook-line">The horde is the weapon.</p>
+        <p class="rule-line" aria-label="Drive, drift, wreck, steal scrap">
+          <span>DRIVE</span><b>•</b><span>DRIFT</span><b>•</b><span>WRECK</span
+          ><b>•</b><span>STEAL SCRAP</span>
+        </p>
+
+        <button
+          class="launch-button"
+          id="start-button"
+          type="button"
+          aria-describedby="launch-hint"
+        >
+          <span class="button-label">WRECK THE HORDE</span>
+          <span class="button-arrow" aria-hidden="true">›</span>
+        </button>
+        <p class="launch-hint" id="launch-hint">
+          <span id="pilot-name">DRIVER</span>, your engine is hot. One run.
+          Maximum carnage.
+        </p>
+      </section>
+
+      <aside
+        class="pit-board"
+        aria-label="Today's arena and community standings"
+      >
+        <div class="board-rivet rivet-one" aria-hidden="true"></div>
+        <div class="board-rivet rivet-two" aria-hidden="true"></div>
+
+        <section class="daily-card" aria-labelledby="daily-label">
+          <p class="board-label" id="daily-label">TODAY'S ARENA</p>
+          <p class="arena-name" id="arena-name">THE BONE YARD</p>
+          <p class="arena-mod" id="arena-mod">DOUBLE RAM DAMAGE</p>
+        </section>
+
+        <section class="wreck-counter" aria-labelledby="wrecks-label">
+          <div>
+            <p class="board-label" id="wrecks-label">COMMUNITY SCRAP</p>
+            <p class="wreck-total" id="community-scrap">0</p>
+          </div>
+          <div class="goal-wrap" aria-label="Community goal progress">
+            <div class="goal-track"><span id="goal-fill"></span></div>
+            <p class="goal-copy" id="community-goal">0% OF 3K TARGET</p>
+          </div>
+        </section>
+
+        <section class="leaderboard" aria-labelledby="leaderboard-title">
+          <div class="leader-heading">
+            <p class="board-label" id="leaderboard-title">PIT LEADERS</p>
+            <span
+              class="signal"
+              id="data-signal"
+              role="status"
+              aria-live="polite"
+              >TUNING RADIO…</span
+            >
+          </div>
+          <ol id="leader-list">
+            <li>
+              <span class="rank">1</span
+              ><span class="driver">NO RUNS YET — CLAIM #1</span
+              ><strong>—</strong>
+            </li>
+          </ol>
+        </section>
+      </aside>
+
+      <p class="build-stamp" aria-hidden="true">
+        NO BRAKES • NO MERCY • DAILY MAYHEM
+      </p>
+    </main>
+
+    <noscript>This game needs JavaScript enabled to enter the arena.</noscript>
+    <script type="module" src="splash.ts"></script>
+  </body>
+</html>

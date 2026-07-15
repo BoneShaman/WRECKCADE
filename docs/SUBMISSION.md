@@ -14,17 +14,17 @@ build or remove that claim before submission.
 | Running WRECKCADE post            | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/` |
 | Public demo video                 | `[DEMO_VIDEO_URL]`                                                                         |
 | Verified public source repository | `https://github.com/BoneShaman/WRECKCADE`                                                  |
-| Privacy policy after current push | `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md`                        |
-| Terms after current push          | `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md`                          |
+| Verified public privacy policy    | `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md`                        |
+| Verified public terms             | `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md`                          |
 
 Do not replace the running demo post with a standalone web-hosting link. Judges
 need the game running as a Reddit Interactive Post.
 
 The WRECKCADE repository is public and verified at the URL above; both origin
-fetch and push point to it. The current WRECKCADE tree, including the policy
-revisions, still requires a push before those exact file URLs are treated as
-release evidence. The WRECKCADE Reddit post above is the verified demonstration
-URL to use in the refreshed submission.
+fetch and push point to it. Commit `f63fe85` publishes the current WRECKCADE
+tree on `origin/main`, and the source, privacy-policy, and terms URLs are verified
+public release evidence. The WRECKCADE Reddit post above is the verified
+demonstration URL to use in the refreshed submission.
 
 ## Current release evidence
 

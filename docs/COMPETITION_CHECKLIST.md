@@ -75,23 +75,23 @@ external uploaded-post checks later in this document.
 
 ## Required submission bundle
 
-| Requirement                                            | Evidence                                                                                                   | Done |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ---- |
-| Joined hackathon from eligible Devpost account         | Submitted Devpost entry and participant/dashboard view                                                     | [x]  |
-| Game built with Reddit Developer Platform / Devvit Web | Uploaded app runs in Reddit post                                                                           | [x]  |
-| All required Devpost fields completed in English       | Submitted public entry and final preview                                                                   | [x]  |
-| Feature/functionality text description                 | Copy verified against uploaded build                                                                       | [x]  |
-| Unique Devvit app listing                              | `https://developers.reddit.com/apps/ramageddon-game`                                                       | [x]  |
-| Demo subreddit                                         | `https://www.reddit.com/r/ramageddon_game_dev`                                                             | [x]  |
-| Accessible post running the actual game                | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/`                 | [x]  |
-| Detailed root `README.md` describing game and play     | This repository's `README.md`                                                                              | [x]  |
-| App remains free and unrestricted through judging      | Signed-out WRECKCADE exact-link launch and modal verification                                              | [x]  |
-| Rights cleared for every submitted component           | [`docs/ASSET_LEDGER.md`](ASSET_LEDGER.md) plus entrant attestation                                         | [ ]  |
-| Optional public video under one minute                 | `[DEMO_VIDEO_URL]`                                                                                         | [ ]  |
-| Optional public source repository                      | Public and renamed: `https://github.com/BoneShaman/WRECKCADE`                                              | [x]  |
-| Public privacy policy                                  | Target exists after current-tree push: `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md` | [ ]  |
-| Public terms                                           | Target exists after current-tree push: `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md`   | [ ]  |
-| Optional actionable Devvit feedback form               | Submitted-form confirmation                                                                                | [ ]  |
+| Requirement                                            | Evidence                                                                                   | Done |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ---- |
+| Joined hackathon from eligible Devpost account         | Submitted Devpost entry and participant/dashboard view                                     | [x]  |
+| Game built with Reddit Developer Platform / Devvit Web | Uploaded app runs in Reddit post                                                           | [x]  |
+| All required Devpost fields completed in English       | Submitted public entry and final preview                                                   | [x]  |
+| Feature/functionality text description                 | Copy verified against uploaded build                                                       | [x]  |
+| Unique Devvit app listing                              | `https://developers.reddit.com/apps/ramageddon-game`                                       | [x]  |
+| Demo subreddit                                         | `https://www.reddit.com/r/ramageddon_game_dev`                                             | [x]  |
+| Accessible post running the actual game                | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/` | [x]  |
+| Detailed root `README.md` describing game and play     | This repository's `README.md`                                                              | [x]  |
+| App remains free and unrestricted through judging      | Signed-out WRECKCADE exact-link launch and modal verification                              | [x]  |
+| Rights cleared for every submitted component           | [`docs/ASSET_LEDGER.md`](ASSET_LEDGER.md) plus entrant attestation                         | [ ]  |
+| Optional public video under one minute                 | `[DEMO_VIDEO_URL]`                                                                         | [ ]  |
+| Optional public source repository                      | Public current tree: `https://github.com/BoneShaman/WRECKCADE`                             | [x]  |
+| Public privacy policy                                  | `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md`                        | [x]  |
+| Public terms                                           | `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md`                          | [x]  |
+| Optional actionable Devvit feedback form               | Submitted-form confirmation                                                                | [ ]  |
 
 The rules recommend a judging post in a **public subreddit with fewer than 200
 members**. Reddit approved `r/ramageddon_game_dev` as Public on July 15, 2026.
@@ -130,8 +130,9 @@ completed by repository code alone.
 - [x] Rename the public source repository to `BoneShaman/WRECKCADE`; verify
       `gh repo view` reports it as PUBLIC and origin fetch/push both use the new
       URL.
-- [ ] Push the current WRECKCADE tree before treating its policy/source file URLs
-      as final public release evidence.
+- [x] Push commit `f63fe85` (**Rebrand as WRECKCADE and forge the scrapyard**) to
+      `origin/main`; verify the current source, privacy-policy, and terms URLs are
+      public.
 
 ### Reddit and Devvit
 
@@ -422,8 +423,8 @@ verification. Those rows remain open above.
 - [ ] Confirm leaderboard, crew, Wreckpile, and vote updates from two accounts.
 - [x] Open the new WRECKCADE post without relying on a Reddit login and verify its
       0.0.8 splash, launch action, and Crew Garage inside the Reddit modal.
-- [ ] Repeat the complete signed-out/public-link audit after the current-tree
-      push, app-profile display-name correction, and Devpost refresh.
+- [ ] Repeat the complete signed-out/public-link audit after the app-profile
+      display-name correction and Devpost refresh.
 - [x] No optional video is attached, so the one-minute video gate is not
       applicable to the submitted entry.
 - [x] The earlier submitted description was read against the visible 0.0.5 build.

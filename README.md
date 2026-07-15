@@ -24,10 +24,10 @@ leaderboards, and **Blueprint Vote** are the engine around it.
 > installed to the public demo subreddit. A visibly signed-out browser opened
 > the exact WRECKCADE post, confirmed its `0-0-8-webview`, rendered the live
 > splash, launched **WRECK THE HORDE**, and reached the generated-car Crew Garage
-> inside the Reddit modal. The public repository is renamed to WRECKCADE and its
-> fetch/push origin is verified; pushing the current tree, correcting the
-> app-profile display name, refreshing Devpost, and completing a live mobile
-> 0.0.8 run remain tracked in
+> inside the Reddit modal. The public repository is renamed to WRECKCADE, its
+> fetch/push origin is verified, and commit `f63fe85` publishes the current tree
+> on `origin/main`. Correcting the app-profile display name, refreshing Devpost,
+> and completing a live mobile 0.0.8 run remain tracked in
 > [the competition checklist](docs/COMPETITION_CHECKLIST.md).
 
 ## The hook: wrecks become weapons
@@ -296,6 +296,6 @@ Live competition links:
 - Technical app listing (display-name correction pending): <https://developers.reddit.com/apps/ramageddon-game>
 - Demo subreddit: <https://www.reddit.com/r/ramageddon_game_dev>
 - Running WRECKCADE post: <https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/>
-- Public source (repository rename verified; current tree push pending): <https://github.com/BoneShaman/WRECKCADE>
-- Privacy-policy target pending current-tree push: <https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md>
-- Terms target pending current-tree push: <https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md>
+- Public source (current tree at `f63fe85`): <https://github.com/BoneShaman/WRECKCADE>
+- Public privacy policy: <https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md>
+- Public terms: <https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md>

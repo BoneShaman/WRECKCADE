@@ -48,7 +48,13 @@ Original prompt: Work all the way through into an incredibly fun and awesome jui
 - Public-access milestone: Reddit approved `r/ramageddon_game_dev` as Public. The exact post and embedded RAMAGEDDON feed card then loaded in a fresh Firefox Private Browsing session with Sign Up and Log In visible, proving signed-out judge access without relying on moderator membership.
 - Final balance acceptance: exact W/arrow and Space/Left-Shift parity passed. Across all six daily modifiers and five arenas, 12 constant-turn W+D/W+D+drift exploit runs produced zero wins and no browser errors. An offense-prioritized state-aware policy legitimately destroyed the 2,762-HP Road King at 175.03 seconds; its only failure was dying in traffic 1.15 seconds after the boss was gone while the old code waited for 180. Boss destruction now resolves victory immediately, and the server accepts the truthful post-150-second result. Focused 150.2-second boss QA reaches the ended result state with the boss removed and zero errors.
 - Final cascade safety: accumulated directional camera kick is capped at 58 pixels and active wrecks at 140. A deterministic 36-car aligned cascade at 333×515 kept the player and crash column visible, retained all 36 active wrecks, and produced no browser error.
+- Submission milestone: Devpost accepted the entry at approximately 1:43pm AEST on July 15, 2026. The confirmation banner and **SUBMITTED TO** state were captured, the public project URL returned HTTP 200 without cookies, and the entry remains editable until the deadline. The creator note now accurately credits entrant direction and OpenAI Codex implementation collaboration.
+- Final live mobile-sized proof: Devvit 0.0.5 completed and synced a Reddit-modal run at 1,778 score, 12 wrecks, x7 best combo, and 24 scrap, then rendered the Wreckpile/Blueprint Vote result screen cleanly; the production log stream returned no error entries for the run.
 
 ## Active TODO
 
-- Capture final live media and complete the external Devpost form before the deadline.
+- Resolve the player-facing title-clearance risk before the deadline: a separate
+  commercial game titled [`Ramageddon`](https://www.nintendo.com/en-ca/store/products/ramageddon-switch/)
+  is still listed on Nintendo platforms.
+- Keep the submitted entry and live judge surfaces available through judging;
+  optional video, native mobile, and two-account checks remain non-blocking.

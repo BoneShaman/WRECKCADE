@@ -22,6 +22,10 @@ need the game running as a Reddit Interactive Post.
 
 ## Current release evidence
 
+- Devpost accepted the submission on July 15, 2026 at approximately 1:43pm AEST.
+  The project page displays **Project submitted!** and **SUBMITTED TO**, remains
+  editable until the deadline, and is publicly reachable without session
+  cookies at `https://devpost.com/software/ramageddon`.
 - Devvit 0.0.5 is uploaded, installed, and serving the existing demo post.
 - Live desktop-browser validation loaded real daily/community state, entered the
   expanded game, and confirmed the final `0-0-5-webview` URL and signed Devvit
@@ -39,9 +43,12 @@ need the game running as a Reddit Interactive Post.
 - Reddit approved the demo community as Public. A fresh Firefox Private Browsing
   session, visibly signed out, loaded the exact post and its embedded RAMAGEDDON
   feed card.
-- A complete ordinary-user run, native Reddit mobile, two-account shared-state
-  testing, final live media, and Devpost submission remain open and are not
-  claimed by the ready-to-paste copy.
+- A final live mobile-sized 0.0.5 run completed at 1,778 score, 12 wrecks, x7
+  best combo, and 24 scrap; its result synced and rendered the Wreckpile and
+  Blueprint Vote flow without a corresponding production error log entry.
+- A complete ordinary-user run, native Reddit mobile, and two-account
+  shared-state testing remain recommended evidence rather than submission
+  blockers.
 
 ## Submission metadata
 

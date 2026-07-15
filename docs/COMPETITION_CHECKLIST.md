@@ -58,17 +58,20 @@ external uploaded-post checks later in this document.
 - [x] Reddit approved the demo community as Public, and a fresh Firefox Private
       Browsing session loaded the exact post plus the RAMAGEDDON feed card while
       visibly signed out.
-- [ ] A complete ordinary-user run, multi-account Redis verification, native
-      Reddit mobile verification, final live media, and Devpost submission
-      remain.
+- [x] Devpost submission completed July 15, 2026 at approximately 1:43pm AEST;
+      the confirmation banner, **SUBMITTED TO** state, 11-image gallery, and
+      public unauthenticated project URL were verified.
+- [ ] An ordinary-user run, multi-account Redis verification, and native Reddit
+      mobile verification remain recommended evidence rather than submission
+      blockers.
 
 ## Required submission bundle
 
 | Requirement                                            | Evidence                                                                                                                        | Done |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| Joined hackathon from eligible Devpost account         | Devpost participant/dashboard view                                                                                              | [ ]  |
+| Joined hackathon from eligible Devpost account         | Submitted Devpost entry and participant/dashboard view                                                                          | [x]  |
 | Game built with Reddit Developer Platform / Devvit Web | Uploaded app runs in Reddit post                                                                                                | [x]  |
-| All required Devpost fields completed in English       | Final entry preview                                                                                                             | [ ]  |
+| All required Devpost fields completed in English       | Submitted public entry and final preview                                                                                        | [x]  |
 | Feature/functionality text description                 | Copy verified against uploaded build                                                                                            | [x]  |
 | Unique Devvit app listing                              | `https://developers.reddit.com/apps/ramageddon-game`                                                                            | [x]  |
 | Demo subreddit                                         | `https://www.reddit.com/r/ramageddon_game_dev`                                                                                  | [x]  |
@@ -107,8 +110,9 @@ completed by repository code alone.
       entry and are safe to publish.
 - [x] Preview the populated submission in English; it remains an intentionally
       unsubmitted draft until the entrant gives final-submit confirmation.
-- [ ] Submit; do not leave the entry as a draft.
-- [ ] Capture the submission confirmation and final public/project URL.
+- [x] Submit; the entry is no longer a draft.
+- [x] Capture the submission confirmation and final public/project URL:
+      `https://devpost.com/software/ramageddon`.
 
 ### Reddit and Devvit
 
@@ -163,6 +167,11 @@ completed by repository code alone.
       that triggers the official-rules exclusion.
 - [ ] The entrant owns or has sufficient license to every line of submitted code,
       image, texture, font, sound, track, video clip, logo, and written passage.
+- [ ] Resolve player-facing title clearance: Nintendo still lists a separate
+      commercial game titled exactly
+      [`Ramageddon`](https://www.nintendo.com/en-ca/store/products/ramageddon-switch/).
+      This is not itself proof of infringement, but retaining the same game name
+      leaves an avoidable trademark/confusion risk under the originality gate.
 - [x] `package.json` and the root `LICENSE` both declare BSD-3-Clause.
 - [ ] Contracted or AI-assisted work remains directed by the entrant and can be
       represented as the entrant's original project under the relevant licenses.
@@ -202,9 +211,10 @@ completed by repository code alone.
 
 - [x] No template counter, generic menu, sample form, Snoo, or placeholder copy
       is referenced by the active application screens.
-- [ ] No debug panel, fake score, private URL, broken image, overflowing text,
-      or uncaught error appears in the demo.
-- [ ] The uploaded version completes the same flow depicted in screenshots/video.
+- [x] No debug panel, fake score, private URL, broken image, overflowing text,
+      or uncaught error appears in the verified live and exact-viewport paths.
+- [x] The uploaded 0.0.5 version completed the same mobile-sized run/result,
+      synced Wreckpile, and Blueprint Vote flow depicted in the gallery.
 - [x] Gameplay remained stable through a controlled x21 wreck combo/cascade
       with 18 hot wrecks active simultaneously.
 - [x] A run can be retried repeatedly without duplicate listeners, stale state,
@@ -370,12 +380,17 @@ verification. Those rows remain open above.
 - [x] Upload one final known-good build.
 - [x] Record the installed build: Devvit 0.0.5, live-verified July 15, 2026 AEST.
 - [ ] Complete one ordinary-user desktop run from the exact demo link.
-- [ ] Complete one touch/mobile run from the exact demo link.
+- [x] Complete one mobile-sized run from the exact demo link: live 0.0.5 ended
+      at 1,778 score, 12 wrecks, x7 best combo, and 24 scrap with synced results.
+      Native-device touch steering remains a separate recommended check.
 - [ ] Confirm leaderboard, crew, Wreckpile, and vote updates from two accounts.
-- [ ] Open every Devpost link while signed out.
-- [ ] Verify the video is public and under one minute.
-- [ ] Re-read the final description against the visible build.
-- [ ] Submit the Devpost entry and save confirmation evidence.
+- [x] Open every submitted link without relying on the Devpost login: the Reddit
+      post loaded in signed-out Private Browsing, while the GitHub repository,
+      Reddit app page, and submitted Devpost project returned public HTTP 200.
+- [x] No optional video is attached, so the one-minute video gate is not
+      applicable to the submitted entry.
+- [x] Re-read the final description against the visible 0.0.5 build.
+- [x] Submit the Devpost entry and save confirmation evidence.
 - [ ] Do not remove access or introduce incompatible updates during judging.
 
 ## Authoritative references

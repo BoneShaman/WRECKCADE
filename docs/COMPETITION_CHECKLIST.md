@@ -45,17 +45,18 @@ external uploaded-post checks later in this document.
       Audio 3 SFX; prompts, seeds, processing, and rejected clips are documented in
       `docs/AUDIO_PROVENANCE.md`, with no stock-library audio included.
 - [x] `npm run type-check`, `npm run lint`, and `npm run build` pass.
-- [x] Devvit 0.0.8 is uploaded and installed to `r/ramageddon_game_dev`; the CLI
+- [x] Devvit 0.0.9 is uploaded and installed to `r/ramageddon_game_dev`; the CLI
       install listing confirms it as the active version.
 - [x] A prior live desktop-browser validation confirmed the 0.0.5
       `0-0-5-webview` with real daily/community state. That production run
       started with active audio and produced an x7 opening wreck cascade; the
       preceding 0.0.2 audit entered a run and reached the first upgrade without
       a visible client error.
-- [x] Current 0.0.8 local QA covers exact 613×512 and 333×515 layouts, WASD/arrow
-      parity, visible `1`/`2`/`3` upgrade shortcuts, simulated two-thumb
-      steering-wheel/throttle-drift-shifter input, generated vehicle damage
-      states, barrel chains, sparse repairs, and the Road King victory path.
+- [x] Current 0.0.9 local QA covers exact 613×512 and 333×515 layouts, the
+      refreshed feed card, branded loader cycles, vote/wait-to-garage recovery,
+      repeated mouse/touch replay, keyboard-driven desktop wheel/shifter
+      telemetry, 140 base BODY, generated vehicle damage states, barrel chains,
+      sparse repairs, and the Road King victory path.
 - [x] Twelve constant-turn exploit runs across all six modifiers and five arenas
       produced zero wins. An offense-prioritized active policy destroyed the
       Road King at 175.03 seconds; the boss kill now ends the run immediately,
@@ -99,9 +100,9 @@ external uploaded-post checks later in this document.
 
 The rules recommend a judging post in a **public subreddit with fewer than 200
 members**. Reddit approved `r/ramageddon_game_dev` as Public on July 15, 2026.
-The exact WRECKCADE post, splash, launch action, and generated-car Crew Garage
-subsequently loaded in a visibly signed-out in-app browser through the live
-0.0.8 webview.
+The existing WRECKCADE post and refreshed splash subsequently loaded through the
+live 0.0.9 webview. A prior visibly signed-out 0.0.8 audit also activated the
+launch action and reached the generated-car Crew Garage inside Reddit.
 
 ## External account actions
 
@@ -161,14 +162,14 @@ completed by repository code alone.
 - [x] Authenticate the local CLI with `npm run login` (`u/BoneShaman`).
 - [x] Install the uploaded app to the dedicated playtest subreddit.
 - [ ] Test the generated post as developer, moderator, and ordinary user.
-- [x] Upload and install the known-good build as Devvit version 0.0.8; confirm
+- [x] Upload and install the known-good build as Devvit version 0.0.9; confirm
       the active install with the CLI listing.
 - [x] Copy the resulting `developers.reddit.com/apps/{app-name}` listing URL.
-- [x] Create **WRECKCADE: Daily Wreckpile**, a clean demonstration post that
-      launches 0.0.8.
-- [x] Open the exact new post in a visibly signed-out browser, confirm the
+- [x] Keep **WRECKCADE: Daily Wreckpile** as the single clean demonstration post;
+      it now serves 0.0.9 without creating a replacement post.
+- [x] Preserve the prior signed-out exact-post proof: confirm the
       `0-0-8-webview`, activate **WRECK THE HORDE**, and reach the generated-car
-      Crew Garage inside the Reddit modal.
+      Crew Garage inside the Reddit modal. The same post now serves 0.0.9.
 - [ ] If seeking normal public distribution, submit with `npm run launch` and
       monitor Reddit app review. Do not assume review will finish before the
       hackathon deadline.
@@ -221,8 +222,9 @@ completed by repository code alone.
 
 - [x] The game launches and finishes a complete run in a Reddit Interactive Post;
       the initial live build completed a synced run and 0.0.2 was separately
-      verified through its first upgrade. Devvit CLI confirms 0.0.8 as the active
-      install, and signed-out exact-post readback reaches its Crew Garage.
+      verified through its first upgrade. Devvit CLI confirms 0.0.9 as the active
+      install and live exact-post readback confirms its `0-0-9-webview`; the prior
+      signed-out 0.0.8 audit reached its Crew Garage.
 - [x] The client is Devvit Web, not a teaser that links to an external full game.
 - [x] Devvit is materially used for authenticated identity and shared Redis state.
 - [x] The menu/results surface daily community mechanics without the README.
@@ -252,8 +254,9 @@ completed by repository code alone.
 - [x] No debug panel, fake score, private URL, broken image, overflowing text,
       or uncaught error appears in the verified live and exact-viewport paths.
 - [x] The prior uploaded 0.0.5 version completed a mobile-sized run/result and
-      synced its Wreckpile and Blueprint Vote flow. Live 0.0.8 Reddit shell and
-      modal captures now occupy `docs/media/09-live-reddit-result.png` and
+      synced its Wreckpile and Blueprint Vote flow. The live 0.0.9 Reddit feed
+      now serves the refreshed collision-art shell; prior modal captures occupy
+      `docs/media/09-live-reddit-result.png` and
       `docs/media/10-live-reddit-feed.png`; the final 11-image WRECKCADE gallery
       and captions are installed and verified on the public Devpost page.
 - [x] Gameplay remained stable through a controlled x21 wreck combo/cascade
@@ -421,24 +424,26 @@ verification. Those rows remain open above.
 
 - [x] Freeze feature work; change only submission blockers.
 - [x] Upload one final known-good build.
-- [x] Record the installed build: Devvit 0.0.8, confirmed active by the CLI
+- [x] Record the installed build: Devvit 0.0.9, confirmed active by the CLI
       install listing on July 15, 2026 AEST.
 - [ ] Complete one ordinary-user desktop run from the exact demo link.
 - [x] Complete one mobile-sized run from the exact demo link: live 0.0.5 ended
       at 1,778 score, 12 wrecks, x7 best combo, and 24 scrap with synced results.
       Native-device touch steering remains a separate recommended check.
-- [ ] Complete and sync a live mobile-sized 0.0.8 run from the WRECKCADE post.
+- [ ] Complete and sync a live mobile-sized 0.0.9 run from the WRECKCADE post.
 - [ ] Confirm leaderboard, crew, Wreckpile, and vote updates from two accounts.
-- [x] Open the new WRECKCADE post without relying on a Reddit login and verify its
-      0.0.8 splash, launch action, and Crew Garage inside the Reddit modal.
+- [x] Open the WRECKCADE post without relying on a Reddit login and verify its
+      splash, launch action, and Crew Garage inside the prior 0.0.8 Reddit modal;
+      live authenticated readback now confirms the refreshed 0.0.9 feed shell.
 - [x] Complete the final public-surface audit: the exact WRECKCADE post passed
-      signed-out 0.0.8 verification, the refreshed Devpost page passed its
+      signed-out 0.0.8 expanded verification and current 0.0.9 feed verification,
+      the refreshed Devpost page passed its
       signed-out visual check, and the current Devvit profile displays the exact
       final metadata and policy links.
 - [x] No optional video is attached, so the one-minute video gate is not
       applicable to the submitted entry.
 - [x] The earlier submitted description was read against the visible 0.0.5 build.
-- [x] Re-read the refreshed WRECKCADE description against the live 0.0.8 post.
+- [x] Re-read the refreshed WRECKCADE description against the live 0.0.9 post.
 - [x] Submit the Devpost entry and save confirmation evidence.
 - [ ] Do not remove access or introduce incompatible updates during judging.
 

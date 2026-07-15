@@ -20,11 +20,14 @@ leaderboards, and **Blueprint Vote** are the engine around it.
 > client and Hono/Redis server pass type-check, lint, and production build.
 > Controlled playtesting reached first impact in under five seconds, first
 > level-up at 21.6 seconds, and a confirmed x21 wreck combo/cascade with 18 hot
-> wrecks active simultaneously. Devvit CLI verification reports version 0.0.8
-> installed to the public demo subreddit. A visibly signed-out browser opened
-> the exact WRECKCADE post, confirmed its `0-0-8-webview`, rendered the live
-> splash, launched **WRECK THE HORDE**, and reached the generated-car Crew Garage
-> inside the Reddit modal. The public repository is renamed to WRECKCADE and its
+> wrecks active simultaneously. Devvit CLI verification reports version 0.0.9
+> installed to the public demo subreddit, and live readback of the existing post
+> confirms its `0-0-9-webview` and refreshed collision-art splash. The 0.0.9
+> release gate covers branded cold/scene loading, vote/wait-to-garage recovery,
+> repeated mouse/touch replay, desktop keyboard telemetry, and the 140-BODY base
+> tune without a browser error. A prior visibly signed-out 0.0.8 audit launched
+> **WRECK THE HORDE** and reached the generated-car Crew Garage inside the Reddit
+> modal. The public repository is renamed to WRECKCADE and its
 > current tree is published on `origin/main`. The public Devpost page displays
 > WRECKCADE, all 11 final captioned images, the live/project links, and its
 > **SUBMITTED TO** state; the project editor remains **SUBMITTED 5/5**.

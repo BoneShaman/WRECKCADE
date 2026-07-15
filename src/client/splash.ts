@@ -25,7 +25,11 @@ const FALLBACK: LaunchData = {
   username: context?.username ?? 'DRIVER',
 };
 
+const launchCard = requireElement<HTMLElement>('launch-card');
 const startButton = requireElement<HTMLButtonElement>('start-button');
+const buttonLabel = requireElement<HTMLSpanElement>('button-label');
+const launchTransition = requireElement<HTMLDivElement>('launch-transition');
+const launchRecovery = requireElement<HTMLParagraphElement>('launch-recovery');
 const pilotName = requireElement<HTMLSpanElement>('pilot-name');
 const arenaName = requireElement<HTMLParagraphElement>('arena-name');
 const arenaModifier = requireElement<HTMLParagraphElement>('arena-mod');
@@ -35,9 +39,77 @@ const goalFill = requireElement<HTMLSpanElement>('goal-fill');
 const leaderList = requireElement<HTMLOListElement>('leader-list');
 const dataSignal = requireElement<HTMLSpanElement>('data-signal');
 
+const LAUNCH_WATCHDOG_MS = 10_000;
+let launchWatchdog: number | undefined;
+let launchInFlight = false;
+let launchLeftInlineView = false;
+
 startButton.addEventListener('click', (event) => {
-  requestExpandedMode(event, 'game');
+  if (launchInFlight) return;
+
+  setLaunching();
+
+  try {
+    // This must remain inside the trusted click handler for Reddit to accept
+    // the expanded-mode request. The visual state above paints immediately
+    // while the new webview and game assets are being prepared.
+    requestExpandedMode(event, 'game');
+  } catch (error) {
+    console.info(
+      'Crew Garage could not open; the launch remains retryable.',
+      error
+    );
+    recoverLaunch('GARAGE LINK MISFIRED — TAP TO RETRY');
+  }
 });
+
+document.addEventListener('visibilitychange', () => {
+  if (!launchInFlight) return;
+
+  if (document.hidden) {
+    launchLeftInlineView = true;
+  } else if (launchLeftInlineView) {
+    recoverLaunch();
+  }
+});
+
+window.addEventListener('pageshow', () => {
+  if (launchInFlight && launchLeftInlineView) recoverLaunch();
+});
+
+function setLaunching(): void {
+  launchInFlight = true;
+  launchLeftInlineView = false;
+  launchCard.classList.remove('launch-failed');
+  launchCard.classList.add('is-launching');
+  startButton.disabled = true;
+  startButton.setAttribute('aria-busy', 'true');
+  buttonLabel.textContent = 'OPENING GARAGE…';
+  launchRecovery.textContent = '';
+  launchTransition.setAttribute('aria-hidden', 'false');
+
+  if (launchWatchdog !== undefined) window.clearTimeout(launchWatchdog);
+  launchWatchdog = window.setTimeout(() => {
+    recoverLaunch('GARAGE LINK STALLED — TAP TO RETRY');
+  }, LAUNCH_WATCHDOG_MS);
+}
+
+function recoverLaunch(message = ''): void {
+  launchInFlight = false;
+  launchLeftInlineView = false;
+  launchCard.classList.remove('is-launching');
+  launchCard.classList.toggle('launch-failed', Boolean(message));
+  startButton.disabled = false;
+  startButton.removeAttribute('aria-busy');
+  buttonLabel.textContent = message ? 'RETRY GARAGE' : 'WRECK THE HORDE';
+  launchRecovery.textContent = message;
+  launchTransition.setAttribute('aria-hidden', 'true');
+
+  if (launchWatchdog !== undefined) {
+    window.clearTimeout(launchWatchdog);
+    launchWatchdog = undefined;
+  }
+}
 
 function requireElement<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);

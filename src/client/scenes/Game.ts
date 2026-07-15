@@ -2,6 +2,11 @@ import * as Phaser from 'phaser';
 import { GameObjects, Scene } from 'phaser';
 import { audio } from '../systems/AudioDirector';
 import {
+  bindBootOverlayToLoader,
+  hideBootOverlayAfterPaint,
+  showBootOverlay,
+} from '../systems/bootOverlay';
+import {
   offlineCommunityState,
   startRunSession,
   submitRun,
@@ -476,6 +481,7 @@ export class Game extends Scene {
   private touchMuteText: GameObjects.Text;
   private touchDriveText: GameObjects.Text;
   private touchDriftText: GameObjects.Text;
+  private desktopTelemetryText: GameObjects.Text;
   private modalTexts: GameObjects.Text[] = [];
   private floatTexts: FloatingText[] = [];
   private keys: ControlKeys;
@@ -561,6 +567,9 @@ export class Game extends Scene {
   private touchSteer = 0;
   private touchThrottle = false;
   private touchDrift = false;
+  private desktopWheelSteer = 0;
+  private desktopShifterX = 0;
+  private desktopShifterY = 0;
   private touchWheelCenterX = 0;
   private touchWheelCenterY = 0;
   private touchShifterCenterX = 0;
@@ -585,6 +594,7 @@ export class Game extends Scene {
   }
 
   preload(): void {
+    bindBootOverlayToLoader(this.load, 'ARMING THE SCRAPSTORM');
     this.load.image(
       'arena-floor-v1',
       new URL('../../../assets/visuals/arena-floor-v1.webp', import.meta.url)
@@ -655,7 +665,7 @@ export class Game extends Scene {
       .setOrigin(0.5, 0)
       .setDepth(120);
     this.hpText = this.add
-      .text(0, 0, 'BODY 100 / 100', {
+      .text(0, 0, 'BODY 140 / 140', {
         fontFamily: monoFont,
         fontSize: '15px',
         color: '#f7f3df',
@@ -744,6 +754,16 @@ export class Game extends Scene {
         color: '#ffc928',
       })
       .setOrigin(0.5)
+      .setDepth(125)
+      .setVisible(false);
+    this.desktopTelemetryText = this.add
+      .text(0, 0, 'STEER         GEAR', {
+        fontFamily: monoFont,
+        fontSize: '9px',
+        color: '#8fa3b8',
+        letterSpacing: 1,
+      })
+      .setOrigin(0.5, 0)
       .setDepth(125)
       .setVisible(false);
     this.announcementText = this.add
@@ -937,6 +957,7 @@ export class Game extends Scene {
         collectPersistentRepair: () => this.qaCollectPersistentRepair(),
       });
     }
+    hideBootOverlayAfterPaint();
   }
 
   private qaShowVehicleDamage(tier: number): void {
@@ -1099,7 +1120,7 @@ export class Game extends Scene {
     const tierBonus = clamp(this.meta.community.tier, 0, 6);
     const crewHp = this.crew === 'iron' ? 20 : 0;
     const blueprintHp = this.meta.communityUpgrade === 'armor' ? 15 : 0;
-    const maxHp = 100 + crewHp + blueprintHp + tierBonus * 2;
+    const maxHp = 140 + crewHp + blueprintHp + tierBonus * 2;
     this.player = {
       x: WORLD_WIDTH / 2,
       y: WORLD_HEIGHT / 2,
@@ -1154,6 +1175,9 @@ export class Game extends Scene {
     this.touchSteer = 0;
     this.touchThrottle = false;
     this.touchDrift = false;
+    this.desktopWheelSteer = 0;
+    this.desktopShifterX = 0;
+    this.desktopShifterY = 0;
     this.previousDrift = false;
     this.voteChoice = null;
     this.runSubmitted = false;
@@ -1440,6 +1464,7 @@ export class Game extends Scene {
   }
 
   private step(dt: number): void {
+    this.updateDesktopInputTelemetry(dt);
     if (this.hitStop > 0) {
       this.hitStop -= dt;
       this.updateParticles(dt * 0.25);
@@ -1500,6 +1525,35 @@ export class Game extends Scene {
       drift:
         this.touchDrift || this.keys.drift.isDown || this.keys.driftAlt.isDown,
     };
+  }
+
+  private updateDesktopInputTelemetry(dt: number): void {
+    if (this.showTouchControls || this.mode !== 'playing') return;
+    const keyboardThrottle =
+      (this.keys.up.isDown || this.keys.upAlt.isDown ? 1 : 0) -
+      (this.keys.down.isDown || this.keys.downAlt.isDown ? 1 : 0);
+    const keyboardSteer =
+      (this.keys.right.isDown || this.keys.rightAlt.isDown ? 1 : 0) -
+      (this.keys.left.isDown || this.keys.leftAlt.isDown ? 1 : 0);
+    const drift = this.keys.drift.isDown || this.keys.driftAlt.isDown;
+    const wheelResponse = 1 - Math.exp(-dt * 14);
+    const shifterResponse = 1 - Math.exp(-dt * 18);
+    this.desktopWheelSteer = lerp(
+      this.desktopWheelSteer,
+      keyboardSteer,
+      wheelResponse
+    );
+    if (drift) {
+      this.desktopShifterX = -1;
+      this.desktopShifterY = -1;
+    } else {
+      this.desktopShifterX = lerp(this.desktopShifterX, 0, shifterResponse);
+      this.desktopShifterY = lerp(
+        this.desktopShifterY,
+        -keyboardThrottle,
+        shifterResponse
+      );
+    }
   }
 
   private maxSpeed(): number {
@@ -4524,6 +4578,109 @@ export class Game extends Scene {
       this.touchDriveText.setVisible(false);
       this.touchDriftText.setVisible(false);
     }
+    const showDesktopTelemetry =
+      !this.showTouchControls && this.mode === 'playing';
+    this.desktopTelemetryText
+      .setPosition(102, Math.max(88, height - 132) + 7)
+      .setVisible(showDesktopTelemetry);
+    if (showDesktopTelemetry) this.drawDesktopInputTelemetry(graphics);
+  }
+
+  private drawDesktopInputTelemetry(graphics: GameObjects.Graphics): void {
+    const panelX = 14;
+    const panelY = Math.max(88, this.scale.height - 132);
+    const panelWidth = 176;
+    const panelHeight = 80;
+    const drift = this.keys.drift.isDown || this.keys.driftAlt.isDown;
+    this.drawScrapPlate(
+      graphics,
+      new Phaser.Geom.Rectangle(panelX, panelY, panelWidth, panelHeight),
+      0x07090a,
+      drift ? 0xf15bb5 : 0x516775,
+      2,
+      0.76
+    );
+
+    const wheelX = panelX + 42;
+    const wheelY = panelY + 49;
+    const wheelActive = Math.abs(this.desktopWheelSteer) > 0.04;
+    graphics.fillStyle(0x030506, 0.9).fillCircle(wheelX, wheelY, 25);
+    graphics.lineStyle(4, 0x182229, 0.96).strokeCircle(wheelX, wheelY, 22);
+    graphics
+      .lineStyle(2, 0x2ef2e2, wheelActive ? 0.92 : 0.38)
+      .strokeCircle(wheelX, wheelY, 24);
+    const wheelRotation = this.desktopWheelSteer * Math.PI * 0.46;
+    graphics.lineStyle(4, 0x8fa3b8, wheelActive ? 0.92 : 0.6);
+    for (let index = 0; index < 3; index += 1) {
+      const angle = wheelRotation - Math.PI / 2 + (index * Math.PI * 2) / 3;
+      graphics.lineBetween(
+        wheelX + Math.cos(angle) * 7,
+        wheelY + Math.sin(angle) * 7,
+        wheelX + Math.cos(angle) * 19,
+        wheelY + Math.sin(angle) * 19
+      );
+    }
+    graphics
+      .fillStyle(wheelActive ? 0x2ef2e2 : 0x26343d, 1)
+      .fillCircle(wheelX, wheelY, 8);
+    graphics.lineStyle(1.5, 0xf7f3df, 0.58).strokeCircle(wheelX, wheelY, 8);
+    const steerIndicatorX = wheelX + this.desktopWheelSteer * 18;
+    graphics
+      .fillStyle(0x2ef2e2, wheelActive ? 0.96 : 0.32)
+      .fillTriangle(
+        steerIndicatorX - 4,
+        panelY + 19,
+        steerIndicatorX + 4,
+        panelY + 19,
+        steerIndicatorX,
+        panelY + 24
+      );
+
+    graphics
+      .lineStyle(1, 0xf7f3df, 0.12)
+      .lineBetween(panelX + 88, panelY + 17, panelX + 88, panelY + 70);
+    const mainGateX = panelX + 141;
+    const driftGateX = mainGateX - 30;
+    const forwardY = panelY + 31;
+    const neutralY = panelY + 50;
+    const reverseY = panelY + 69;
+    graphics.lineStyle(9, 0x020304, 0.96).beginPath();
+    graphics.moveTo(mainGateX, reverseY);
+    graphics.lineTo(mainGateX, forwardY);
+    graphics.lineTo(driftGateX, forwardY);
+    graphics.strokePath();
+    graphics
+      .lineStyle(3, 0x8fa3b8, 0.52)
+      .lineBetween(mainGateX, reverseY, mainGateX, forwardY);
+    graphics
+      .lineStyle(3, 0xf15bb5, drift ? 0.98 : 0.4)
+      .lineBetween(mainGateX, forwardY, driftGateX, forwardY);
+    graphics.fillStyle(0xffc928, 0.5).fillCircle(mainGateX, forwardY, 4);
+    graphics.fillStyle(0x8fa3b8, 0.34).fillCircle(mainGateX, neutralY, 4);
+    graphics.fillStyle(0xff6b35, 0.5).fillCircle(mainGateX, reverseY, 4);
+    graphics
+      .fillStyle(0xf15bb5, drift ? 1 : 0.46)
+      .fillCircle(driftGateX, forwardY, 5);
+
+    const driftAmount = clamp(-this.desktopShifterX, 0, 1);
+    const shifterKnobX = lerp(mainGateX, driftGateX, driftAmount);
+    const shifterKnobY = neutralY + this.desktopShifterY * 19;
+    const shifterColor = drift
+      ? 0xf15bb5
+      : this.desktopShifterY < -0.12
+        ? 0xffc928
+        : this.desktopShifterY > 0.12
+          ? 0xff6b35
+          : 0x26343d;
+    graphics
+      .fillStyle(shifterColor, 1)
+      .fillCircle(shifterKnobX, shifterKnobY, 10);
+    graphics
+      .lineStyle(2, 0xf7f3df, drift ? 0.92 : 0.62)
+      .strokeCircle(shifterKnobX, shifterKnobY, 10);
+    graphics
+      .lineStyle(2, 0x080b12, 0.76)
+      .strokeCircle(shifterKnobX, shifterKnobY, 4);
   }
 
   private drawTouchControls(graphics: GameObjects.Graphics): void {
@@ -5873,11 +6030,13 @@ export class Game extends Scene {
   }
 
   private restartRun(): void {
+    showBootOverlay('RUNNING IT BACK');
     this.clearModal();
     this.scene.restart({ crew: this.crew, meta: this.meta });
   }
 
   private returnToMenu(): void {
+    showBootOverlay('ROLLING INTO THE CREW GARAGE');
     this.clearModal();
     this.scene.start('MainMenu');
   }
@@ -6033,6 +6192,17 @@ export class Game extends Scene {
         fullscreen: 'F',
         choose: '1, 2, 3 or pointer',
         touchControlsVisible: this.showTouchControls,
+        desktopTelemetryVisible:
+          !this.showTouchControls && this.mode === 'playing',
+        desktopTelemetry:
+          !this.showTouchControls && this.mode === 'playing'
+            ? {
+                wheelSteer: Number(this.desktopWheelSteer.toFixed(3)),
+                shifterX: Number(this.desktopShifterX.toFixed(3)),
+                shifterY: Number(this.desktopShifterY.toFixed(3)),
+                driftGate: this.keys.drift.isDown || this.keys.driftAlt.isDown,
+              }
+            : null,
         touch: this.showTouchControls
           ? 'fixed left steering wheel, hold right shifter for throttle, slide it left for drift'
           : null,

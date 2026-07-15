@@ -13,6 +13,30 @@
   <body>
     <main id="app" aria-label="WRECKCADE game">
       <div id="game-container"></div>
+      <section
+        class="boot-loader"
+        id="boot-loader"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-busy="true"
+      >
+        <div class="boot-loader__panel">
+          <p class="boot-loader__kicker">
+            <span aria-hidden="true"></span>PIT CREW // LIVE
+          </p>
+          <p class="boot-loader__logo" aria-label="WRECKCADE">
+            <span>WRECK</span><strong>CADE</strong>
+          </p>
+          <p class="boot-loader__message" id="boot-message">
+            OPENING CREW GARAGE
+          </p>
+          <div class="boot-loader__track" aria-hidden="true">
+            <span></span>
+          </div>
+          <p class="boot-loader__hook">WRECKS BECOME WEAPONS.</p>
+        </div>
+      </section>
     </main>
     <script type="module" src="game.ts"></script>
   </body>

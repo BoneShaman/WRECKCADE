@@ -2,6 +2,11 @@ import * as Phaser from 'phaser';
 import { GameObjects, Scene } from 'phaser';
 import { audio } from '../systems/AudioDirector';
 import {
+  bindBootOverlayToLoader,
+  hideBootOverlayAfterPaint,
+  showBootOverlay,
+} from '../systems/bootOverlay';
+import {
   deletePlayerData,
   loadCommunityState,
   offlineCommunityState,
@@ -104,6 +109,7 @@ export class MainMenu extends Scene {
   }
 
   preload(): void {
+    bindBootOverlayToLoader(this.load, 'OPENING CREW GARAGE');
     this.load.image(GARAGE_BACKDROP_KEY, GARAGE_BACKDROP_URL);
     this.load.spritesheet(VEHICLE_ATLAS_KEY, VEHICLE_ATLAS_URL, {
       frameWidth: 128,
@@ -114,6 +120,9 @@ export class MainMenu extends Scene {
   create(): void {
     this.alive = true;
     this.metaReady = false;
+    this.deleteConfirmUntil = 0;
+    this.deletingData = false;
+    this.cardRects = [];
     this.cameras.main.setBackgroundColor(0x080b12);
     this.backdrop = this.add
       .image(0, 0, GARAGE_BACKDROP_KEY)
@@ -168,18 +177,16 @@ export class MainMenu extends Scene {
       })
       .setOrigin(0.5);
 
-    for (const crew of CREWS) {
-      this.crewTexts.push(
-        this.add
-          .text(0, 0, `${crew.name}\n${crew.perk}`, {
-            ...textStyle(18, crew.colorCss, 'center'),
-            fontFamily: 'Impact, Haettenschweiler, sans-serif',
-            lineSpacing: 8,
-          })
-          .setOrigin(0.5)
-          .setDepth(3)
-      );
-    }
+    this.crewTexts = CREWS.map((crew) =>
+      this.add
+        .text(0, 0, `${crew.name}\n${crew.perk}`, {
+          ...textStyle(18, crew.colorCss, 'center'),
+          fontFamily: 'Impact, Haettenschweiler, sans-serif',
+          lineSpacing: 8,
+        })
+        .setOrigin(0.5)
+        .setDepth(3)
+    );
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) =>
       this.handlePointer(pointer)
@@ -246,6 +253,7 @@ export class MainMenu extends Scene {
       this.elapsed += milliseconds / 1000;
       this.draw();
     };
+    hideBootOverlayAfterPaint();
   }
 
   override update(_time: number, delta: number): void {
@@ -285,6 +293,7 @@ export class MainMenu extends Scene {
 
   private startRun(): void {
     if (!this.metaReady) return;
+    showBootOverlay('UNLOCKING THE SCRAPSTORM');
     audio.ensure();
     this.scene.start('Game', {
       crew: CREWS[this.selectedCrew]?.id ?? 'iron',

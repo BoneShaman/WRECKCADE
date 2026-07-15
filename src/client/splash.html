@@ -6,35 +6,15 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#171411" />
+    <meta name="theme-color" content="#07101a" />
     <link rel="stylesheet" href="splash.css" />
     <title>WRECKCADE — Wrecks Become Weapons</title>
   </head>
   <body>
-    <main class="launch-card" aria-labelledby="game-title">
-      <div class="arena-art" aria-hidden="true">
-        <div class="floodlight floodlight-left"></div>
-        <div class="floodlight floodlight-right"></div>
-        <div class="skid skid-one"></div>
-        <div class="skid skid-two"></div>
-        <div class="dust dust-one"></div>
-        <div class="dust dust-two"></div>
-        <div class="hero-car">
-          <span class="wheel wheel-front-top"></span>
-          <span class="wheel wheel-front-bottom"></span>
-          <span class="wheel wheel-back-top"></span>
-          <span class="wheel wheel-back-bottom"></span>
-          <span class="car-shell">
-            <span class="windshield"></span>
-            <span class="number-plate">13</span>
-          </span>
-          <span class="ram-bar"></span>
-          <span class="exhaust"></span>
-        </div>
-        <span class="spark spark-one"></span>
-        <span class="spark spark-two"></span>
-        <span class="spark spark-three"></span>
-        <span class="impact-word">KRAK!</span>
+    <main id="launch-card" class="launch-card" aria-labelledby="game-title">
+      <div class="key-art" aria-hidden="true">
+        <img class="key-art-image" src="../../assets/app-icon.png" alt="" />
+        <span class="art-callout">WRECKS BECOME WEAPONS</span>
       </div>
 
       <section class="hero-copy" aria-label="Game introduction">
@@ -57,13 +37,14 @@
           type="button"
           aria-describedby="launch-hint"
         >
-          <span class="button-label">WRECK THE HORDE</span>
-          <span class="button-arrow" aria-hidden="true">›</span>
+          <span class="button-label" id="button-label">WRECK THE HORDE</span>
+          <span class="button-arrow" aria-hidden="true">→</span>
         </button>
         <p class="launch-hint" id="launch-hint">
           <span id="pilot-name">DRIVER</span>, your engine is hot. One run.
           Maximum carnage.
         </p>
+        <p class="launch-recovery" id="launch-recovery" aria-live="polite"></p>
       </section>
 
       <aside
@@ -114,6 +95,21 @@
       <p class="build-stamp" aria-hidden="true">
         NO BRAKES • NO MERCY • DAILY MAYHEM
       </p>
+
+      <div
+        class="launch-transition"
+        id="launch-transition"
+        role="status"
+        aria-live="assertive"
+        aria-hidden="true"
+      >
+        <div class="transition-card">
+          <span class="transition-kicker">WRECKCADE SYSTEMS</span>
+          <strong>OPENING GARAGE…</strong>
+          <span class="transition-track" aria-hidden="true"><i></i></span>
+          <small>WARMING TYRES&nbsp; • &nbsp;LOADING CREWS</small>
+        </div>
+      </div>
     </main>
 
     <noscript>This game needs JavaScript enabled to enter the arena.</noscript>

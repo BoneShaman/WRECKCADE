@@ -21,6 +21,10 @@ body,
   background: #080b12;
 }
 
+#app {
+  position: relative;
+}
+
 body {
   touch-action: none;
   user-select: none;
@@ -33,4 +37,193 @@ canvas {
   height: 100%;
   touch-action: none;
   outline: none;
+}
+
+.boot-loader {
+  --boot-progress: 7%;
+  position: absolute;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(20px, 6vw, 72px);
+  color: #f7f3df;
+  background:
+    linear-gradient(112deg, rgba(8, 11, 18, 0.1) 0 47%, #080b12 78%),
+    radial-gradient(
+      circle at 18% 28%,
+      rgba(255, 201, 40, 0.18),
+      transparent 31%
+    ),
+    repeating-linear-gradient(
+      118deg,
+      transparent 0 34px,
+      rgba(247, 243, 223, 0.025) 35px 36px
+    ),
+    #11141a;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 180ms ease,
+    visibility 0s linear 0s;
+}
+
+.boot-loader::before,
+.boot-loader::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.boot-loader::before {
+  inset: clamp(8px, 1.8vw, 18px);
+  border: 2px solid rgba(255, 201, 40, 0.58);
+  box-shadow:
+    inset 0 0 48px rgba(0, 0, 0, 0.7),
+    0 0 0 clamp(5px, 1vw, 10px) #080b12;
+}
+
+.boot-loader::after {
+  right: -8vw;
+  bottom: -22vh;
+  width: min(58vw, 720px);
+  aspect-ratio: 1;
+  border: clamp(22px, 6vw, 74px) solid rgba(255, 107, 53, 0.13);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 clamp(18px, 5vw, 62px) rgba(46, 242, 226, 0.055),
+    inset 0 0 0 7px rgba(8, 11, 18, 0.72);
+  animation: boot-wheel 1.7s linear infinite;
+}
+
+.boot-loader.is-hidden {
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 180ms ease,
+    visibility 0s linear 180ms;
+}
+
+.boot-loader__panel {
+  position: relative;
+  z-index: 1;
+  width: min(780px, 100%);
+  transform: skew(-2deg);
+}
+
+.boot-loader__kicker,
+.boot-loader__message,
+.boot-loader__hook {
+  margin: 0;
+  font-family: ui-monospace, Menlo, monospace;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.boot-loader__kicker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #ffc928;
+  font-size: clamp(9px, 1.3vw, 13px);
+}
+
+.boot-loader__kicker span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ff6b35;
+  box-shadow: 0 0 12px #ff6b35;
+  animation: boot-live 800ms steps(2, end) infinite;
+}
+
+.boot-loader__logo {
+  margin: clamp(7px, 1.5vh, 13px) 0 0;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(62px, 15vw, 164px);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.78;
+  text-transform: uppercase;
+  white-space: nowrap;
+  filter: drop-shadow(7px 8px 0 #050608);
+}
+
+.boot-loader__logo span,
+.boot-loader__logo strong {
+  display: inline-block;
+}
+
+.boot-loader__logo strong {
+  color: #ffc928;
+  font-weight: inherit;
+}
+
+.boot-loader__message {
+  width: fit-content;
+  margin: clamp(18px, 4vh, 34px) 0 9px;
+  padding: 5px 9px 6px;
+  color: #080b12;
+  background: #ff6b35;
+  box-shadow: 4px 4px 0 #050608;
+  font-size: clamp(10px, 1.8vw, 16px);
+}
+
+.boot-loader__track {
+  width: min(560px, 100%);
+  height: 14px;
+  overflow: hidden;
+  border: 3px solid #050608;
+  background: #282b31;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+.boot-loader__track span {
+  display: block;
+  width: var(--boot-progress);
+  height: 100%;
+  min-width: 7%;
+  background: repeating-linear-gradient(
+    135deg,
+    #ffc928 0 9px,
+    #ff6b35 10px 17px,
+    #080b12 18px 20px
+  );
+  transition: width 180ms ease-out;
+  animation: boot-hazard 500ms linear infinite;
+}
+
+.boot-loader__hook {
+  margin-top: 13px;
+  color: #2ef2e2;
+  font-size: clamp(9px, 1.4vw, 12px);
+}
+
+@keyframes boot-live {
+  50% {
+    opacity: 0.38;
+  }
+}
+
+@keyframes boot-hazard {
+  to {
+    background-position: 40px 0;
+  }
+}
+
+@keyframes boot-wheel {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-loader__kicker span,
+  .boot-loader__track span,
+  .boot-loader::after {
+    animation: none;
+  }
 }

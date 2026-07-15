@@ -7,20 +7,21 @@ must be added here with its creator, source, and license before release.
 
 ## Original production work
 
-| Component                                                                                                | Source in this project                                                    | Creator / owner                                               | Rights status                                                                                                                                                          |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phaser gameplay rendering, cars, enemies, wrecks, props, particles, HUD, cards, and results presentation | `src/client/scenes/`                                                      | RAMAGEDDON contributors                                       | Original code-native artwork; BSD-3-Clause project license                                                                                                             |
-| Interactive-post launch art, logo treatment, hero car, skid marks, pit board, and responsive layout      | `src/client/splash.html`, `src/client/splash.css`, `src/client/splash.ts` | RAMAGEDDON contributors                                       | Original HTML/CSS/TypeScript artwork; BSD-3-Clause project license                                                                                                     |
-| Engine, drift, collision, weapon, pickup, upgrade, and result audio                                      | `src/client/systems/AudioDirector.ts`                                     | RAMAGEDDON contributors                                       | Synthesized at runtime with WebAudio; no sampled or recorded third-party audio                                                                                         |
-| Game simulation, server APIs, Redis persistence, daily challenge systems, and shared types               | `src/client/`, `src/server/`, `src/shared/`                               | RAMAGEDDON contributors                                       | Original code; BSD-3-Clause project license                                                                                                                            |
-| Reddit app icon                                                                                          | `assets/app-icon.png`                                                     | RAMAGEDDON contributors with OpenAI built-in image generation | Entrant-directed original prompt with no input/reference images; generated for this project, then resized and palette-compressed to Devvit's 1024px/500 KB requirement |
-| Competition screenshots                                                                                  | `docs/media/`                                                             | RAMAGEDDON contributors                                       | Captures of the original code-native runtime; final selection remains subject to the submission claims and QA gates                                                    |
+| Component                                                                                                | Source in this project                                                    | Creator / owner                                               | Rights status                                                                                                                                                                |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phaser gameplay rendering, cars, enemies, wrecks, props, particles, HUD, cards, and results presentation | `src/client/scenes/`                                                      | RAMAGEDDON contributors                                       | Original code-native artwork; BSD-3-Clause project license                                                                                                                   |
+| Interactive-post launch art, logo treatment, hero car, skid marks, pit board, and responsive layout      | `src/client/splash.html`, `src/client/splash.css`, `src/client/splash.ts` | RAMAGEDDON contributors                                       | Original HTML/CSS/TypeScript artwork; BSD-3-Clause project license                                                                                                           |
+| Engine, drift, collision, weapon, pickup, upgrade, and result audio                                      | `src/client/systems/AudioDirector.ts`, `assets/audio/`                    | RAMAGEDDON contributors using local Stable Audio 3 SFX        | Original hybrid of runtime WebAudio and entrant-directed generated samples edited for this game; no stock or third-party sound-library audio; see `docs/AUDIO_PROVENANCE.md` |
+| Game simulation, server APIs, Redis persistence, daily challenge systems, and shared types               | `src/client/`, `src/server/`, `src/shared/`                               | RAMAGEDDON contributors                                       | Original code; BSD-3-Clause project license                                                                                                                                  |
+| Reddit app icon                                                                                          | `assets/app-icon.png`                                                     | RAMAGEDDON contributors with OpenAI built-in image generation | Entrant-directed original prompt with no input/reference images; generated for this project, then resized and palette-compressed to Devvit's 1024px/500 KB requirement       |
+| Competition screenshots                                                                                  | `docs/media/`                                                             | RAMAGEDDON contributors                                       | Captures of the original code-native runtime; final selection remains subject to the submission claims and QA gates                                                          |
 
 RAMAGEDDON's active game runtime does not ship raster sprites, texture packs,
-recorded sound effects, music, or generated gameplay artwork. Active visuals
-are drawn by Phaser or HTML/CSS, and active sound is synthesized in the
-browser. The separately listed generated PNG is used only as the Reddit app
-directory/profile icon.
+stock recordings, third-party sound effects, music, or generated gameplay
+artwork. Active visuals are drawn by Phaser or HTML/CSS. Active sound combines
+responsive browser synthesis with the original locally generated and
+post-processed layers documented in `docs/AUDIO_PROVENANCE.md`. The separately
+listed generated PNG is used only as the Reddit app directory/profile icon.
 
 The UI uses system font stacks such as `Impact`, `Haettenschweiler`,
 `Arial Narrow Bold`, `Menlo`, `ui-monospace`, and generic sans-serif/monospace
@@ -85,5 +86,5 @@ find dist/client -maxdepth 2 -type f -print
 ```
 
 The first search should return no matches. The file listing should contain only
-the RAMAGEDDON HTML, CSS, JavaScript, source-map, and preload outputs expected by
-the Devvit build.
+the RAMAGEDDON HTML, CSS, JavaScript, source-map, WAV, and preload outputs
+expected by the Devvit build.

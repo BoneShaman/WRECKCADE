@@ -65,6 +65,7 @@ type PlayerState = {
   overdriveTimer: number;
   forwardSpeed: number;
   drifting: boolean;
+  driftIntensity: number;
 };
 
 type Enemy = {
@@ -90,6 +91,7 @@ type Enemy = {
   phase: number;
   chargeCooldown: number;
   chargeTelegraph: number;
+  chargeAngle: number;
   alive: boolean;
 };
 
@@ -107,6 +109,7 @@ type Wreck = {
   chain: number;
   power: number;
   color: number;
+  trailTimer: number;
   hitIds: Set<number>;
 };
 
@@ -147,6 +150,19 @@ type Particle = {
   size: number;
   drag: number;
   gravity: number;
+  kind?: 'spark' | 'chunk' | 'smoke' | 'tyre';
+  rotation?: number;
+  spin?: number;
+};
+
+type ImpactRing = {
+  x: number;
+  y: number;
+  life: number;
+  maxLife: number;
+  startRadius: number;
+  endRadius: number;
+  color: number;
 };
 
 type SkidMark = {
@@ -185,6 +201,7 @@ type ControlKeys = {
   leftAlt: Phaser.Input.Keyboard.Key;
   rightAlt: Phaser.Input.Keyboard.Key;
   drift: Phaser.Input.Keyboard.Key;
+  driftAlt: Phaser.Input.Keyboard.Key;
 };
 
 type ControlState = {
@@ -346,6 +363,7 @@ export class Game extends Scene {
   private projectiles: Projectile[] = [];
   private fires: FirePool[] = [];
   private particles: Particle[] = [];
+  private impactRings: ImpactRing[] = [];
   private skidMarks: SkidMark[] = [];
   private decorations: Decoration[] = [];
   private enemyGrid = new Map<string, Enemy[]>();
@@ -387,6 +405,8 @@ export class Game extends Scene {
   private randomState = 1;
   private cameraX = 0;
   private cameraY = 0;
+  private cameraKickX = 0;
+  private cameraKickY = 0;
   private trauma = 0;
   private hitStop = 0;
   private announcementTimer = 0;
@@ -498,7 +518,7 @@ export class Game extends Scene {
       .text(
         0,
         0,
-        'WASD / ARROWS DRIVE  •  SPACE DRIFT  •  P PAUSE  •  M SOUND',
+        'WASD / ARROWS DRIVE  •  SPACE / L-SHIFT DRIFT  •  P PAUSE  •  M SOUND',
         {
           fontFamily: monoFont,
           fontSize: '12px',
@@ -566,6 +586,7 @@ export class Game extends Scene {
       leftAlt: 'LEFT',
       rightAlt: 'RIGHT',
       drift: 'SPACE',
+      driftAlt: 'SHIFT',
     }) as ControlKeys;
 
     const hotkeyHandler = (event: KeyboardEvent): void => {
@@ -612,6 +633,7 @@ export class Game extends Scene {
     this.input.on('gameout', () => this.resetTouchInput());
     this.scale.on('resize', () => this.layoutUi());
     this.events.once('shutdown', () => {
+      this.runToken += 1;
       window.removeEventListener('keydown', hotkeyHandler);
       delete window.__ramageddonState;
       delete window.__ramageddonAdvance;
@@ -620,7 +642,7 @@ export class Game extends Scene {
     });
 
     this.layoutUi();
-    this.announce('LIGHTS OUT!\nWRECKS BECOME WEAPONS', 2.5);
+    this.announce('LIGHTS OUT!\nWRECKS BECOME WEAPONS', 0.72);
     this.spawnOpeningPack();
     audio.ensure();
 
@@ -666,6 +688,7 @@ export class Game extends Scene {
               this.player.y - boss.y,
               this.player.x - boss.x
             );
+            boss.chargeAngle = boss.angle;
             boss.vx = 0;
             boss.vy = 0;
             boss.chargeCooldown = 0.02;
@@ -714,14 +737,28 @@ export class Game extends Scene {
 
   private resetRuntime(): void {
     this.runToken += 1;
-    this.runId = globalThis.crypto.randomUUID();
+    const token = this.runToken;
+    const runId = globalThis.crypto.randomUUID();
+    this.runId = runId;
     this.runSessionPromise =
       this.meta.runtimeMode === 'practice'
         ? null
         : startRunSession({
             day: this.meta.day,
             seed: this.meta.seed,
-            runId: this.runId,
+            runId,
+          }).then((session) => {
+            if (token !== this.runToken || session?.runId === runId)
+              return session;
+
+            this.meta = { ...this.meta, runtimeMode: 'practice' };
+            this.runSyncState = 'practice';
+            if (this.mode === 'playing') {
+              this.announce('PIT RADIO LOST\nPRACTICE — NO SYNC', 2.8);
+            } else if (this.mode === 'ended') {
+              this.buildResultsModal();
+            }
+            return null;
           });
     this.mode = 'playing';
     this.enemies = [];
@@ -730,6 +767,7 @@ export class Game extends Scene {
     this.projectiles = [];
     this.fires = [];
     this.particles = [];
+    this.impactRings = [];
     this.skidMarks = [];
     this.decorations = [];
     this.enemyGrid.clear();
@@ -772,6 +810,7 @@ export class Game extends Scene {
       overdriveTimer: 0,
       forwardSpeed: 0,
       drifting: false,
+      driftIntensity: 0,
     };
     this.elapsed = 0;
     this.accumulator = 0;
@@ -780,6 +819,8 @@ export class Game extends Scene {
     this.randomState = (this.meta.seed ^ 0x9e3779b9) >>> 0;
     this.cameraX = this.player.x - this.scale.width / 2;
     this.cameraY = this.player.y - this.scale.height / 2;
+    this.cameraKickX = 0;
+    this.cameraKickY = 0;
     this.trauma = 0;
     this.hitStop = 0;
     this.announcementTimer = 0;
@@ -798,7 +839,8 @@ export class Game extends Scene {
     this.previousDrift = false;
     this.voteChoice = null;
     this.runSubmitted = false;
-    this.runSyncState = 'idle';
+    this.runSyncState =
+      this.meta.runtimeMode === 'practice' ? 'practice' : 'idle';
     this.voteSyncState = 'idle';
     this.pendingRun = null;
     this.baselineCommunityScrap = this.meta.community.scrap;
@@ -893,11 +935,18 @@ export class Game extends Scene {
     this.checkProgression();
     this.checkRunEnd();
 
-    audio.engine(
-      Math.hypot(this.player.vx, this.player.vy) / this.maxSpeed(),
-      controls.throttle,
-      this.player.overdriveTimer > 0
-    );
+    if (this.mode === 'playing') {
+      const speedRatio =
+        Math.hypot(this.player.vx, this.player.vy) / this.maxSpeed();
+      audio.engine(
+        speedRatio,
+        controls.throttle,
+        this.player.overdriveTimer > 0
+      );
+      audio.drift(this.player.driftIntensity, speedRatio);
+    } else {
+      audio.stopEngine();
+    }
   }
 
   private readControls(): ControlState {
@@ -913,13 +962,17 @@ export class Game extends Scene {
       return {
         throttle: Math.abs(dy) > 0.12 ? -dy : keyboardThrottle,
         steer: Math.abs(dx) > 0.12 ? dx : keyboardSteer,
-        drift: this.touchDrift || this.keys.drift.isDown,
+        drift:
+          this.touchDrift ||
+          this.keys.drift.isDown ||
+          this.keys.driftAlt.isDown,
       };
     }
     return {
       throttle: keyboardThrottle,
       steer: keyboardSteer,
-      drift: this.touchDrift || this.keys.drift.isDown,
+      drift:
+        this.touchDrift || this.keys.drift.isDown || this.keys.driftAlt.isDown,
     };
   }
 
@@ -936,6 +989,25 @@ export class Game extends Scene {
 
   private arenaInset(): number {
     return this.meta.challenge.arena.id === 'boneyard-bowl' ? 170 : 42;
+  }
+
+  private dangerLevel(): number {
+    const rawTime = clamp((this.elapsed - 18) / 132, 0, 1);
+    const timeDanger = rawTime * rawTime * (3 - 2 * rawTime);
+    const expectedKills = Math.max(1, this.elapsed * 0.27);
+    const killPace = clamp(
+      (this.player.kills - expectedKills) / (16 + this.elapsed * 0.09),
+      0,
+      1
+    );
+    const buildPace = clamp((this.player.level - 4) / 9, 0, 1);
+    const performanceGate = clamp((this.elapsed - 18) / 42, 0, 1);
+    return clamp(
+      timeDanger * 0.78 +
+        Math.max(killPace, buildPace) * performanceGate * 0.22,
+      0,
+      1
+    );
   }
 
   private updatePlayer(dt: number, controls: ControlState): void {
@@ -978,9 +1050,18 @@ export class Game extends Scene {
     const coast = this.meta.modifier.id === 'redline' ? 0.997 : 0.992;
     forwardSpeed *= Math.pow(controls.throttle === 0 ? coast : 0.998, dt * 60);
     const speedRatio = clamp(Math.abs(forwardSpeed) / 240, 0.18, 1.25);
+    const highSpeed = clamp(
+      (Math.abs(forwardSpeed) / Math.max(1, maximum) - 0.48) / 0.52,
+      0,
+      1
+    );
     const reverseSign = forwardSpeed < -8 ? -1 : 1;
     const crewTurn = this.crew === 'neon' ? 1.18 : 1;
-    const turnRate = (controls.drift ? 3.55 : 2.72) * speedRatio * crewTurn;
+    const steeringTaper = controls.drift
+      ? 1 + highSpeed * 0.08
+      : lerp(1, 0.56, highSpeed);
+    const turnRate =
+      (controls.drift ? 3.55 : 2.72) * speedRatio * crewTurn * steeringTaper;
     player.angle += controls.steer * turnRate * reverseSign * dt;
 
     if (
@@ -1005,6 +1086,9 @@ export class Game extends Scene {
       controls.drift &&
       Math.abs(lateralSpeed) > 38 &&
       Math.abs(forwardSpeed) > 110;
+    player.driftIntensity = player.drifting
+      ? clamp((Math.abs(lateralSpeed) - 38) / 170, 0, 1)
+      : 0;
     player.forwardSpeed = forwardSpeed;
     player.vx = forwardX * forwardSpeed + rightX * lateralSpeed;
     player.vy = forwardY * forwardSpeed + rightY * lateralSpeed;
@@ -1083,18 +1167,22 @@ export class Game extends Scene {
       (this.meta.modifier.id === 'magnet-storm' ? 1.12 : 1) *
       (this.meta.challenge.arena.id === 'thunder-dome' ? 1.08 : 1) *
       (this.meta.challenge.arena.id === 'furnace-eight' ? 1.05 : 1);
-    const interval = clamp(0.66 - this.elapsed * 0.0027, 0.14, 0.66) / density;
+    const danger = this.dangerLevel();
+    const interval =
+      clamp((0.66 - this.elapsed * 0.0025) / (1 + danger * 0.48), 0.105, 0.66) /
+      density;
     if (this.spawnTimer <= 0 && this.enemies.length < 165) {
       this.spawnTimer += interval;
       this.spawnEnemy();
-      if (this.elapsed > 72 && this.random() < 0.13) this.spawnEnemy('buggy');
+      if (this.elapsed > 72 && this.random() < 0.12 + danger * 0.18)
+        this.spawnEnemy(this.random() < danger * 0.32 ? 'striker' : 'buggy');
     }
-    if (
-      Math.abs(this.elapsed - 45) < dt * 0.6 ||
-      Math.abs(this.elapsed - 98) < dt * 0.6
-    ) {
-      this.spawnEnemy('elite');
-      this.announce('CRUSHER INBOUND', 1.7);
+    for (const eliteTime of [45, 82, 112, 137]) {
+      if (Math.abs(this.elapsed - eliteTime) < dt * 0.6) {
+        this.spawnEnemy('elite');
+        if (eliteTime >= 112) this.spawnEnemy('striker');
+        this.announce('CRUSHER INBOUND', 1.35);
+      }
     }
   }
 
@@ -1105,10 +1193,16 @@ export class Game extends Scene {
   private spawnEnemy(forcedKind?: EnemyKind, forcedDistance?: number): void {
     const roll = this.random();
     const progress = this.elapsed / RUN_SECONDS;
+    const danger = this.dangerLevel();
     let kind: EnemyKind = forcedKind ?? 'buggy';
     if (!forcedKind) {
-      if (progress > 0.62 && roll < 0.13) kind = 'bruiser';
-      else if (progress > 0.24 && roll < 0.31) kind = 'striker';
+      const eliteChance = progress > 0.58 ? 0.014 + danger * 0.034 : 0;
+      const bruiserChance = progress > 0.38 ? 0.07 + danger * 0.15 : 0;
+      const strikerChance = progress > 0.16 ? 0.2 + danger * 0.2 : 0;
+      if (roll < eliteChance) kind = 'elite';
+      else if (roll < eliteChance + bruiserChance) kind = 'bruiser';
+      else if (roll < eliteChance + bruiserChance + strikerChance)
+        kind = 'striker';
       else kind = 'buggy';
     }
     const arenaId = this.meta.challenge.arena.id;
@@ -1118,7 +1212,9 @@ export class Game extends Scene {
         : arenaId === 'thunder-dome'
           ? 690
           : 590;
-    const distance = forcedDistance ?? baseDistance + this.random() * 150;
+    const distance =
+      forcedDistance ??
+      Math.max(330, baseDistance - danger * 155 + this.random() * 150);
     let angle = this.random() * Math.PI * 2;
     if (arenaId === 'neon-spillway') {
       angle =
@@ -1163,6 +1259,7 @@ export class Game extends Scene {
       phase: this.random() * Math.PI * 2,
       chargeCooldown: kind === 'boss' ? 2.2 : 0,
       chargeTelegraph: 0,
+      chargeAngle: angle + Math.PI,
       alive: true,
     });
   }
@@ -1176,13 +1273,17 @@ export class Game extends Scene {
     score: number;
     scrap: number;
   } {
-    const toughness = 1 + Math.min(0.75, this.elapsed / 260);
+    const danger = this.dangerLevel();
+    const toughness =
+      (1 + Math.min(0.75, this.elapsed / 260)) * (1 + danger * 0.12);
+    const pursuitSpeed = 1 + danger * 0.31;
+    const pursuitAcceleration = 1 + danger * 0.43;
     if (kind === 'striker')
       return {
         radius: 18,
         hp: 30 * toughness,
-        speed: 205,
-        acceleration: 270,
+        speed: 205 * pursuitSpeed,
+        acceleration: 270 * pursuitAcceleration,
         mass: 0.82,
         score: 115,
         scrap: 3,
@@ -1191,8 +1292,8 @@ export class Game extends Scene {
       return {
         radius: 29,
         hp: 126 * toughness,
-        speed: 105,
-        acceleration: 165,
+        speed: 105 * pursuitSpeed,
+        acceleration: 165 * pursuitAcceleration,
         mass: 1.85,
         score: 340,
         scrap: 7,
@@ -1201,8 +1302,8 @@ export class Game extends Scene {
       return {
         radius: 34,
         hp: 420 * toughness,
-        speed: 128,
-        acceleration: 190,
+        speed: 128 * pursuitSpeed,
+        acceleration: 190 * pursuitAcceleration,
         mass: 2.35,
         score: 1250,
         scrap: 18,
@@ -1210,9 +1311,9 @@ export class Game extends Scene {
     if (kind === 'boss')
       return {
         radius: 52,
-        hp: 2600,
-        speed: 118,
-        acceleration: 170,
+        hp: 2600 * (1 + danger * 0.08),
+        speed: 118 * (1 + danger * 0.16),
+        acceleration: 170 * (1 + danger * 0.24),
         mass: 4.5,
         score: 8500,
         scrap: 70,
@@ -1220,8 +1321,8 @@ export class Game extends Scene {
     return {
       radius: 20,
       hp: 36 * toughness,
-      speed: 142,
-      acceleration: 225,
+      speed: 142 * pursuitSpeed,
+      acceleration: 225 * pursuitAcceleration,
       mass: 1,
       score: 90,
       scrap: 2,
@@ -1249,10 +1350,14 @@ export class Game extends Scene {
         targetAngle += Math.sin(this.elapsed * 1.7 + enemy.phase) * 0.46;
       if (enemy.kind === 'buggy')
         targetAngle += Math.sin(this.elapsed * 0.9 + enemy.phase) * 0.12;
+      const charging = enemy.kind === 'boss' && enemy.chargeCooldown > 3;
+      const steeringLocked =
+        enemy.kind === 'boss' && (telegraphBefore > 0 || charging);
+      if (steeringLocked) targetAngle = enemy.chargeAngle;
       const turn =
         enemy.kind === 'boss'
-          ? enemy.chargeTelegraph > 0
-            ? 1.72
+          ? steeringLocked
+            ? 0
             : 1.05
           : enemy.kind === 'bruiser'
             ? 1.38
@@ -1268,20 +1373,24 @@ export class Game extends Scene {
         telegraphBefore > 0 &&
         enemy.chargeTelegraph <= 0
       ) {
-        const dx = this.player.x - enemy.x;
-        const dy = this.player.y - enemy.y;
-        const length = Math.max(1, Math.hypot(dx, dy));
-        enemy.vx += (dx / length) * 390;
-        enemy.vy += (dy / length) * 390;
-        enemy.chargeCooldown = 3.4;
-        this.spawnBurst(enemy.x, enemy.y, 0xf15bb5, 22, 220);
-        this.heavyFeedback(0.36);
+        enemy.angle = enemy.chargeAngle;
+        enemy.vx = Math.cos(enemy.chargeAngle) * 650;
+        enemy.vy = Math.sin(enemy.chargeAngle) * 650;
+        enemy.chargeCooldown = 3.8;
+        this.spawnBurst(enemy.x, enemy.y, 0xf15bb5, 30, 310);
+        this.kickCamera(enemy.chargeAngle, 0.48);
+        this.heavyFeedback(0.48);
       } else if (
         enemy.kind === 'boss' &&
         enemy.chargeCooldown <= 0 &&
         enemy.chargeTelegraph <= 0
       ) {
-        enemy.chargeTelegraph = 0.68;
+        enemy.chargeAngle = Math.atan2(
+          this.player.y - enemy.y,
+          this.player.x - enemy.x
+        );
+        enemy.angle = enemy.chargeAngle;
+        enemy.chargeTelegraph = 0.72;
         enemy.vx *= 0.56;
         enemy.vy *= 0.56;
         this.spawnBurst(enemy.x, enemy.y, 0xffc928, 10, 90);
@@ -1295,13 +1404,13 @@ export class Game extends Scene {
       }
 
       const throttle =
-        enemy.kind === 'boss' && enemy.chargeTelegraph > 0 ? 0.14 : 1;
+        enemy.kind === 'boss' && enemy.chargeTelegraph > 0 ? 0.08 : 1;
       enemy.vx += Math.cos(enemy.angle) * enemy.acceleration * throttle * dt;
       enemy.vy += Math.sin(enemy.angle) * enemy.acceleration * throttle * dt;
       const speed = Math.hypot(enemy.vx, enemy.vy);
       const maximum =
         enemy.speed *
-        (enemy.kind === 'boss' && enemy.chargeCooldown > 2.6 ? 2.35 : 1);
+        (enemy.kind === 'boss' && enemy.chargeCooldown > 3 ? 5.2 : 1);
       if (speed > maximum) {
         enemy.vx = (enemy.vx / speed) * maximum;
         enemy.vy = (enemy.vy / speed) * maximum;
@@ -1488,12 +1597,51 @@ export class Game extends Scene {
       wreck.vx *= Math.pow(wreck.hot ? 0.985 : 0.94, dt * 60);
       wreck.vy *= Math.pow(wreck.hot ? 0.985 : 0.94, dt * 60);
       wreck.spin *= Math.pow(0.992, dt * 60);
+      wreck.trailTimer -= dt;
       const inset = this.arenaInset() + wreck.radius;
       if (wreck.x < inset || wreck.x > WORLD_WIDTH - inset) wreck.vx *= -0.52;
       if (wreck.y < inset || wreck.y > WORLD_HEIGHT - inset) wreck.vy *= -0.52;
       wreck.x = clamp(wreck.x, inset, WORLD_WIDTH - inset);
       wreck.y = clamp(wreck.y, inset, WORLD_HEIGHT - inset);
       const speed = Math.hypot(wreck.vx, wreck.vy);
+      if (wreck.hot && speed > 105 && wreck.trailTimer <= 0) {
+        const travelAngle = Math.atan2(wreck.vy, wreck.vx);
+        const smokeLife = 0.48 + this.random() * 0.36;
+        this.particles.push({
+          x: wreck.x - Math.cos(travelAngle) * wreck.radius * 0.65,
+          y: wreck.y - Math.sin(travelAngle) * wreck.radius * 0.65,
+          vx: -wreck.vx * 0.07 + (this.random() - 0.5) * 28,
+          vy: -wreck.vy * 0.07 + (this.random() - 0.5) * 28,
+          life: smokeLife,
+          maxLife: smokeLife,
+          color: wreck.chain > 0 ? 0x6a3557 : 0x424954,
+          size: 7 + this.random() * 7,
+          drag: 0.972,
+          gravity: -18,
+          kind: 'smoke',
+        });
+        if (this.random() < 0.56) {
+          const sparkLife = 0.15 + this.random() * 0.18;
+          this.particles.push({
+            x: wreck.x,
+            y: wreck.y,
+            vx:
+              -Math.cos(travelAngle) * (40 + this.random() * 90) +
+              (this.random() - 0.5) * 45,
+            vy:
+              -Math.sin(travelAngle) * (40 + this.random() * 90) +
+              (this.random() - 0.5) * 45,
+            life: sparkLife,
+            maxLife: sparkLife,
+            color: 0xffc928,
+            size: 2 + this.random() * 2,
+            drag: 0.95,
+            gravity: 35,
+            kind: 'spark',
+          });
+        }
+        wreck.trailTimer = 0.055 + this.random() * 0.045;
+      }
       if (!wreck.hot || speed < 95) continue;
       for (const enemy of this.nearbyEnemies(
         wreck.x,
@@ -1529,7 +1677,7 @@ export class Game extends Scene {
         }
       }
     }
-    this.wrecks = this.wrecks.filter((wreck) => wreck.life > 0);
+    this.wrecks = this.wrecks.filter((wreck) => wreck.life > 0).slice(-140);
   }
 
   private updateFire(dt: number): void {
@@ -1588,12 +1736,21 @@ export class Game extends Scene {
       const playerAttack = player.vx * nx + player.vy * ny;
       const enemyAttack = -(enemy.vx * nx + enemy.vy * ny);
       const frontal = Math.max(0, forwardX * nx + forwardY * ny);
+      const ramLevel = this.upgradeLevels.ram;
+      const forwardContact = dx * forwardX + dy * forwardY;
+      const lateralContact = Math.abs(dx * -forwardY + dy * forwardX);
+      const noseHit =
+        frontal > 0.72 &&
+        forwardContact > distance * 0.7 &&
+        lateralContact < 14 + enemy.radius * 0.58 + ramLevel * 1.5;
       const attacking =
-        playerAttack > enemyAttack * 0.72 && frontal > 0.12 && closing > 42;
-      enemy.contactCooldown = 0.18;
+        noseHit &&
+        playerAttack > Math.max(74, enemyAttack * 0.82) &&
+        closing > 64;
+      const danger = this.dangerLevel();
+      enemy.contactCooldown = lerp(0.18, 0.135, danger);
 
       if (attacking) {
-        const ramLevel = this.upgradeLevels.ram;
         const crewRam = this.crew === 'iron' ? 1.15 : 1;
         const overdrive = player.overdriveTimer > 0 ? 1.65 : 1;
         const damage =
@@ -1609,13 +1766,33 @@ export class Game extends Scene {
         enemy.vy += (ny * launch) / enemy.mass;
         player.vx -= nx * closing * 0.13 * enemy.mass;
         player.vy -= ny * closing * 0.13 * enemy.mass;
+        this.spawnCrashFx(
+          player.x + forwardX * 24,
+          player.y + forwardY * 24,
+          Math.atan2(ny, nx),
+          clamp(closing / 520, 0.22, 0.92),
+          enemy.kind === 'elite' || enemy.kind === 'boss' ? 0xf15bb5 : 0xffc928
+        );
         this.heavyFeedback(clamp(closing / 500, 0.12, 1));
         audio.impact(clamp(closing / 500, 0.15, 1));
       } else if (closing > 28 || enemyAttack > 55) {
         const armorReduction = 1 - this.upgradeLevels.armor * 0.09;
-        const damage = Math.max(
-          2,
-          (closing * 0.032 + enemyAttack * 0.022) * enemy.mass * armorReduction
+        const contactMass = enemy.mass * (enemy.kind === 'boss' ? 0.68 : 1);
+        const damage =
+          Math.max(
+            2,
+            (closing * 0.032 + enemyAttack * 0.022) *
+              contactMass *
+              armorReduction
+          ) *
+          (1 + danger * 0.3);
+        const impactStrength = clamp((closing + enemyAttack) / 620, 0.18, 0.78);
+        this.spawnCrashFx(
+          player.x + nx * 20,
+          player.y + ny * 20,
+          Math.atan2(-ny, -nx),
+          impactStrength,
+          0xff365e
         );
         this.damagePlayer(
           damage,
@@ -1688,6 +1865,7 @@ export class Game extends Scene {
   ): void {
     this.spawnBurst(x, y, 0xff6b35, 24, 260);
     this.spawnBurst(x, y, 0xffc928, 14, 190);
+    this.spawnCrashFx(x, y, this.random() * Math.PI * 2, 0.9, 0xff6b35, true);
     const previousEnvironmental = this.environmentalBlast;
     this.environmentalBlast = environmental;
     for (const enemy of this.nearbyEnemies(x, y, radius)) {
@@ -1763,9 +1941,9 @@ export class Game extends Scene {
       player.bestWreckChain = Math.max(player.bestWreckChain, chain + 1);
     }
     player.comboTimer =
-      3.1 +
-      this.upgradeLevels.overdrive * 0.5 +
-      (this.crew === 'neon' ? 0.8 : 0);
+      2.25 +
+      this.upgradeLevels.overdrive * 0.34 +
+      (this.crew === 'neon' ? 0.55 : 0);
     const comboMultiplier =
       1 + Math.min(3.2, Math.max(0, player.combo - 1) * 0.11);
     const oilDriftBonus =
@@ -1801,6 +1979,12 @@ export class Game extends Scene {
         : enemy.kind === 'bruiser'
           ? 0x8f3f32
           : 0x6d302b;
+    const wreckLife =
+      1.15 +
+      this.upgradeLevels.chain * 0.17 +
+      (enemy.kind === 'boss' ? 1.6 : 0) +
+      (enemy.kind === 'elite' ? 0.3 : 0) +
+      (this.meta.challenge.arena.id === 'thunder-dome' ? 0.32 : 0);
     this.wrecks.push({
       x: enemy.x,
       y: enemy.y,
@@ -1809,18 +1993,27 @@ export class Game extends Scene {
       angle: enemy.angle,
       spin: (this.random() < 0.5 ? -1 : 1) * (4.5 + this.random() * 7),
       radius: enemy.radius * 0.86,
-      life:
-        0.72 +
-        this.upgradeLevels.chain * 0.17 +
-        (enemy.kind === 'boss' ? 1.3 : 0) +
-        (this.meta.challenge.arena.id === 'thunder-dome' ? 0.32 : 0),
-      maxLife: 1.6,
+      life: wreckLife,
+      maxLife: wreckLife,
       hot: isHot,
       chain,
       power: 1 + this.upgradeLevels.chain * 0.18,
       color,
+      trailTimer: 0,
       hitIds: new Set<number>(),
     });
+    this.spawnCrashFx(
+      enemy.x,
+      enemy.y,
+      impactAngle,
+      clamp(
+        actualLaunch / 720 + enemy.mass * 0.055 + Math.min(0.2, chain * 0.025),
+        0.38,
+        1
+      ),
+      enemy.kind === 'elite' || enemy.kind === 'boss' ? 0xf15bb5 : 0xffc928,
+      true
+    );
 
     const pickupCount =
       enemy.kind === 'boss'
@@ -1843,16 +2036,22 @@ export class Game extends Scene {
         age: 0,
       });
     }
-    if (
-      this.random() <
-      (enemy.kind === 'elite' ? 0.65 : enemy.kind === 'boss' ? 1 : 0.025)
-    ) {
+    const repairNeeded = player.hp <= player.maxHp * 0.58;
+    const repairChance =
+      enemy.kind === 'boss'
+        ? 1
+        : enemy.kind === 'elite'
+          ? 0.24
+          : enemy.kind === 'bruiser'
+            ? 0.012
+            : 0.003;
+    if (repairNeeded && this.random() < repairChance) {
       this.pickups.push({
         x: enemy.x,
         y: enemy.y,
         vx: 0,
         vy: -80,
-        value: 22,
+        value: enemy.kind === 'boss' ? 16 : enemy.kind === 'elite' ? 10 : 6,
         kind: 'repair',
         age: 0,
       });
@@ -1902,15 +2101,14 @@ export class Game extends Scene {
       );
     }
     if (player.combo > 0 && player.combo % 10 === 0) {
-      const repair = 7 + Math.min(8, player.combo / 5);
-      player.hp = Math.min(player.maxHp, player.hp + repair);
       this.popWorldText(
-        `CRASH REPAIR +${Math.round(repair)}`,
+        `MAYHEM MILESTONE x${player.combo}`,
         player.x,
         player.y - 46,
-        '#6ee7a8',
-        21
+        '#2ef2e2',
+        23
       );
+      this.spawnBurst(player.x, player.y, 0x2ef2e2, 12, 180);
     }
     audio.wreck(chain);
     this.trauma = Math.max(
@@ -1921,11 +2119,13 @@ export class Game extends Scene {
       this.hitStop,
       enemy.kind === 'boss' ? 0.11 : 0.035 + Math.min(0.045, chain * 0.009)
     );
-    if (enemy.kind === 'boss') {
+    const defeatedBoss = enemy.kind === 'boss';
+    if (defeatedBoss) {
       this.bossDefeated = true;
       this.announce('ROAD KING SCRAPPED!', 3);
     }
     this.enemies = this.enemies.filter((candidate) => candidate.alive);
+    if (defeatedBoss) this.finishRun(true);
   }
 
   private damagePlayer(amount: number, trauma: number): void {
@@ -1938,7 +2138,9 @@ export class Game extends Scene {
     const actualDamage =
       amount * (this.meta.modifier.id === 'thin-metal' ? 1.35 : 1);
     this.player.hp = Math.max(0, this.player.hp - actualDamage);
-    this.player.invulnerable = 0.56;
+    this.player.invulnerable = lerp(0.56, 0.31, this.dangerLevel());
+    this.player.combo = 0;
+    this.player.comboTimer = 0;
     this.trauma = Math.max(this.trauma, trauma);
     this.hitStop = Math.max(this.hitStop, trauma > 0.5 ? 0.045 : 0.018);
     this.spawnBurst(this.player.x, this.player.y, 0xff365e, 9, 150);
@@ -1957,6 +2159,17 @@ export class Game extends Scene {
     this.trauma = Math.max(this.trauma, amount * 0.65);
     if (amount > 0.5)
       this.hitStop = Math.max(this.hitStop, 0.025 + amount * 0.025);
+  }
+
+  private kickCamera(angle: number, strength: number): void {
+    const magnitude = 10 + clamp(strength, 0, 1) * 24;
+    this.cameraKickX += Math.cos(angle) * magnitude;
+    this.cameraKickY += Math.sin(angle) * magnitude;
+    const accumulated = Math.hypot(this.cameraKickX, this.cameraKickY);
+    if (accumulated > 58) {
+      this.cameraKickX = (this.cameraKickX / accumulated) * 58;
+      this.cameraKickY = (this.cameraKickY / accumulated) * 58;
+    }
   }
 
   private updatePickups(dt: number): void {
@@ -2021,10 +2234,16 @@ export class Game extends Scene {
         particle.vy * Math.pow(particle.drag, dt * 60) + particle.gravity * dt;
       particle.x += particle.vx * dt;
       particle.y += particle.vy * dt;
+      if (particle.rotation !== undefined)
+        particle.rotation += (particle.spin ?? 0) * dt;
     }
     this.particles = this.particles
       .filter((particle) => particle.life > 0)
       .slice(-650);
+    for (const ring of this.impactRings) ring.life -= dt;
+    this.impactRings = this.impactRings
+      .filter((ring) => ring.life > 0)
+      .slice(-28);
   }
 
   private updateSkidMarks(dt: number): void {
@@ -2080,6 +2299,9 @@ export class Game extends Scene {
     const smoothing = 1 - Math.pow(0.0006, dt);
     this.cameraX = lerp(this.cameraX, targetX, smoothing);
     this.cameraY = lerp(this.cameraY, targetY, smoothing);
+    const kickDecay = Math.pow(0.00002, dt);
+    this.cameraKickX *= kickDecay;
+    this.cameraKickY *= kickDecay;
     this.trauma = Math.max(0, this.trauma - dt * 1.8);
   }
 
@@ -2092,6 +2314,7 @@ export class Game extends Scene {
     );
     this.rollUpgradeChoices();
     this.mode = 'levelup';
+    audio.stopEngine();
     this.buildLevelUpModal();
     audio.levelUp();
   }
@@ -2191,23 +2414,35 @@ export class Game extends Scene {
     const token = this.runToken;
     const pendingRun = this.pendingRun;
     const sessionPromise = this.runSessionPromise;
+    const isCurrentRun = () =>
+      token === this.runToken &&
+      this.mode === 'ended' &&
+      pendingRun.runId === this.runId;
     void (async () => {
       let session = await sessionPromise;
+      if (!isCurrentRun() || this.meta.runtimeMode === 'practice') return null;
       if (!session || session.runId !== pendingRun.runId) {
-        this.runSessionPromise = startRunSession({
+        const retryPromise = startRunSession({
           day: pendingRun.day,
           seed: pendingRun.seed,
           runId: pendingRun.runId,
         });
-        session = await this.runSessionPromise;
+        this.runSessionPromise = retryPromise;
+        session = await retryPromise;
       }
-      if (!session || session.runId !== pendingRun.runId) return null;
+      if (!isCurrentRun() || !session || session.runId !== pendingRun.runId)
+        return null;
       return await submitRun({
         ...pendingRun,
         sessionNonce: session.sessionNonce,
       });
     })().then((response) => {
       if (token !== this.runToken || this.mode !== 'ended') return;
+      if (this.meta.runtimeMode === 'practice') {
+        this.runSyncState = 'practice';
+        this.buildResultsModal();
+        return;
+      }
       if (response) {
         this.communityScrapDelta = Math.max(
           0,
@@ -2300,6 +2535,103 @@ export class Game extends Scene {
         gravity: 28 + this.random() * 80,
       });
     }
+  }
+
+  private spawnCrashFx(
+    x: number,
+    y: number,
+    impactAngle: number,
+    strength: number,
+    color: number,
+    destroyed = false
+  ): void {
+    const impact = clamp(strength, 0.12, 1);
+    const sparkCount = Math.round(5 + impact * 12 + (destroyed ? 5 : 0));
+    for (let index = 0; index < sparkCount; index += 1) {
+      const angle =
+        impactAngle + (this.random() - 0.5) * (destroyed ? 2.25 : 1.35);
+      const speed = (170 + this.random() * 330) * (0.46 + impact * 0.72);
+      const life = 0.12 + this.random() * (0.2 + impact * 0.16);
+      this.particles.push({
+        x: x + (this.random() - 0.5) * 8,
+        y: y + (this.random() - 0.5) * 8,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life,
+        maxLife: life,
+        color: this.random() < 0.28 ? 0xf7f3df : 0xffc928,
+        size: 1.8 + this.random() * (2.2 + impact * 2.2),
+        drag: 0.94 + this.random() * 0.025,
+        gravity: 48 + this.random() * 85,
+        kind: 'spark',
+      });
+    }
+
+    const chunkCount = Math.round(1 + impact * 4 + (destroyed ? 4 : 0));
+    for (let index = 0; index < chunkCount; index += 1) {
+      const angle = impactAngle + (this.random() - 0.5) * 2.8;
+      const speed = (65 + this.random() * 190) * (0.55 + impact * 0.65);
+      const life = 0.5 + this.random() * 0.65;
+      const tyre = destroyed && this.random() < 0.2;
+      this.particles.push({
+        x: x + (this.random() - 0.5) * 15,
+        y: y + (this.random() - 0.5) * 15,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life,
+        maxLife: life,
+        color: tyre ? 0x111722 : this.random() < 0.32 ? 0x8fa3b8 : color,
+        size: tyre ? 5 + this.random() * 3 : 4 + this.random() * 6,
+        drag: 0.965,
+        gravity: 135 + this.random() * 95,
+        kind: tyre ? 'tyre' : 'chunk',
+        rotation: this.random() * Math.PI * 2,
+        spin: (this.random() - 0.5) * 18,
+      });
+    }
+
+    const smokeCount = Math.round(2 + impact * 4 + (destroyed ? 3 : 0));
+    for (let index = 0; index < smokeCount; index += 1) {
+      const angle = this.random() * Math.PI * 2;
+      const life = 0.48 + this.random() * 0.72;
+      const speed = 18 + this.random() * (45 + impact * 50);
+      this.particles.push({
+        x: x + (this.random() - 0.5) * 18,
+        y: y + (this.random() - 0.5) * 18,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life,
+        maxLife: life,
+        color: destroyed && this.random() < 0.25 ? 0x6a3557 : 0x59616b,
+        size: 7 + this.random() * (8 + impact * 7),
+        drag: 0.975,
+        gravity: -18 - this.random() * 18,
+        kind: 'smoke',
+      });
+    }
+
+    const ringLife = 0.2 + impact * 0.13;
+    this.impactRings.push({
+      x,
+      y,
+      life: ringLife,
+      maxLife: ringLife,
+      startRadius: 8 + impact * 8,
+      endRadius: 42 + impact * (destroyed ? 82 : 48),
+      color,
+    });
+    if (destroyed && impact > 0.58) {
+      this.impactRings.push({
+        x,
+        y,
+        life: ringLife * 0.72,
+        maxLife: ringLife * 0.72,
+        startRadius: 4,
+        endRadius: 24 + impact * 48,
+        color: 0xf7f3df,
+      });
+    }
+    this.kickCamera(impactAngle, impact * (destroyed ? 1 : 0.72));
   }
 
   private popWorldText(
@@ -2418,8 +2750,8 @@ export class Game extends Scene {
     const shakeAmount = this.trauma * this.trauma * 12;
     const shakeX = Math.sin(this.elapsed * 127.31) * shakeAmount;
     const shakeY = Math.cos(this.elapsed * 93.17) * shakeAmount * 0.72;
-    const cameraX = this.cameraX + shakeX;
-    const cameraY = this.cameraY + shakeY;
+    const cameraX = this.cameraX + shakeX + this.cameraKickX;
+    const cameraY = this.cameraY + shakeY + this.cameraKickY;
     this.renderWorld(cameraX, cameraY);
     this.renderHud();
     this.renderModal();
@@ -2579,6 +2911,20 @@ export class Game extends Scene {
         .fillCircle(x, y, fire.radius * 0.46);
     }
 
+    for (const ring of this.impactRings) {
+      const x = ring.x - cameraX;
+      const y = ring.y - cameraY;
+      const remaining = clamp(ring.life / ring.maxLife, 0, 1);
+      const progress = 1 - remaining;
+      const radius = lerp(ring.startRadius, ring.endRadius, progress);
+      graphics
+        .fillStyle(ring.color, remaining * remaining * 0.07)
+        .fillCircle(x, y, radius * 0.72);
+      graphics
+        .lineStyle(2 + remaining * 5, ring.color, remaining * 0.8)
+        .strokeCircle(x, y, radius);
+    }
+
     for (const pickup of this.pickups) {
       const x = pickup.x - cameraX;
       const y = pickup.y - cameraY;
@@ -2608,9 +2954,10 @@ export class Game extends Scene {
       const y = wreck.y - cameraY;
       if (x < -90 || x > width + 90 || y < -90 || y > height + 90) continue;
       if (wreck.hot) {
+        const pulse = 1 + Math.sin(this.elapsed * 17 + wreck.angle) * 0.12;
         graphics
-          .fillStyle(wreck.chain > 0 ? 0xf15bb5 : 0xffc928, 0.12)
-          .fillCircle(x, y, wreck.radius * 1.7);
+          .fillStyle(wreck.chain > 0 ? 0xf15bb5 : 0xffc928, 0.14)
+          .fillCircle(x, y, wreck.radius * 1.85 * pulse);
       }
       this.drawCar(
         graphics,
@@ -2624,6 +2971,46 @@ export class Game extends Scene {
         false,
         'wreck'
       );
+      this.drawPolygon(
+        graphics,
+        x,
+        y,
+        wreck.angle,
+        [
+          wreck.radius * 0.05,
+          -wreck.radius * 0.46,
+          wreck.radius * 0.86,
+          -wreck.radius * 0.24,
+          wreck.radius * 0.58,
+          wreck.radius * 0.08,
+          wreck.radius * 0.92,
+          wreck.radius * 0.34,
+          wreck.radius * 0.04,
+          wreck.radius * 0.42,
+        ],
+        0x191d22,
+        wreck.chain > 0 ? 0xf15bb5 : 0x080b12,
+        2
+      );
+      const forwardX = Math.cos(wreck.angle);
+      const forwardY = Math.sin(wreck.angle);
+      const rightX = -forwardY;
+      const rightY = forwardX;
+      graphics
+        .lineStyle(3, 0x080b12, 0.9)
+        .lineBetween(
+          x - forwardX * wreck.radius * 0.65 - rightX * wreck.radius * 0.42,
+          y - forwardY * wreck.radius * 0.65 - rightY * wreck.radius * 0.42,
+          x + forwardX * wreck.radius * 0.18 - rightX * wreck.radius * 0.5,
+          y + forwardY * wreck.radius * 0.18 - rightY * wreck.radius * 0.5
+        );
+      graphics
+        .fillStyle(0x080b12, 1)
+        .fillCircle(
+          x - forwardX * wreck.radius * 0.48 + rightX * wreck.radius * 0.58,
+          y - forwardY * wreck.radius * 0.48 + rightY * wreck.radius * 0.58,
+          Math.max(2.5, wreck.radius * 0.2)
+        );
     }
 
     for (const enemy of this.enemies) {
@@ -2636,15 +3023,15 @@ export class Game extends Scene {
       const accent =
         enemy.kind === 'elite' || enemy.kind === 'boss' ? 0xf15bb5 : 0xffc928;
       if (enemy.kind === 'boss' && enemy.chargeTelegraph > 0) {
-        const windup = clamp(1 - enemy.chargeTelegraph / 0.68, 0, 1);
+        const windup = clamp(1 - enemy.chargeTelegraph / 0.72, 0, 1);
         const pulse = 0.45 + Math.sin(this.elapsed * 42) * 0.2;
-        const warningLength = 250 + windup * 170;
+        const warningLength = 560;
         graphics.lineStyle(8 + windup * 8, 0xff365e, 0.12 + windup * 0.18);
         graphics.lineBetween(
           x,
           y,
-          x + Math.cos(enemy.angle) * warningLength,
-          y + Math.sin(enemy.angle) * warningLength
+          x + Math.cos(enemy.chargeAngle) * warningLength,
+          y + Math.sin(enemy.chargeAngle) * warningLength
         );
         graphics.lineStyle(3, 0xffc928, 0.55 + pulse);
         graphics.strokeCircle(x, y, enemy.radius * (1.45 + windup * 0.38));
@@ -2731,9 +3118,52 @@ export class Game extends Scene {
       const y = particle.y - cameraY;
       if (x < -20 || x > width + 20 || y < -20 || y > height + 20) continue;
       const alpha = clamp(particle.life / particle.maxLife, 0, 1);
-      graphics
-        .fillStyle(particle.color, alpha)
-        .fillCircle(x, y, Math.max(0.7, particle.size * alpha));
+      if (particle.kind === 'spark') {
+        const velocity = Math.max(1, Math.hypot(particle.vx, particle.vy));
+        const streak = 6 + particle.size * 2.4;
+        graphics
+          .lineStyle(Math.max(1, particle.size * 0.52), particle.color, alpha)
+          .lineBetween(
+            x,
+            y,
+            x - (particle.vx / velocity) * streak,
+            y - (particle.vy / velocity) * streak
+          );
+      } else if (particle.kind === 'smoke') {
+        const bloom = 1 + (1 - alpha) * 1.15;
+        graphics
+          .fillStyle(particle.color, alpha * 0.24)
+          .fillCircle(x, y, Math.max(1, particle.size * bloom));
+      } else if (particle.kind === 'chunk') {
+        const size = particle.size * (0.62 + alpha * 0.38);
+        this.drawPolygon(
+          graphics,
+          x,
+          y,
+          particle.rotation ?? 0,
+          [
+            -size,
+            -size * 0.42,
+            size * 0.9,
+            -size * 0.7,
+            size,
+            size * 0.38,
+            -size * 0.7,
+            size * 0.65,
+          ],
+          particle.color,
+          0x080b12,
+          1.5
+        );
+      } else if (particle.kind === 'tyre') {
+        graphics
+          .lineStyle(Math.max(2, particle.size * 0.42), particle.color, alpha)
+          .strokeCircle(x, y, Math.max(2, particle.size * alpha));
+      } else {
+        graphics
+          .fillStyle(particle.color, alpha)
+          .fillCircle(x, y, Math.max(0.7, particle.size * alpha));
+      }
     }
   }
 
@@ -3173,7 +3603,9 @@ export class Game extends Scene {
       this.drawTouchControls(graphics);
     } else {
       this.hintText
-        .setText('WASD / ARROWS DRIVE  •  SPACE DRIFT  •  P PAUSE  •  M SOUND')
+        .setText(
+          'WASD / ARROWS DRIVE  •  SPACE / L-SHIFT DRIFT  •  P PAUSE  •  M SOUND'
+        )
         .setPosition(width / 2, height - 24)
         .setScale(1)
         .setVisible(this.mode === 'playing' && height > 500 && width > 700);
@@ -3829,6 +4261,8 @@ export class Game extends Scene {
         distance: Math.round(distance),
         hp: Math.max(0, Math.round(enemy.hp)),
         chargeTelegraphSeconds: Number(enemy.chargeTelegraph.toFixed(2)),
+        chargeAngleRadians:
+          enemy.kind === 'boss' ? Number(enemy.chargeAngle.toFixed(3)) : null,
       }));
     return {
       mode: this.mode,
@@ -3853,6 +4287,7 @@ export class Game extends Scene {
       maxSpeed: Math.round(this.maxSpeed()),
       soundMuted: audio.isMuted(),
       dailyTuning: {
+        dangerLevel: Number(this.dangerLevel().toFixed(3)),
         accelerationMultiplier: this.meta.modifier.id === 'redline' ? 1.28 : 1,
         normalGrip: this.meta.modifier.id === 'oil-rain' ? 0.91 : 0.82,
         pickupRadiusBonus: this.meta.modifier.id === 'magnet-storm' ? 120 : 0,
@@ -3886,6 +4321,7 @@ export class Game extends Scene {
         heat: Math.round(this.player.heat),
         overdriveSeconds: Number(this.player.overdriveTimer.toFixed(2)),
         drifting: this.player.drifting,
+        driftIntensity: Number(this.player.driftIntensity.toFixed(2)),
       },
       visibleEnemies: nearestEnemies,
       activeWreckProjectiles: this.wrecks.filter((wreck) => wreck.hot).length,
@@ -3905,7 +4341,7 @@ export class Game extends Scene {
           : [],
       controls: {
         drive: 'WASD or arrow keys',
-        drift: 'Space',
+        drift: 'Space or Left Shift',
         pause: 'P',
         sound: 'M',
         fullscreen: 'F',

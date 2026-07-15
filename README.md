@@ -20,9 +20,9 @@ leaderboards, and **Blueprint Vote** are the engine around it.
 > client and Hono/Redis server pass type-check, lint, and production build.
 > Controlled playtesting reached first impact in under five seconds, first
 > level-up at 21.6 seconds, and a confirmed x21 wreck combo/cascade with 18 hot
-> wrecks active simultaneously. Devvit version 0.0.1 is uploaded and running in
-> the linked Reddit post. Judge-access testing and the external Devpost entry
-> remain tracked in [the competition checklist](docs/COMPETITION_CHECKLIST.md).
+> wrecks active simultaneously. The latest uploaded build is installed and
+> running in the linked Reddit post. Judge-access testing and the external
+> Devpost entry remain tracked in [the competition checklist](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/COMPETITION_CHECKLIST.md).
 
 ## The hook: wrecks become weapons
 
@@ -52,10 +52,10 @@ The control set is deliberately small:
 | Action                                  | Keyboard                                               | Pointer / touch                                                           |
 | --------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------- |
 | Throttle / reverse / steer              | `WASD` or arrow keys                                   | Drag the left virtual stick: vertical is throttle, horizontal is steering |
-| Handbrake drift                         | `Space`                                                | Hold the right-side drift button                                          |
+| Handbrake drift                         | `Space` or left `Shift`                                | Hold the right-side drift button                                          |
 | Choose crew, upgrade, or Blueprint Vote | `1`, `2`, or `3`; crew also supports left/right arrows | Tap the card                                                              |
-| Pause / resume                          | `P`                                                    | —                                                                         |
-| Sound on/off                            | `M`                                                    | —                                                                         |
+| Pause / resume                          | `P`                                                    | Tap **PAUSE**                                                             |
+| Sound on/off                            | `M`                                                    | Tap **SOUND**                                                             |
 | Fullscreen                              | `F`                                                    | —                                                                         |
 | Start                                   | `Enter` or `Space`                                     | Tap the primary button                                                    |
 | Replay after a run                      | `R` or `Enter`                                         | Tap **Run It Back**                                                       |
@@ -142,8 +142,9 @@ npm run launch
 
 Publishing is an external account action. Do not put credentials in this
 repository. The live app, subreddit, and post links are recorded in
-[the submission guide](docs/SUBMISSION.md); final judge-access and Devpost
-submission checks still require the entrant account.
+[the submission guide](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/SUBMISSION.md);
+final judge-access and Devpost submission checks still require the entrant
+account.
 
 ## Architecture
 
@@ -160,7 +161,8 @@ Reddit interactive post
 
 - `src/client/` contains the splash, responsive shell, Phaser 4 Canvas
   bootstrap, fixed-step simulation, procedural vector rendering, input,
-  synthesized WebAudio, combat presentation, and community screens.
+  hybrid WebAudio/original sample playback, combat presentation, and community
+  screens.
 - `src/server/` contains Hono endpoints, Reddit/Devvit integration, validation,
   Redis transactions, persistence, post creation, and triggers.
 - `src/shared/` contains request and response types shared across the boundary.
@@ -212,20 +214,24 @@ work.
 
 ## Accessibility and comfort
 
-The current build is playable without audio, provides `M` mute and `P` pause,
-uses text alongside color for critical state, and supports keyboard and touch
-driving. The uploaded post still needs the following final checks:
+The current build is playable without audio, provides keyboard and touch
+pause/sound controls, uses text alongside color for critical state, and supports
+keyboard and touch driving. Release QA verifies the 613×512 feed card and
+333×515 expanded layouts without clipping or inline scrolling, plus keyboard
+driving and simulated touch steering, drift, pause, sound, card selection, and
+replay. The official browser client and focused smoke suite pass with no
+application-console errors. The final balance matrix rejects constant-turn
+driving across every daily variant, while an offense-prioritized active policy
+destroyed the Road King at 175.03 seconds; focused QA confirms the boss kill now
+resolves victory immediately instead of exposing the winner to a post-kill
+traffic death.
 
-- readable text and controls at Reddit's mobile and desktop post sizes
-- keyboard and touch completion of the full run and all card/button choices
-- labeled buttons, visible focus treatment, and a persistent control reminder
-- high-contrast health, XP, timer, and upgrade information
-- restrained flashing and bounded camera shake; the current build does not
-  claim a dedicated reduced-effects mode
-- pause behavior that does not punish the player
-
-Accessibility claims belong in the submission only after they are exercised in
-the uploaded Reddit post.
+Buttons are labeled, keyboard actions have visible focus treatment, critical
+health/XP/timer/upgrade information remains high contrast, and camera trauma
+and hit-stop are bounded. The current build does not claim a dedicated
+reduced-effects mode. Native Reddit mobile-client, ordinary-user, and
+judge-access verification remain release-gate items; they are not implied by
+the exact-viewport browser checks.
 
 ## Support and reports
 
@@ -237,8 +243,9 @@ issue tracker may also be used for reproducible technical defects.
 
 ## Licensing and credits
 
-- Project code is distributed under the BSD 3-Clause terms in [LICENSE](LICENSE),
-  matching `package.json`.
+- Project code is distributed under the BSD 3-Clause terms in
+  [LICENSE](https://github.com/BoneShaman/RAMAGEDDON/blob/main/LICENSE), matching
+  `package.json`.
 - The app uses [Phaser](https://phaser.io/),
   [Devvit Web](https://developers.reddit.com/docs/capabilities/devvit-web/devvit_web_overview),
   [Hono](https://hono.dev/), [Vite](https://vite.dev/), and
@@ -247,9 +254,11 @@ issue tracker may also be used for reproducible technical defects.
 - The repository began from Reddit's Devvit Phaser starter. Its copyright and
   BSD notice must be retained wherever that license requires.
 - Active RAMAGEDDON production visuals are drawn procedurally with Phaser
-  Graphics, and its engine, collision, pickup, weapon, and impact sounds are
-  synthesized at runtime with WebAudio. No generated or third-party production
-  game assets are referenced by the active runtime.
+  Graphics. Its audio combines runtime WebAudio synthesis with original SFX
+  layers generated locally using Stable Audio 3 and edited specifically for the
+  game. No stock recordings or third-party sound-library files are included;
+  exact prompts, seeds, and processing are recorded in
+  [`docs/AUDIO_PROVENANCE.md`](docs/AUDIO_PROVENANCE.md).
 - The Reddit app icon is a separately generated, entrant-directed marketing
   asset recorded in the license ledger; it is not loaded by the game runtime.
 - Reference captures, third-party game art, external logos, Reddit trademarks,
@@ -257,14 +266,15 @@ issue tracker may also be used for reproducible technical defects.
   built client without explicit written permission.
 
 The current creator/source/license record is maintained in the
-[asset and license ledger](docs/ASSET_LEDGER.md). Add any later music, footage,
-font, artwork, or other submitted component to that ledger before release.
+[asset and license ledger](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/ASSET_LEDGER.md).
+Add any later music, footage, font, artwork, or other submitted component to
+that ledger before release.
 
 ## Submission materials
 
-- [Ready-to-paste Devpost copy and 60-second video plan](docs/SUBMISSION.md)
-- [Deadline, eligibility, compliance, and external-account checklist](docs/COMPETITION_CHECKLIST.md)
-- [Production asset and dependency license ledger](docs/ASSET_LEDGER.md)
+- [Ready-to-paste Devpost copy and 60-second video plan](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/SUBMISSION.md)
+- [Deadline, eligibility, compliance, and external-account checklist](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/COMPETITION_CHECKLIST.md)
+- [Production asset and dependency license ledger](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/ASSET_LEDGER.md)
 
 Live competition links:
 

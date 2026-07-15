@@ -295,7 +295,7 @@ const validateRun = (value: unknown): RunSubmissionRequest => {
       400
     );
   }
-  if (run.victory && run.survivedSeconds < 180) {
+  if (run.victory && run.survivedSeconds < 150) {
     throw new GameApiError(
       'bad-request',
       'victory requires reaching the Road King.',

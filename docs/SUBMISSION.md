@@ -20,6 +20,29 @@ build or remove that claim before submission.
 Do not replace the running demo post with a standalone web-hosting link. Judges
 need the game running as a Reddit Interactive Post.
 
+## Current release evidence
+
+- Devvit 0.0.5 is uploaded, installed, and serving the existing demo post.
+- Live desktop-browser validation loaded real daily/community state, entered the
+  expanded game, and confirmed the final `0-0-5-webview` URL and signed Devvit
+  token. The production run started with active audio and produced an x7 opening
+  wreck cascade; the preceding 0.0.2 gameplay audit reached the first upgrade
+  without a visible client error.
+- Exact 613×512 feed and 333×515 expanded browser layouts pass without clipping
+  or inline scrolling. Desktop keyboard and simulated touch
+  steering/drift/pause/sound/card/replay paths pass the focused release suite.
+- A prior natural 180-second local run defeated the Road King and remained
+  playable at approximately 54 fps under 4× CPU throttling. In the final harder
+  balance, an offense-prioritized active policy destroyed the Road King at
+  175.03 seconds; a focused final QA branch confirms that destroying the boss
+  now resolves victory immediately.
+- Reddit approved the demo community as Public. A fresh Firefox Private Browsing
+  session, visibly signed out, loaded the exact post and its embedded RAMAGEDDON
+  feed card.
+- A complete ordinary-user run, native Reddit mobile, two-account shared-state
+  testing, final live media, and Devpost submission remain open and are not
+  claimed by the ready-to-paste copy.
+
 ## Submission metadata
 
 - **Project title:** RAMAGEDDON
@@ -88,11 +111,13 @@ need the game running as a Reddit Interactive Post.
 > bests, streaks, and Wreckpile progress. Reddit provides identity and post
 > context, so players do not need a second account or an off-platform profile.
 >
-> The visual identity is drawn procedurally with Phaser Graphics, and all engine,
-> weapon, pickup, and impact audio is synthesized at runtime with WebAudio—no
-> generated or third-party production game assets. Collision response, threat
-> readability, spawn pressure, upgrade cadence, hit-stop, camera trauma,
-> particles, audio, and score presentation are tuned as one impact system.
+> The visual identity is drawn procedurally with Phaser Graphics. Audio combines
+> responsive WebAudio synthesis with original SFX generated locally using Stable
+> Audio 3 and edited specifically for the game; exact prompts, seeds, processing,
+> and rejected-clip policy are recorded in `docs/AUDIO_PROVENANCE.md`. Collision
+> response, threat readability, spawn pressure, upgrade cadence, hit-stop, camera
+> trauma, particles, audio, and score presentation are tuned as one impact
+> system.
 
 ### Challenges
 
@@ -176,8 +201,8 @@ the Reddit-post context is intentionally being demonstrated.
 
 1. **Hero / thumbnail:** player car breaking through a dense wreck cascade;
    title and “Wrecks become weapons” remain readable at small size.
-2. **Reddit proof:** the public demo post in-feed with a clear play call to
-   action and original RAMAGEDDON branding.
+2. **Reddit proof:** the demo post in-feed with a clear play call to action and
+   original RAMAGEDDON branding.
 3. **First five seconds:** readable HUD, immediate driving, enemy intent, and the
    first confirmed impact.
 4. **The signature mechanic:** one hot wreck launched down a pursuit line,
@@ -207,7 +232,7 @@ sparingly so cause and effect remain obvious.
 
 | Time      | Picture                                                           | Voice-over / on-screen copy                                                              |
 | --------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| 0:00–0:04 | Public Reddit post, click **Play**, immediate RAMAGEDDON title    | “The horde is the weapon. Wrecks become weapons.”                                        |
+| 0:00–0:04 | Live Reddit post, click **Play**, immediate RAMAGEDDON title      | “The horde is the weapon. Wrecks become weapons.”                                        |
 | 0:04–0:11 | First movement, enemies converge, auto-weapon lands               | “RAMAGEDDON is a destruction-derby survivor built inside Reddit with Phaser and Devvit.” |
 | 0:11–0:21 | Ram one car; its hot wreck launches through the pursuit line      | “Every clean ram carries its momentum forward as a hot wreck.”                           |
 | 0:21–0:29 | Show the x21 wreck combo/cascade and simultaneous hot wrecks      | “Aim one impact well, and the entire swarm becomes ammunition.”                          |
@@ -245,4 +270,4 @@ sparingly so cause and effect remain obvious.
 - [Official rules](https://redditgameswithahook.devpost.com/rules)
 - [Devvit Rules](https://developers.reddit.com/docs/devvit_rules)
 - [Building Community Games](https://developers.reddit.com/docs/guides/best-practices/community_games)
-- [RAMAGEDDON asset and license ledger](ASSET_LEDGER.md)
+- [RAMAGEDDON asset and license ledger](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/ASSET_LEDGER.md)

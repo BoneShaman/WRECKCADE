@@ -36,38 +36,56 @@ external uploaded-post checks later in this document.
       results, replay, sound toggle, pause, and fullscreen are implemented.
 - [x] Server-derived daily seed/modifier, profiles, streaks, Wreckpile, crew
       standings, leaderboard, and Blueprint Vote use Hono plus Devvit Redis.
-- [x] Active production visuals are procedural Phaser Graphics and active audio
-      is synthesized WebAudio; the runtime does not reference generated or
-      third-party production game assets.
+- [x] Active production visuals are procedural Phaser Graphics. Active audio
+      combines responsive WebAudio synthesis with entrant-directed local Stable
+      Audio 3 SFX; prompts, seeds, processing, and rejected clips are documented
+      in `docs/AUDIO_PROVENANCE.md`, with no stock-library audio included.
 - [x] `npm run type-check`, `npm run lint`, and `npm run build` pass.
-- [x] Devvit 0.0.1 is uploaded, installed, and rendering its interactive launch
-      surface in the generated Reddit post.
-- [ ] Public/signed-out access, multi-account Redis verification, mobile Reddit
-      verification, live-post media, and Devpost submission remain.
+- [x] Devvit 0.0.5 is uploaded, installed, and rendering its interactive launch
+      and expanded game surfaces in the existing Reddit post.
+- [x] Live desktop-browser validation confirmed the final `0-0-5-webview` with
+      real daily/community state. The production run started with active audio
+      and produced an x7 opening wreck cascade; the preceding 0.0.2 audit entered
+      a run and reached the first upgrade without a visible client error.
+- [x] Exact 613×512 feed and 333×515 expanded browser layouts, desktop controls,
+      simulated touch steering/drift/pause/sound, and the Road King victory path
+      pass focused local release QA.
+- [x] Twelve constant-turn exploit runs across all six modifiers and five arenas
+      produced zero wins. An offense-prioritized active policy destroyed the
+      Road King at 175.03 seconds; the boss kill now ends the run immediately,
+      and its focused 150.2-second QA branch reaches the result state without an
+      error.
+- [x] Reddit approved the demo community as Public, and a fresh Firefox Private
+      Browsing session loaded the exact post plus the RAMAGEDDON feed card while
+      visibly signed out.
+- [ ] A complete ordinary-user run, multi-account Redis verification, native
+      Reddit mobile verification, final live media, and Devpost submission
+      remain.
 
 ## Required submission bundle
 
-| Requirement                                            | Evidence                                                                                    | Done |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------- | ---- |
-| Joined hackathon from eligible Devpost account         | Devpost participant/dashboard view                                                          | [ ]  |
-| Game built with Reddit Developer Platform / Devvit Web | Uploaded app runs in Reddit post                                                            | [x]  |
-| All required Devpost fields completed in English       | Final entry preview                                                                         | [ ]  |
-| Feature/functionality text description                 | Copy verified against uploaded build                                                        | [ ]  |
-| Unique Devvit app listing                              | `https://developers.reddit.com/apps/ramageddon-game`                                        | [x]  |
-| Demo subreddit                                         | `https://www.reddit.com/r/ramageddon_game_dev`                                              | [x]  |
-| Accessible post running the actual game                | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uws1an/ramageddon_daily_wreckpile/` | [ ]  |
-| Detailed root `README.md` describing game and play     | This repository's `README.md`                                                               | [x]  |
-| App remains free and unrestricted through judging      | Signed-out/judge-access test                                                                | [ ]  |
-| Rights cleared for every submitted component           | [Asset/source/license ledger](ASSET_LEDGER.md) plus entrant attestation                     | [ ]  |
-| Optional public video under one minute                 | `[DEMO_VIDEO_URL]`                                                                          | [ ]  |
-| Optional public source repository                      | `https://github.com/BoneShaman/RAMAGEDDON`                                                  | [x]  |
-| Optional actionable Devvit feedback form               | Submitted-form confirmation                                                                 | [ ]  |
+| Requirement                                            | Evidence                                                                                                                        | Done |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| Joined hackathon from eligible Devpost account         | Devpost participant/dashboard view                                                                                              | [ ]  |
+| Game built with Reddit Developer Platform / Devvit Web | Uploaded app runs in Reddit post                                                                                                | [x]  |
+| All required Devpost fields completed in English       | Final entry preview                                                                                                             | [ ]  |
+| Feature/functionality text description                 | Copy verified against uploaded build                                                                                            | [x]  |
+| Unique Devvit app listing                              | `https://developers.reddit.com/apps/ramageddon-game`                                                                            | [x]  |
+| Demo subreddit                                         | `https://www.reddit.com/r/ramageddon_game_dev`                                                                                  | [x]  |
+| Accessible post running the actual game                | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uws1an/ramageddon_daily_wreckpile/`                                     | [x]  |
+| Detailed root `README.md` describing game and play     | This repository's `README.md`                                                                                                   | [x]  |
+| App remains free and unrestricted through judging      | Public community plus signed-out exact-link test                                                                                | [x]  |
+| Rights cleared for every submitted component           | [Asset/source/license ledger](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/ASSET_LEDGER.md) plus entrant attestation | [ ]  |
+| Optional public video under one minute                 | `[DEMO_VIDEO_URL]`                                                                                                              | [ ]  |
+| Optional public source repository                      | `https://github.com/BoneShaman/RAMAGEDDON`                                                                                      | [x]  |
+| Public privacy policy                                  | `https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/PRIVACY.md`                                                            | [x]  |
+| Public terms                                           | `https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/TERMS.md`                                                              | [x]  |
+| Optional actionable Devvit feedback form               | Submitted-form confirmation                                                                                                     | [ ]  |
 
 The rules recommend a judging post in a **public subreddit with fewer than 200
-members**. If the subreddit is not public, install Reddit's
-[Admin Approval app](https://developers.reddit.com/apps/dr-admin-approve) so
-judges can enter. The lower-risk path is a small, public, dedicated demo
-subreddit and a public post tested from an unrelated account.
+members**. Reddit approved `r/ramageddon_game_dev` as Public on July 15, 2026;
+the exact post and embedded RAMAGEDDON feed card subsequently loaded in a fresh,
+signed-out Firefox Private Browsing session.
 
 ## External account actions
 
@@ -76,18 +94,19 @@ completed by repository code alone.
 
 ### Devpost
 
-- [ ] Sign in to the entrant's Devpost account.
-- [ ] Click **Join Hackathon** on the
+- [x] Sign in to the entrant's Devpost account.
+- [x] Click **Join Hackathon** on the
       [competition page](https://redditgameswithahook.devpost.com/).
 - [ ] Confirm the entrant/team/organization is eligible.
 - [ ] If entering as a team or organization, appoint one eligible representative
       authorized to submit for everyone.
-- [ ] Create or open the RAMAGEDDON project before the deadline.
-- [ ] Paste only claims that pass `docs/SUBMISSION.md`'s claims gate.
-- [ ] Add the app listing, demo subreddit, and running post links.
+- [x] Create or open the RAMAGEDDON project before the deadline.
+- [x] Paste only claims that pass `docs/SUBMISSION.md`'s claims gate.
+- [x] Add the app listing, demo subreddit, running post, and repository links.
 - [ ] Add the optional public video and repository links if they improve the
       entry and are safe to publish.
-- [ ] Preview the complete submission in English.
+- [x] Preview the populated submission in English; it remains an intentionally
+      unsubmitted draft until the entrant gives final-submit confirmation.
 - [ ] Submit; do not leave the entry as a draft.
 - [ ] Capture the submission confirmation and final public/project URL.
 
@@ -95,8 +114,8 @@ completed by repository code alone.
 
 - [x] Enroll the entrant's Reddit account at
       [developers.reddit.com](https://developers.reddit.com/).
-- [ ] Create a dedicated, public demo subreddit with fewer than 200 members, or
-      configure judge access with `dr-admin-approve`.
+- [x] Reddit approved the dedicated demo subreddit as Public. Devvit Admin
+      Helper 0.0.6 remains installed as a secondary access safeguard.
 - [x] Give the entrant account moderator permission needed to install/playtest.
 - [x] Repository and Devvit configuration use the RAMAGEDDON name and original
       copy; no template name placeholder remains.
@@ -106,10 +125,11 @@ completed by repository code alone.
 - [x] Authenticate the local CLI with `npm run login` (`u/BoneShaman`).
 - [x] Install the uploaded app to the dedicated playtest subreddit.
 - [ ] Test the generated post as developer, moderator, and ordinary user.
-- [x] Upload the known-good build as Devvit version 0.0.1.
+- [x] Upload the known-good build as Devvit version 0.0.5.
 - [x] Copy the resulting `developers.reddit.com/apps/{app-name}` listing URL.
 - [x] Create a clean demonstration post that launches the uploaded version.
-- [ ] Open the post from a separate, non-moderator Reddit account.
+- [x] Open the exact post from a fresh, signed-out Firefox Private Browsing
+      session and verify the embedded RAMAGEDDON feed card loads.
 - [ ] If seeking normal public distribution, submit with `npm run launch` and
       monitor Reddit app review. Do not assume review will finish before the
       hackathon deadline.
@@ -153,7 +173,9 @@ completed by repository code alone.
 
 ### Stage 1: viability and required platform
 
-- [ ] The game launches and finishes a complete run in a Reddit Interactive Post.
+- [x] The game launches and finishes a complete run in a Reddit Interactive Post;
+      the initial live build completed a synced run, 0.0.2 was separately
+      verified through its first upgrade, and the final 0.0.5 webview is live.
 - [x] The client is Devvit Web, not a teaser that links to an external full game.
 - [x] Devvit is materially used for authenticated identity and shared Redis state.
 - [x] The menu/results surface daily community mechanics without the README.
@@ -173,7 +195,7 @@ completed by repository code alone.
 - [x] A verified x21 wreck combo/cascade with 18 simultaneous hot wrecks
       remained controllable and readable.
 - [ ] Every button has hover/focus/pressed/disabled feedback where applicable.
-- [ ] Empty, loading, offline, API-error, and duplicate-submission states have
+- [x] Empty, loading, offline, API-error, and duplicate-submission states have
       understandable messages and recovery paths.
 
 ### Polish
@@ -185,7 +207,7 @@ completed by repository code alone.
 - [ ] The uploaded version completes the same flow depicted in screenshots/video.
 - [x] Gameplay remained stable through a controlled x21 wreck combo/cascade
       with 18 hot wrecks active simultaneously.
-- [ ] A run can be retried repeatedly without duplicate listeners, stale state,
+- [x] A run can be retried repeatedly without duplicate listeners, stale state,
       or accumulating performance loss.
 - [x] Server failure cannot freeze the core result screen or erase the local
       result before showing it.
@@ -223,9 +245,9 @@ completed by repository code alone.
       x21 wreck combo/cascade with 18 hot wrecks active simultaneously.
 - [x] Enemy counts and transient object lifetimes are bounded; expired objects are
       removed from simulation arrays.
-- [x] Hit-stop, camera trauma, particles, procedural animation, and synthesized
-      WebAudio reinforce impact while
-      preserving steering authority.
+- [x] Hit-stop, camera trauma, particles, procedural animation, and hybrid
+      synthesized/original sample audio reinforce impact while preserving
+      steering authority.
 - [x] Responsive Canvas scaling, portrait card layouts, keyboard, and virtual
       touch controls are implemented for Devvit views.
 
@@ -261,8 +283,10 @@ npm run build
       leaderboard, profile, and Wreckpile updates.
 - [x] Run submissions have a daily cap, repeat votes are idempotent/changeable,
       bodies are capped, and API failures return constrained messages.
-- [ ] Mobile and desktop frame rates remain playable during the densest intended
-      scene.
+- [x] Desktop and exact mobile-sized browser runs remain playable during the
+      intended full-run density; a prior natural 180-second audit held
+      approximately 54 fps even under 4× CPU throttling, and the final narrow
+      cascade proof kept a 36-car aligned chain visible at 333×515.
 - [ ] Browser console and Devvit server logs remain clean through two full runs.
 
 Packaging/remnant search before upload:
@@ -286,9 +310,11 @@ captures without permission.
 
 - [x] The built app has an original name and branding; no Reddit, Snoo, or other Reddit
       trademark appears without written approval.
-- [x] Active production rendering and audio are original procedural
-      Phaser/WebAudio systems; the production bundle contains no generated or
-      third-party production game assets.
+- [x] Active production rendering is original procedural Phaser work. Production
+      audio is an original hybrid of WebAudio synthesis and entrant-directed,
+      locally generated Stable Audio 3 SFX with documented provenance; the
+      production bundle contains no stock-library or unlicensed third-party game
+      assets.
 - [x] The game does not link out to a fuller version on another platform.
 - [x] Players are never asked for Reddit credentials or unnecessary personal data.
 - [x] Only Reddit username, opaque account ID, and documented gameplay/community
@@ -325,19 +351,24 @@ Also verify:
 
 - [x] Splash and game shells explicitly disable inline scrolling and overscroll.
 - [x] Critical gameplay state uses text/shape alongside color and does not require
-      audio; `M` toggles all synthesized sound.
-- [ ] Text remains legible without overlapping at the smallest supported size.
+      audio; `M` toggles all game sound.
+- [x] Text remains legible without overlapping in the exact 613×512 feed and
+      333×515 expanded browser layouts.
 - [x] The launch button has labeled semantics plus visible hover, active, and
       `focus-visible` treatment; canvas choices also include number labels.
 - [x] Camera trauma and hit-stop are bounded; no rapid full-screen flash system is
       used.
 - [x] `P` pause stops simulation danger and engine audio.
 
+Exact-viewport browser QA is evidence for layout and input behavior, not a claim
+that the game has completed native Reddit mobile or ordinary-user access
+verification. Those rows remain open above.
+
 ## Final hour
 
-- [ ] Freeze feature work; change only submission blockers.
-- [ ] Upload one final known-good build.
-- [ ] Record its app version and time.
+- [x] Freeze feature work; change only submission blockers.
+- [x] Upload one final known-good build.
+- [x] Record the installed build: Devvit 0.0.5, live-verified July 15, 2026 AEST.
 - [ ] Complete one ordinary-user desktop run from the exact demo link.
 - [ ] Complete one touch/mobile run from the exact demo link.
 - [ ] Confirm leaderboard, crew, Wreckpile, and vote updates from two accounts.

@@ -69,6 +69,10 @@ external uploaded-post checks later in this document.
 - [x] Devpost submission completed July 15, 2026 at approximately 1:43pm AEST;
       the confirmation banner, **SUBMITTED TO** state, 11-image gallery, and
       public unauthenticated project URL were verified.
+- [x] The final Devpost refresh displays **WRECKCADE**, the final story and links,
+      11 new captioned images, and **SUBMITTED TO** status. A signed-out public
+      visual audit confirmed the legacy `/software/ramageddon` URL remains
+      healthy; the project editor remains **SUBMITTED 5/5**.
 - [ ] An ordinary-user run, multi-account Redis verification, and native Reddit
       mobile verification remain recommended evidence rather than submission
       blockers.
@@ -113,7 +117,7 @@ completed by repository code alone.
 - [ ] If entering as a team or organization, appoint one eligible representative
       authorized to submit for everyone.
 - [x] Create, populate, and submit the project before the deadline.
-- [ ] Refresh the submitted project title, copy, links, and gallery for
+- [x] Refresh the submitted project title, copy, links, and gallery for
       WRECKCADE, then confirm it remains in **SUBMITTED TO** state.
 - [x] Paste only claims that pass `docs/SUBMISSION.md`'s claims gate.
 - [x] Add the app listing, demo subreddit, running post, and repository links.
@@ -144,9 +148,13 @@ completed by repository code alone.
 - [x] Repository copy and in-game surfaces use the WRECKCADE name; the legacy
       technical slug is retained only for install/state continuity and no
       template placeholder remains.
-- [ ] Change the Devvit app-profile display name from the legacy title to
-      **WRECKCADE: Wrecks Become Weapons**. This manual account step remains
-      pending and must not be inferred from the in-game rebrand.
+- [ ] Replace the legacy Devvit app-profile metadata with name **WRECKCADE:
+      Wrecks Become Weapons**; description **A three-minute destruction-derby
+      survivor where every wreck becomes a high-speed weapon.**; privacy URL
+      `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md`; and
+      terms URL `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md`.
+      This manual account step remains pending and must not be inferred from the
+      in-game rebrand.
 - [x] Reddit rejected the taken `ramageddon` slug; `ramageddon-game` passed the
       live uniqueness check and remains the technical Devvit app name. The
       in-game player-facing title is **WRECKCADE**.
@@ -246,8 +254,8 @@ completed by repository code alone.
 - [x] The prior uploaded 0.0.5 version completed a mobile-sized run/result and
       synced its Wreckpile and Blueprint Vote flow. Live 0.0.8 Reddit shell and
       modal captures now occupy `docs/media/09-live-reddit-result.png` and
-      `docs/media/10-live-reddit-feed.png`; complete the remaining WRECKCADE
-      gallery refresh before updating Devpost.
+      `docs/media/10-live-reddit-feed.png`; the final 11-image WRECKCADE gallery
+      and captions are installed and verified on the public Devpost page.
 - [x] Gameplay remained stable through a controlled x21 wreck combo/cascade
       with 18 hot wrecks active simultaneously.
 - [x] A run can be retried repeatedly without duplicate listeners, stale state,
@@ -428,7 +436,7 @@ verification. Those rows remain open above.
 - [x] No optional video is attached, so the one-minute video gate is not
       applicable to the submitted entry.
 - [x] The earlier submitted description was read against the visible 0.0.5 build.
-- [ ] Re-read the refreshed WRECKCADE description against the live 0.0.8 post.
+- [x] Re-read the refreshed WRECKCADE description against the live 0.0.8 post.
 - [x] Submit the Devpost entry and save confirmation evidence.
 - [ ] Do not remove access or introduce incompatible updates during judging.
 

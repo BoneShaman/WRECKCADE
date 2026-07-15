@@ -21,17 +21,19 @@ Do not replace the running demo post with a standalone web-hosting link. Judges
 need the game running as a Reddit Interactive Post.
 
 The WRECKCADE repository is public and verified at the URL above; both origin
-fetch and push point to it. Commit `f63fe85` publishes the current WRECKCADE
-tree on `origin/main`, and the source, privacy-policy, and terms URLs are verified
-public release evidence. The WRECKCADE Reddit post above is the verified
-demonstration URL to use in the refreshed submission.
+fetch and push point to it. The current WRECKCADE tree is published on
+`origin/main`, and the source, privacy-policy, and terms URLs are verified public
+release evidence. The WRECKCADE Reddit post above is the demonstration URL used
+in the final refreshed submission.
 
 ## Current release evidence
 
 - Devpost accepted the submission on July 15, 2026 at approximately 1:43pm AEST.
-  The project page displays **Project submitted!** and **SUBMITTED TO**, remains
-  editable until the deadline, and is publicly reachable without session
-  cookies at `https://devpost.com/software/ramageddon`.
+  The final public page displays **WRECKCADE**, the final story and links, 11 new
+  captioned images, and **SUBMITTED TO** status. A signed-out visual audit
+  confirmed it is publicly reachable without session cookies at the retained
+  legacy URL `https://devpost.com/software/ramageddon`; the project editor
+  remains **SUBMITTED 5/5**.
 - Devvit 0.0.8 is uploaded and installed to `r/ramageddon_game_dev`; the CLI
   install listing confirms 0.0.8 is active.
 - A visibly signed-out in-app browser opened the exact **WRECKCADE: Daily
@@ -60,9 +62,11 @@ demonstration URL to use in the refreshed submission.
 - A prior live mobile-sized 0.0.5 run completed at 1,778 score, 12 wrecks, x7
   best combo, and 24 scrap; its result synced and rendered the Wreckpile and
   Blueprint Vote flow without a corresponding production error log entry.
-- The Devvit app-profile display name still exposes the legacy title and must be
-  changed manually to **WRECKCADE: Wrecks Become Weapons**. This document does
-  not treat the profile rebrand as complete.
+- The Devvit app profile still requires a manual metadata refresh: name
+  **WRECKCADE: Wrecks Become Weapons**; description **A three-minute
+  destruction-derby survivor where every wreck becomes a high-speed weapon.**;
+  and the verified WRECKCADE privacy-policy and terms URLs listed above. This
+  document does not treat the profile rebrand as complete.
 - A complete ordinary-user run, native Reddit mobile, and two-account
   shared-state testing remain recommended evidence rather than submission
   blockers.

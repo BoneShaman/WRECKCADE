@@ -59,14 +59,16 @@ Original prompt: Work all the way through into an incredibly fun and awesome jui
 - The generic dashboard garage is gone. Crew selection now takes place in a physical yellow/cyan/orange demolition workshop with riveted pit boards, welded angled crew plates, work-light selection, a stamped data control, and squared ignition action. Exact 1280×720, 613×512, 390×844, and 333×515 captures remain readable and interaction tests pass.
 - Vehicle/hazard integration is complete: player and enemy sprites swap through healthy, battered, critical, and wrecked art without moving code-controlled hitboxes; restart-safe pools cover cars, four barrel variants, eight blast frames, and sparse repair cases. Focused QA verified all enemy damage rows, a three-barrel 240-point chain with bounded player damage, persistent repair pickup behavior, clean restarts, and zero console/page errors.
 - Mobile driving now uses a fixed left steering wheel plus a held right shifter: holding accelerates and ticking it left engages drift without releasing throttle. Strict pointer ownership and reset-on-blur/visibility/resize/modal logic remove the orphaned-pointer failure mode. Desktop WASD/arrow and Space/Left-Shift parity remains intact, and level-up plates visibly advertise working `1`/`2`/`3` shortcuts.
-- Release 0.0.8 is uploaded and installed to `r/ramageddon_game_dev`; `devvit list installs` confirms it as the active version. The new **WRECKCADE: Daily Wreckpile** post is live at `https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/`. A visibly signed-out in-app browser confirmed its `0-0-8-webview`, rendered the WRECKCADE splash, activated **WRECK THE HORDE**, and reached the generated-car Crew Garage inside the Reddit modal. Fresh live Reddit modal/feed captures now occupy `docs/media/09-live-reddit-result.png` and `docs/media/10-live-reddit-feed.png`. The public repository rename is verified at `https://github.com/BoneShaman/WRECKCADE`, origin fetch/push both use that URL, and commit `f63fe85` publishes the current tree on `origin/main`; the public source, privacy-policy, and terms URLs are verified. The app-profile display name and submitted Devpost page still require their WRECKCADE public-surface refresh, and a live mobile 0.0.8 run also remains open.
+- Release 0.0.8 is uploaded and installed to `r/ramageddon_game_dev`; `devvit list installs` confirms it as the active version. The new **WRECKCADE: Daily Wreckpile** post is live at `https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/`. A visibly signed-out in-app browser confirmed its `0-0-8-webview`, rendered the WRECKCADE splash, activated **WRECK THE HORDE**, and reached the generated-car Crew Garage inside the Reddit modal. Fresh live Reddit modal/feed captures now occupy `docs/media/09-live-reddit-result.png` and `docs/media/10-live-reddit-feed.png`. The public repository rename is verified at `https://github.com/BoneShaman/WRECKCADE`, origin fetch/push both use that URL, and the current tree is published on `origin/main`; the public source, privacy-policy, and terms URLs are verified. The app-profile display name still requires its WRECKCADE public-surface refresh.
+- Final Devpost refresh is complete: the project editor remains **SUBMITTED 5/5**, and the public project displays **WRECKCADE**, the final story and links, 11 new captioned images, and **SUBMITTED TO** status. A signed-out visual audit of `https://devpost.com/software/ramageddon` confirmed the legacy URL remains healthy while the player-facing title, gallery, captions, live Reddit link, repository link, app-listing link, and submission badge all render correctly.
 
 ## Active TODO
 
-- Capture and install the final WRECKCADE screenshot set.
-- Update the Reddit app-profile display name and refresh the already-submitted
-  Devpost entry before its edit deadline.
-- Complete a live mobile-sized 0.0.8 run from the WRECKCADE post.
+- Update the Reddit app profile to **WRECKCADE: Wrecks Become Weapons** with the
+  final three-minute destruction-derby-survivor description and the public
+  WRECKCADE privacy-policy and terms URLs.
+- Complete the entrant-only eligibility, ownership/AI-asset-rights,
+  prior-win/conflict, and Stable Audio 3 licensing confirmations.
 - Keep the submitted entry and live judge surfaces available through judging;
-  optional video, native mobile, entrant attestations, and two-account checks
-  remain non-blocking unless the official rules or judging flow require them.
+  optional video, native mobile, ordinary-user, and two-account checks remain
+  non-blocking unless the official rules or judging flow require them.

@@ -1,8 +1,8 @@
-# RAMAGEDDON
+# WRECKCADE
 
 **The horde is the weapon. Wrecks become weapons.**
 
-RAMAGEDDON is a compact top-down destruction-derby survivor built for Reddit
+WRECKCADE is a compact top-down destruction-derby survivor built for Reddit
 with Phaser and Devvit Web. You drive into a collapsing arena, outmaneuver an
 ever-thickening swarm, and turn a clean ram into high-speed kinetic ammunition.
 A ram-destroyed vehicle launches as a hot wreck through its pursuers; each
@@ -20,13 +20,19 @@ leaderboards, and **Blueprint Vote** are the engine around it.
 > client and Hono/Redis server pass type-check, lint, and production build.
 > Controlled playtesting reached first impact in under five seconds, first
 > level-up at 21.6 seconds, and a confirmed x21 wreck combo/cascade with 18 hot
-> wrecks active simultaneously. The latest uploaded build is installed and
-> running in the linked Reddit post. Judge-access testing and the external
-> Devpost entry remain tracked in [the competition checklist](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/COMPETITION_CHECKLIST.md).
+> wrecks active simultaneously. Devvit CLI verification reports version 0.0.8
+> installed to the public demo subreddit. A visibly signed-out browser opened
+> the exact WRECKCADE post, confirmed its `0-0-8-webview`, rendered the live
+> splash, launched **WRECK THE HORDE**, and reached the generated-car Crew Garage
+> inside the Reddit modal. The public repository is renamed to WRECKCADE and its
+> fetch/push origin is verified; pushing the current tree, correcting the
+> app-profile display name, refreshing Devpost, and completing a live mobile
+> 0.0.8 run remain tracked in
+> [the competition checklist](docs/COMPETITION_CHECKLIST.md).
 
 ## The hook: wrecks become weapons
 
-Most arena survivors treat a defeated enemy as subtraction. RAMAGEDDON turns it
+Most arena survivors treat a defeated enemy as subtraction. WRECKCADE turns it
 into multiplication: one wreck can tear through the cars behind it and launch a
 chain that changes the entire fight.
 
@@ -49,17 +55,18 @@ and bigger scores.
 
 The control set is deliberately small:
 
-| Action                                  | Keyboard                                               | Pointer / touch                                                           |
-| --------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------- |
-| Throttle / reverse / steer              | `WASD` or arrow keys                                   | Drag the left virtual stick: vertical is throttle, horizontal is steering |
-| Handbrake drift                         | `Space` or left `Shift`                                | Hold the right-side drift button                                          |
-| Choose crew, upgrade, or Blueprint Vote | `1`, `2`, or `3`; crew also supports left/right arrows | Tap the card                                                              |
-| Pause / resume                          | `P`                                                    | Tap **PAUSE**                                                             |
-| Sound on/off                            | `M`                                                    | Tap **SOUND**                                                             |
-| Fullscreen                              | `F`                                                    | —                                                                         |
-| Start                                   | `Enter` or `Space`                                     | Tap the primary button                                                    |
-| Replay after a run                      | `R` or `Enter`                                         | Tap **Run It Back**                                                       |
-| Delete stored player data from garage   | Press `D` twice within five seconds                    | Tap **Privacy: Delete My Data** twice                                     |
+| Action                                  | Keyboard                                               | Pointer / touch                                       |
+| --------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------- |
+| Steer                                   | `A` / `D` or left/right arrows                         | Hold or drag across the fixed left steering wheel     |
+| Throttle / reverse                      | `W` / `S` or up/down arrows                            | Hold the right shifter for throttle                   |
+| Handbrake drift                         | `Space` or left `Shift`                                | Slide the held shifter left; throttle remains engaged |
+| Choose crew, upgrade, or Blueprint Vote | `1`, `2`, or `3`; crew also supports left/right arrows | Tap the stamped plate                                 |
+| Pause / resume                          | `P`                                                    | Tap **PAUSE**                                         |
+| Sound on/off                            | `M`                                                    | Tap **SOUND**                                         |
+| Fullscreen                              | `F`                                                    | —                                                     |
+| Start                                   | `Enter` or `Space`                                     | Tap the primary ignition plate                        |
+| Replay after a run                      | `R` or `Enter`                                         | Tap **Run It Back**                                   |
+| Delete stored player data from garage   | Press `D` twice within five seconds                    | Tap **Privacy: Delete My Data** twice                 |
 
 Weapons fire automatically so attention stays on driving, momentum, drift
 angles, and lining one wreck up with the next victim.
@@ -75,7 +82,7 @@ angles, and lining one wreck up with the next victim.
 
 ## Why it belongs on Reddit
 
-RAMAGEDDON is designed as asynchronous community play, not a web game with a
+WRECKCADE is designed as asynchronous community play, not a web game with a
 leaderboard stapled on afterward.
 
 - **Daily Wreckpile:** everyone tackles the same server-generated daily seed.
@@ -90,7 +97,7 @@ leaderboard stapled on afterward.
 - **Blueprint Vote:** players vote between three safe, pre-authored garage
   blueprints. The winning blueprint becomes the next day's community-wide
   starting upgrade.
-- **No coerced sharing:** RAMAGEDDON does not post or comment on a player's
+- **No coerced sharing:** WRECKCADE does not post or comment on a player's
   behalf, and posting or subscribing is never required for progress.
 
 These systems use Devvit server endpoints and Redis. The competition build must
@@ -142,7 +149,7 @@ npm run launch
 
 Publishing is an external account action. Do not put credentials in this
 repository. The live app, subreddit, and post links are recorded in
-[the submission guide](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/SUBMISSION.md);
+[the submission guide](docs/SUBMISSION.md);
 final judge-access and Devpost submission checks still require the entrant
 account.
 
@@ -160,9 +167,9 @@ Reddit interactive post
 ```
 
 - `src/client/` contains the splash, responsive shell, Phaser 4 Canvas
-  bootstrap, fixed-step simulation, procedural vector rendering, input,
-  hybrid WebAudio/original sample playback, combat presentation, and community
-  screens.
+  bootstrap, fixed-step simulation, generated sprite/environment atlases,
+  procedural semantic overlays and effects, input, hybrid WebAudio/original
+  sample playback, combat presentation, and community screens.
 - `src/server/` contains Hono endpoints, Reddit/Devvit integration, validation,
   Redis transactions, persistence, post creation, and triggers.
 - `src/shared/` contains request and response types shared across the boundary.
@@ -178,7 +185,7 @@ so these checks are input hardening rather than replay-authoritative anti-cheat.
 
 ## Data and privacy
 
-RAMAGEDDON is designed to use only the minimum Reddit data needed to operate the
+WRECKCADE is designed to use only the minimum Reddit data needed to operate the
 game:
 
 - Reddit-provided username and opaque account ID; current post/subreddit context
@@ -192,18 +199,18 @@ game:
 The competition build stores these records in Devvit Redis. Player profiles are
 keyed by Reddit's opaque account ID rather than by username and expire 30 days
 after the latest saved run. Player-scoped daily records, leaderboard entries,
-and Blueprint Vote selections expire after 16 days. RAMAGEDDON does not request
+and Blueprint Vote selections expire after 16 days. WRECKCADE does not request
 or store Snoovatar URLs, passwords, email addresses, real names, or payment
 information, and it does not send gameplay or identity data to an external
 analytics or leaderboard service. Public boards may display the Reddit username
 already associated with the play session, score, crew, and contribution.
 
-Players can delete their stored RAMAGEDDON data directly from the Crew Garage:
+Players can delete their stored WRECKCADE data directly from the Crew Garage:
 press `D` twice within five seconds or tap **Privacy: Delete My Data** twice. The
 action removes the account-keyed profile, retained player-scoped daily records,
 leaderboard positions, and daily Blueprint Vote selections. Shared crew and
 Wreckpile totals contain no username or account ID and may remain as anonymous
-community aggregates. RAMAGEDDON does not create comments or posts as the
+community aggregates. WRECKCADE does not create comments or posts as the
 player. Automatic platform account-deletion behavior must still be verified
 against the current [Devvit Rules](https://developers.reddit.com/docs/devvit_rules)
 before a public app-directory launch.
@@ -217,26 +224,27 @@ work.
 The current build is playable without audio, provides keyboard and touch
 pause/sound controls, uses text alongside color for critical state, and supports
 keyboard and touch driving. Release QA verifies the 613×512 feed card and
-333×515 expanded layouts without clipping or inline scrolling, plus keyboard
-driving and simulated touch steering, drift, pause, sound, card selection, and
-replay. The official browser client and focused smoke suite pass with no
-application-console errors. The final balance matrix rejects constant-turn
-driving across every daily variant, while an offense-prioritized active policy
-destroyed the Road King at 175.03 seconds; focused QA confirms the boss kill now
-resolves victory immediately instead of exposing the winner to a post-kill
-traffic death.
+333×515 expanded layouts without clipping or inline scrolling, plus parity
+between WASD and arrow-key driving, visible `1`/`2`/`3` upgrade shortcuts, and
+simulated two-thumb steering-wheel/shifter input for throttle, drift, pause,
+sound, card selection, and replay. The official browser client and focused smoke
+suite pass with no application-console errors. The final balance matrix rejects
+constant-turn driving across every daily variant, while an offense-prioritized
+active policy destroyed the Road King at 175.03 seconds; focused QA confirms the
+boss kill now resolves victory immediately instead of exposing the winner to a
+post-kill traffic death.
 
 Buttons are labeled, keyboard actions have visible focus treatment, critical
 health/XP/timer/upgrade information remains high contrast, and camera trauma
 and hit-stop are bounded. The current build does not claim a dedicated
-reduced-effects mode. Native Reddit mobile-client, ordinary-user, and
-judge-access verification remain release-gate items; they are not implied by
-the exact-viewport browser checks.
+reduced-effects mode. A signed-out desktop exact-link launch is verified; native
+Reddit mobile-client and logged-in ordinary-user runs remain release-gate items
+and are not implied by the exact-viewport browser checks.
 
 ## Support and reports
 
 Report a gameplay, safety, or privacy problem by sending Modmail to the
-subreddit that hosts the RAMAGEDDON post. Include the app version, device,
+subreddit that hosts the WRECKCADE post. Include the app version, device,
 browser/Reddit client, and steps to reproduce, but do not include credentials or
 other sensitive information. If the optional public repository is linked, its
 issue tracker may also be used for reproducible technical defects.
@@ -244,8 +252,7 @@ issue tracker may also be used for reproducible technical defects.
 ## Licensing and credits
 
 - Project code is distributed under the BSD 3-Clause terms in
-  [LICENSE](https://github.com/BoneShaman/RAMAGEDDON/blob/main/LICENSE), matching
-  `package.json`.
+  [LICENSE](LICENSE), matching `package.json`.
 - The app uses [Phaser](https://phaser.io/),
   [Devvit Web](https://developers.reddit.com/docs/capabilities/devvit-web/devvit_web_overview),
   [Hono](https://hono.dev/), [Vite](https://vite.dev/), and
@@ -253,8 +260,16 @@ issue tracker may also be used for reproducible technical defects.
   notices remain with those projects.
 - The repository began from Reddit's Devvit Phaser starter. Its copyright and
   BSD notice must be retained wherever that license requires.
-- Active RAMAGEDDON production visuals are drawn procedurally with Phaser
-  Graphics. Its audio combines runtime WebAudio synthesis with original SFX
+- WRECKCADE combines code-controlled hitboxes, attachments, combat feedback,
+  HUD, and controls with six entrant-directed image-generated runtime assets: a
+  patched arena floor, demolition-garage backdrop, drive-over decals, scrapyard
+  landmarks, nine vehicle models with four damage states each, and a
+  barrel/blast/repair atlas. The final WebP assets total roughly 1.62 MB and
+  were generated without reference images, chroma-keyed where transparency was
+  needed, normalized into stable frames, visually inspected, and integrated as
+  responsive game-space art; exact prompts and processing are recorded in
+  [`docs/VISUAL_PROVENANCE.md`](docs/VISUAL_PROVENANCE.md). Its audio combines
+  runtime WebAudio synthesis with original SFX
   layers generated locally using Stable Audio 3 and edited specifically for the
   game. No stock recordings or third-party sound-library files are included;
   exact prompts, seeds, and processing are recorded in
@@ -266,21 +281,21 @@ issue tracker may also be used for reproducible technical defects.
   built client without explicit written permission.
 
 The current creator/source/license record is maintained in the
-[asset and license ledger](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/ASSET_LEDGER.md).
+[asset and license ledger](docs/ASSET_LEDGER.md).
 Add any later music, footage, font, artwork, or other submitted component to
 that ledger before release.
 
 ## Submission materials
 
-- [Ready-to-paste Devpost copy and 60-second video plan](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/SUBMISSION.md)
-- [Deadline, eligibility, compliance, and external-account checklist](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/COMPETITION_CHECKLIST.md)
-- [Production asset and dependency license ledger](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/ASSET_LEDGER.md)
+- [Ready-to-paste Devpost copy and 60-second video plan](docs/SUBMISSION.md)
+- [Deadline, eligibility, compliance, and external-account checklist](docs/COMPETITION_CHECKLIST.md)
+- [Production asset and dependency license ledger](docs/ASSET_LEDGER.md)
 
 Live competition links:
 
-- App listing: <https://developers.reddit.com/apps/ramageddon-game>
+- Technical app listing (display-name correction pending): <https://developers.reddit.com/apps/ramageddon-game>
 - Demo subreddit: <https://www.reddit.com/r/ramageddon_game_dev>
-- Running demo post: <https://www.reddit.com/r/ramageddon_game_dev/comments/1uws1an/ramageddon_daily_wreckpile/>
-- Public source: <https://github.com/BoneShaman/RAMAGEDDON>
-- Privacy policy: <https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/PRIVACY.md>
-- Terms: <https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/TERMS.md>
+- Running WRECKCADE post: <https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/>
+- Public source (repository rename verified; current tree push pending): <https://github.com/BoneShaman/WRECKCADE>
+- Privacy-policy target pending current-tree push: <https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md>
+- Terms target pending current-tree push: <https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md>

@@ -1,8 +1,8 @@
-# RAMAGEDDON Privacy Notice
+# WRECKCADE Privacy Notice
 
 Effective: July 15, 2026
 
-RAMAGEDDON is a free Reddit interactive game. This notice describes the data
+WRECKCADE is a free Reddit interactive game. This notice describes the data
 used by the `ramageddon-game` Devvit app when someone opens or plays it.
 
 ## Data the app uses
@@ -31,7 +31,7 @@ with leaderboard score and contribution data inside the game.
 
 ## Storage and retention
 
-RAMAGEDDON stores game records in Reddit Devvit Redis for the subreddit where
+WRECKCADE stores game records in Reddit Devvit Redis for the subreddit where
 the app is installed. Player profiles expire 30 days after the latest saved
 run. Player-scoped daily records, leaderboard entries, vote selections, run
 receipts, and run-session records expire after no more than 17 days. Shared
@@ -48,19 +48,19 @@ deletion events remain governed by Reddit and the Devvit platform.
 ## Sharing and service providers
 
 Game data stays within Reddit/Devvit services except when the player chooses to
-share a screenshot or other information independently. RAMAGEDDON does not sell
+share a screenshot or other information independently. WRECKCADE does not sell
 personal data and does not post or comment on a player's behalf.
 
 ## Children and eligibility
 
 Use of the app is subject to Reddit's own age and account requirements. Do not
-use RAMAGEDDON if you are not permitted to use Reddit in your jurisdiction.
+use WRECKCADE if you are not permitted to use Reddit in your jurisdiction.
 
 ## Changes and contact
 
 Material changes will be reflected by updating this notice and its effective
 date. To ask a privacy question or report a problem, send Modmail to the
-subreddit hosting the official RAMAGEDDON post:
+subreddit hosting the official WRECKCADE post:
 <https://www.reddit.com/message/compose?to=r/ramageddon_game_dev>.
 
 Reddit's own privacy practices are described in the

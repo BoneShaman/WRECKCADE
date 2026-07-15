@@ -1,8 +1,8 @@
 {
   "private": true,
-  "name": "ramageddon-game",
+  "name": "wreckcade-game",
   "version": "1.0.0",
-  "description": "A juicy destruction-derby survivor built as a Reddit Devvit Web interactive post.",
+  "description": "WRECKCADE — a juicy destruction-derby survivor built as a Reddit Devvit Web interactive post.",
   "license": "BSD-3-Clause",
   "type": "module",
   "scripts": {

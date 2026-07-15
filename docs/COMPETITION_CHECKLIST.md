@@ -1,4 +1,4 @@
-# RAMAGEDDON Competition Checklist
+# WRECKCADE Competition Checklist
 
 Use this as the release gate for Reddit's Games with a Hook Hackathon. The
 [official rules](https://redditgameswithahook.devpost.com/rules) control if any
@@ -36,28 +36,36 @@ external uploaded-post checks later in this document.
       results, replay, sound toggle, pause, and fullscreen are implemented.
 - [x] Server-derived daily seed/modifier, profiles, streaks, Wreckpile, crew
       standings, leaderboard, and Blueprint Vote use Hono plus Devvit Redis.
-- [x] Active production visuals are procedural Phaser Graphics. Active audio
+- [x] Active production visuals combine Phaser-controlled hitboxes, combat,
+      attachments, HUD, controls, and semantic UI with six entrant-directed
+      image-generated runtime WebPs covering the environment, nine cars with
+      staged damage, barrels, blasts, and repair cases; visual prompts and
+      processing are documented in `docs/VISUAL_PROVENANCE.md`. Active audio
       combines responsive WebAudio synthesis with entrant-directed local Stable
-      Audio 3 SFX; prompts, seeds, processing, and rejected clips are documented
-      in `docs/AUDIO_PROVENANCE.md`, with no stock-library audio included.
+      Audio 3 SFX; prompts, seeds, processing, and rejected clips are documented in
+      `docs/AUDIO_PROVENANCE.md`, with no stock-library audio included.
 - [x] `npm run type-check`, `npm run lint`, and `npm run build` pass.
-- [x] Devvit 0.0.5 is uploaded, installed, and rendering its interactive launch
-      and expanded game surfaces in the existing Reddit post.
-- [x] Live desktop-browser validation confirmed the final `0-0-5-webview` with
-      real daily/community state. The production run started with active audio
-      and produced an x7 opening wreck cascade; the preceding 0.0.2 audit entered
-      a run and reached the first upgrade without a visible client error.
-- [x] Exact 613×512 feed and 333×515 expanded browser layouts, desktop controls,
-      simulated touch steering/drift/pause/sound, and the Road King victory path
-      pass focused local release QA.
+- [x] Devvit 0.0.8 is uploaded and installed to `r/ramageddon_game_dev`; the CLI
+      install listing confirms it as the active version.
+- [x] A prior live desktop-browser validation confirmed the 0.0.5
+      `0-0-5-webview` with real daily/community state. That production run
+      started with active audio and produced an x7 opening wreck cascade; the
+      preceding 0.0.2 audit entered a run and reached the first upgrade without
+      a visible client error.
+- [x] Current 0.0.8 local QA covers exact 613×512 and 333×515 layouts, WASD/arrow
+      parity, visible `1`/`2`/`3` upgrade shortcuts, simulated two-thumb
+      steering-wheel/throttle-drift-shifter input, generated vehicle damage
+      states, barrel chains, sparse repairs, and the Road King victory path.
 - [x] Twelve constant-turn exploit runs across all six modifiers and five arenas
       produced zero wins. An offense-prioritized active policy destroyed the
       Road King at 175.03 seconds; the boss kill now ends the run immediately,
       and its focused 150.2-second QA branch reaches the result state without an
       error.
-- [x] Reddit approved the demo community as Public, and a fresh Firefox Private
-      Browsing session loaded the exact post plus the RAMAGEDDON feed card while
-      visibly signed out.
+- [x] Reddit approved the demo community as Public. A visibly signed-out in-app
+      browser opened the exact **WRECKCADE: Daily Wreckpile** post, confirmed
+      its iframe source contains `0-0-8-webview`, rendered the WRECKCADE splash,
+      activated **WRECK THE HORDE**, and reached the generated-car Crew Garage
+      inside the Reddit modal.
 - [x] Devpost submission completed July 15, 2026 at approximately 1:43pm AEST;
       the confirmation banner, **SUBMITTED TO** state, 11-image gallery, and
       public unauthenticated project URL were verified.
@@ -67,28 +75,29 @@ external uploaded-post checks later in this document.
 
 ## Required submission bundle
 
-| Requirement                                            | Evidence                                                                                                                        | Done |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| Joined hackathon from eligible Devpost account         | Submitted Devpost entry and participant/dashboard view                                                                          | [x]  |
-| Game built with Reddit Developer Platform / Devvit Web | Uploaded app runs in Reddit post                                                                                                | [x]  |
-| All required Devpost fields completed in English       | Submitted public entry and final preview                                                                                        | [x]  |
-| Feature/functionality text description                 | Copy verified against uploaded build                                                                                            | [x]  |
-| Unique Devvit app listing                              | `https://developers.reddit.com/apps/ramageddon-game`                                                                            | [x]  |
-| Demo subreddit                                         | `https://www.reddit.com/r/ramageddon_game_dev`                                                                                  | [x]  |
-| Accessible post running the actual game                | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uws1an/ramageddon_daily_wreckpile/`                                     | [x]  |
-| Detailed root `README.md` describing game and play     | This repository's `README.md`                                                                                                   | [x]  |
-| App remains free and unrestricted through judging      | Public community plus signed-out exact-link test                                                                                | [x]  |
-| Rights cleared for every submitted component           | [Asset/source/license ledger](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/ASSET_LEDGER.md) plus entrant attestation | [ ]  |
-| Optional public video under one minute                 | `[DEMO_VIDEO_URL]`                                                                                                              | [ ]  |
-| Optional public source repository                      | `https://github.com/BoneShaman/RAMAGEDDON`                                                                                      | [x]  |
-| Public privacy policy                                  | `https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/PRIVACY.md`                                                            | [x]  |
-| Public terms                                           | `https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/TERMS.md`                                                              | [x]  |
-| Optional actionable Devvit feedback form               | Submitted-form confirmation                                                                                                     | [ ]  |
+| Requirement                                            | Evidence                                                                                                   | Done |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ---- |
+| Joined hackathon from eligible Devpost account         | Submitted Devpost entry and participant/dashboard view                                                     | [x]  |
+| Game built with Reddit Developer Platform / Devvit Web | Uploaded app runs in Reddit post                                                                           | [x]  |
+| All required Devpost fields completed in English       | Submitted public entry and final preview                                                                   | [x]  |
+| Feature/functionality text description                 | Copy verified against uploaded build                                                                       | [x]  |
+| Unique Devvit app listing                              | `https://developers.reddit.com/apps/ramageddon-game`                                                       | [x]  |
+| Demo subreddit                                         | `https://www.reddit.com/r/ramageddon_game_dev`                                                             | [x]  |
+| Accessible post running the actual game                | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/`                 | [x]  |
+| Detailed root `README.md` describing game and play     | This repository's `README.md`                                                                              | [x]  |
+| App remains free and unrestricted through judging      | Signed-out WRECKCADE exact-link launch and modal verification                                              | [x]  |
+| Rights cleared for every submitted component           | [`docs/ASSET_LEDGER.md`](ASSET_LEDGER.md) plus entrant attestation                                         | [ ]  |
+| Optional public video under one minute                 | `[DEMO_VIDEO_URL]`                                                                                         | [ ]  |
+| Optional public source repository                      | Public and renamed: `https://github.com/BoneShaman/WRECKCADE`                                              | [x]  |
+| Public privacy policy                                  | Target exists after current-tree push: `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md` | [ ]  |
+| Public terms                                           | Target exists after current-tree push: `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md`   | [ ]  |
+| Optional actionable Devvit feedback form               | Submitted-form confirmation                                                                                | [ ]  |
 
 The rules recommend a judging post in a **public subreddit with fewer than 200
-members**. Reddit approved `r/ramageddon_game_dev` as Public on July 15, 2026;
-the exact post and embedded RAMAGEDDON feed card subsequently loaded in a fresh,
-signed-out Firefox Private Browsing session.
+members**. Reddit approved `r/ramageddon_game_dev` as Public on July 15, 2026.
+The exact WRECKCADE post, splash, launch action, and generated-car Crew Garage
+subsequently loaded in a visibly signed-out in-app browser through the live
+0.0.8 webview.
 
 ## External account actions
 
@@ -103,16 +112,26 @@ completed by repository code alone.
 - [ ] Confirm the entrant/team/organization is eligible.
 - [ ] If entering as a team or organization, appoint one eligible representative
       authorized to submit for everyone.
-- [x] Create or open the RAMAGEDDON project before the deadline.
+- [x] Create, populate, and submit the project before the deadline.
+- [ ] Refresh the submitted project title, copy, links, and gallery for
+      WRECKCADE, then confirm it remains in **SUBMITTED TO** state.
 - [x] Paste only claims that pass `docs/SUBMISSION.md`'s claims gate.
 - [x] Add the app listing, demo subreddit, running post, and repository links.
 - [ ] Add the optional public video and repository links if they improve the
       entry and are safe to publish.
-- [x] Preview the populated submission in English; it remains an intentionally
-      unsubmitted draft until the entrant gives final-submit confirmation.
+- [x] Preview the populated submission in English while it was still a draft;
+      submit only after the entrant's final confirmation.
 - [x] Submit; the entry is no longer a draft.
 - [x] Capture the submission confirmation and final public/project URL:
       `https://devpost.com/software/ramageddon`.
+
+### GitHub
+
+- [x] Rename the public source repository to `BoneShaman/WRECKCADE`; verify
+      `gh repo view` reports it as PUBLIC and origin fetch/push both use the new
+      URL.
+- [ ] Push the current WRECKCADE tree before treating its policy/source file URLs
+      as final public release evidence.
 
 ### Reddit and Devvit
 
@@ -121,19 +140,26 @@ completed by repository code alone.
 - [x] Reddit approved the dedicated demo subreddit as Public. Devvit Admin
       Helper 0.0.6 remains installed as a secondary access safeguard.
 - [x] Give the entrant account moderator permission needed to install/playtest.
-- [x] Repository and Devvit configuration use the RAMAGEDDON name and original
-      copy; no template name placeholder remains.
+- [x] Repository copy and in-game surfaces use the WRECKCADE name; the legacy
+      technical slug is retained only for install/state continuity and no
+      template placeholder remains.
+- [ ] Change the Devvit app-profile display name from the legacy title to
+      **WRECKCADE: Wrecks Become Weapons**. This manual account step remains
+      pending and must not be inferred from the in-game rebrand.
 - [x] Reddit rejected the taken `ramageddon` slug; `ramageddon-game` passed the
-      live uniqueness check and is now the technical Devvit app name. The
-      player-facing title remains **RAMAGEDDON**.
+      live uniqueness check and remains the technical Devvit app name. The
+      in-game player-facing title is **WRECKCADE**.
 - [x] Authenticate the local CLI with `npm run login` (`u/BoneShaman`).
 - [x] Install the uploaded app to the dedicated playtest subreddit.
 - [ ] Test the generated post as developer, moderator, and ordinary user.
-- [x] Upload the known-good build as Devvit version 0.0.5.
+- [x] Upload and install the known-good build as Devvit version 0.0.8; confirm
+      the active install with the CLI listing.
 - [x] Copy the resulting `developers.reddit.com/apps/{app-name}` listing URL.
-- [x] Create a clean demonstration post that launches the uploaded version.
-- [x] Open the exact post from a fresh, signed-out Firefox Private Browsing
-      session and verify the embedded RAMAGEDDON feed card loads.
+- [x] Create **WRECKCADE: Daily Wreckpile**, a clean demonstration post that
+      launches 0.0.8.
+- [x] Open the exact new post in a visibly signed-out browser, confirm the
+      `0-0-8-webview`, activate **WRECK THE HORDE**, and reach the generated-car
+      Crew Garage inside the Reddit modal.
 - [ ] If seeking normal public distribution, submit with `npm run launch` and
       monitor Reddit app review. Do not assume review will finish before the
       hackathon deadline.
@@ -159,7 +185,7 @@ completed by repository code alone.
       location where participation or receipt of a prize is prohibited.
 - [ ] No entrant is disqualified through sponsor/administrator employment,
       judging, close family/household ties, affiliation, or another conflict.
-- [ ] RAMAGEDDON was newly created or significantly updated after June 17, 2026.
+- [ ] WRECKCADE was newly created or significantly updated after June 17, 2026.
 - [ ] If it existed earlier, the Devpost description clearly identifies the
       significant changes made during the submission period.
 - [ ] The project has not won a previous Reddit hackathon.
@@ -167,11 +193,13 @@ completed by repository code alone.
       that triggers the official-rules exclusion.
 - [ ] The entrant owns or has sufficient license to every line of submitted code,
       image, texture, font, sound, track, video clip, logo, and written passage.
-- [ ] Resolve player-facing title clearance: Nintendo still lists a separate
-      commercial game titled exactly
-      [`Ramageddon`](https://www.nintendo.com/en-ca/store/products/ramageddon-switch/).
-      This is not itself proof of infringement, but retaining the same game name
-      leaves an avoidable trademark/confusion risk under the originality gate.
+- [x] Resolve player-facing title clearance: the exact **RAMAGEDDON** collision
+      on Nintendo was removed by rebranding to **WRECKCADE**. Exact-name sweeps
+      found no WRECKCADE game/store, indexed web/social, GitHub repository/code,
+      IP Australia, or USPTO match; `.com` and `.com.au` also had no DNS/registry
+      footprint during the July 15 audit. This is a documented preliminary
+      clearance search, not a substitute for professional similarity clearance
+      before a larger commercial launch.
 - [x] `package.json` and the root `LICENSE` both declare BSD-3-Clause.
 - [ ] Contracted or AI-assisted work remains directed by the entrant and can be
       represented as the entrant's original project under the relevant licenses.
@@ -183,12 +211,13 @@ completed by repository code alone.
 ### Stage 1: viability and required platform
 
 - [x] The game launches and finishes a complete run in a Reddit Interactive Post;
-      the initial live build completed a synced run, 0.0.2 was separately
-      verified through its first upgrade, and the final 0.0.5 webview is live.
+      the initial live build completed a synced run and 0.0.2 was separately
+      verified through its first upgrade. Devvit CLI confirms 0.0.8 as the active
+      install, and signed-out exact-post readback reaches its Crew Garage.
 - [x] The client is Devvit Web, not a teaser that links to an external full game.
 - [x] Devvit is materially used for authenticated identity and shared Redis state.
 - [x] The menu/results surface daily community mechanics without the README.
-- [x] The experience has original procedural presentation and a distinct
+- [x] The experience has an original hybrid presentation and a distinct
       wreck-chain driving system—not renamed clone assets.
 - [x] The “hook” is recurring community play and tomorrow's voted upgrade, not a
       literal hook gag.
@@ -213,8 +242,11 @@ completed by repository code alone.
       is referenced by the active application screens.
 - [x] No debug panel, fake score, private URL, broken image, overflowing text,
       or uncaught error appears in the verified live and exact-viewport paths.
-- [x] The uploaded 0.0.5 version completed the same mobile-sized run/result,
-      synced Wreckpile, and Blueprint Vote flow depicted in the gallery.
+- [x] The prior uploaded 0.0.5 version completed a mobile-sized run/result and
+      synced its Wreckpile and Blueprint Vote flow. Live 0.0.8 Reddit shell and
+      modal captures now occupy `docs/media/09-live-reddit-result.png` and
+      `docs/media/10-live-reddit-feed.png`; complete the remaining WRECKCADE
+      gallery refresh before updating Devpost.
 - [x] Gameplay remained stable through a controlled x21 wreck combo/cascade
       with 18 hot wrecks active simultaneously.
 - [x] A run can be retried repeatedly without duplicate listeners, stale state,
@@ -276,9 +308,9 @@ npm run build
       exit successfully.
 - [x] There are no TypeScript, lint, build, or asset-resolution warnings that
       conceal a real defect.
-- [x] The production `dist/client` contains only the RAMAGEDDON entrypoints,
-      styles, scripts, source maps, and module preload helper; unused starter
-      PNGs are not copied into the Devvit bundle.
+- [x] The production `dist/client` contains only the WRECKCADE entrypoints,
+      styles, scripts, source maps, WAV/WebP production assets, and module preload
+      helper; unused starter PNGs are not copied into the Devvit bundle.
 - [x] Client fetches target only the app's `/api/init`, `/api/run`, `/api/vote`,
       and player-initiated `/api/profile` deletion endpoints.
 - [x] Public server endpoints are under `/api/` and use bounded request bodies.
@@ -320,11 +352,13 @@ captures without permission.
 
 - [x] The built app has an original name and branding; no Reddit, Snoo, or other Reddit
       trademark appears without written approval.
-- [x] Active production rendering is original procedural Phaser work. Production
-      audio is an original hybrid of WebAudio synthesis and entrant-directed,
-      locally generated Stable Audio 3 SFX with documented provenance; the
-      production bundle contains no stock-library or unlicensed third-party game
-      assets.
+- [x] Active production rendering combines original Phaser work with six
+      entrant-directed, provenance-documented WebPs: four environment assets,
+      a nine-vehicle/four-damage-state atlas, and a barrel/blast/repair atlas.
+      Production audio is an original hybrid of WebAudio synthesis and
+      entrant-directed, locally generated Stable Audio 3 SFX with documented
+      provenance; the production bundle contains no stock-library or unlicensed
+      third-party game assets.
 - [x] The game does not link out to a fuller version on another platform.
 - [x] Players are never asked for Reddit credentials or unnecessary personal data.
 - [x] Only Reddit username, opaque account ID, and documented gameplay/community
@@ -378,18 +412,22 @@ verification. Those rows remain open above.
 
 - [x] Freeze feature work; change only submission blockers.
 - [x] Upload one final known-good build.
-- [x] Record the installed build: Devvit 0.0.5, live-verified July 15, 2026 AEST.
+- [x] Record the installed build: Devvit 0.0.8, confirmed active by the CLI
+      install listing on July 15, 2026 AEST.
 - [ ] Complete one ordinary-user desktop run from the exact demo link.
 - [x] Complete one mobile-sized run from the exact demo link: live 0.0.5 ended
       at 1,778 score, 12 wrecks, x7 best combo, and 24 scrap with synced results.
       Native-device touch steering remains a separate recommended check.
+- [ ] Complete and sync a live mobile-sized 0.0.8 run from the WRECKCADE post.
 - [ ] Confirm leaderboard, crew, Wreckpile, and vote updates from two accounts.
-- [x] Open every submitted link without relying on the Devpost login: the Reddit
-      post loaded in signed-out Private Browsing, while the GitHub repository,
-      Reddit app page, and submitted Devpost project returned public HTTP 200.
+- [x] Open the new WRECKCADE post without relying on a Reddit login and verify its
+      0.0.8 splash, launch action, and Crew Garage inside the Reddit modal.
+- [ ] Repeat the complete signed-out/public-link audit after the current-tree
+      push, app-profile display-name correction, and Devpost refresh.
 - [x] No optional video is attached, so the one-minute video gate is not
       applicable to the submitted entry.
-- [x] Re-read the final description against the visible 0.0.5 build.
+- [x] The earlier submitted description was read against the visible 0.0.5 build.
+- [ ] Re-read the refreshed WRECKCADE description against the live 0.0.8 post.
 - [x] Submit the Devpost entry and save confirmation evidence.
 - [ ] Do not remove access or introduce incompatible updates during judging.
 

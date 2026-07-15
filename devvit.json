@@ -27,8 +27,8 @@
   "menu": {
     "items": [
       {
-        "label": "Create RAMAGEDDON post",
-        "description": "Create a new RAMAGEDDON Daily Wreckpile post",
+        "label": "Create WRECKCADE post",
+        "description": "Create a new WRECKCADE Daily Wreckpile post",
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/post-create"
@@ -36,7 +36,8 @@
     ]
   },
   "triggers": {
-    "onAppInstall": "/internal/triggers/on-app-install"
+    "onAppInstall": "/internal/triggers/on-app-install",
+    "onAppUpgrade": "/internal/triggers/on-app-install"
   },
   "scripts": {
     "build": "vite build",

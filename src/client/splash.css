@@ -154,6 +154,7 @@ textarea {
   letter-spacing: -0.045em;
   line-height: 0.76;
   text-transform: uppercase;
+  white-space: nowrap;
   transform: skew(-4deg) rotate(-1deg);
   transform-origin: left center;
   filter: drop-shadow(5px 7px 0 var(--ink));

@@ -1,6 +1,6 @@
-# RAMAGEDDON audio provenance
+# WRECKCADE audio provenance
 
-RAMAGEDDON's shipped sample layers were generated locally with the
+WRECKCADE's shipped sample layers were generated locally with the
 user-provided Stable Audio 3 SFX MLX runner and then edited specifically for
 the game. No stock recordings or third-party sound-library files are included.
 The runtime combines these samples with responsive WebAudio synthesis.

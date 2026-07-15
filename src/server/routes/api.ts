@@ -325,7 +325,7 @@ const requirePostId = (): string => {
   if (!context.postId) {
     throw new GameApiError(
       'context-missing',
-      'This endpoint must be opened from a RAMAGEDDON post.',
+      'This endpoint must be opened from a WRECKCADE post.',
       400
     );
   }
@@ -340,7 +340,7 @@ const normalizeError = (error: unknown, operation: string): ErrorResult => {
     };
   }
 
-  console.error(`RAMAGEDDON ${operation} failed:`, error);
+  console.error(`WRECKCADE ${operation} failed:`, error);
   return {
     status: 500,
     body: {

@@ -36,6 +36,8 @@ type UpgradeDefinition = {
   max: number;
 };
 
+type ModalPoint = { x: number; y: number };
+
 const CREW_NAMES: Record<CrewId, string> = {
   iron: 'IRON HOWLERS',
   neon: 'NEON JACKALS',
@@ -71,6 +73,7 @@ type PlayerState = {
 type Enemy = {
   id: number;
   kind: EnemyKind;
+  visualRow: number;
   x: number;
   y: number;
   vx: number;
@@ -96,6 +99,8 @@ type Enemy = {
 };
 
 type Wreck = {
+  id: number;
+  visualRow: number;
   x: number;
   y: number;
   vx: number;
@@ -114,6 +119,7 @@ type Wreck = {
 };
 
 type Pickup = {
+  id: number;
   x: number;
   y: number;
   vx: number;
@@ -121,6 +127,8 @@ type Pickup = {
   value: number;
   kind: 'scrap' | 'repair';
   age: number;
+  persistent: boolean;
+  visualFrame: number;
 };
 
 type Projectile = {
@@ -174,12 +182,63 @@ type SkidMark = {
 };
 
 type Decoration = {
+  id: number;
   x: number;
   y: number;
   kind: 'stain' | 'crack' | 'cone' | 'barrel' | 'tyre' | 'pillar';
   rotation: number;
   size: number;
   alive: boolean;
+  hp: number;
+  maxHp: number;
+  fuse: number;
+  visualFrame: number;
+};
+
+type BlastVisual = {
+  id: number;
+  x: number;
+  y: number;
+  radius: number;
+  life: number;
+  maxLife: number;
+};
+
+type ExplosionOptions = {
+  environmental?: boolean;
+  hurtsPlayer?: boolean;
+  chainsBarrels?: boolean;
+};
+
+type LandmarkEdge = 'top' | 'right' | 'bottom' | 'left';
+
+type LandmarkDefinition = {
+  frame: number;
+  edge: LandmarkEdge;
+  along: number;
+  size: number;
+  rotation: number;
+};
+
+type ArenaLandmark = {
+  object: GameObjects.Image;
+  worldX: number;
+  worldY: number;
+  cullRadius: number;
+};
+
+type DecalDefinition = {
+  x: number;
+  y: number;
+  size: number;
+  rotation: number;
+};
+
+type ArenaDecal = {
+  object: GameObjects.Image;
+  worldX: number;
+  worldY: number;
+  cullRadius: number;
 };
 
 type FloatingText = {
@@ -220,6 +279,69 @@ const WORLD_HEIGHT = 2500;
 const FIXED_STEP = 1 / 60;
 const RUN_SECONDS = 180;
 const GRID_SIZE = 96;
+const VEHICLE_ATLAS_KEY = 'vehicle-atlas-v1';
+const HAZARDS_ATLAS_KEY = 'hazards-fx-v1';
+const VEHICLE_FRAME_SIZE = 128;
+const VEHICLE_ART_LENGTH = 112;
+const VEHICLE_DAMAGE_COLUMNS = 4;
+const BARREL_HP = 24;
+const BARREL_RADIUS = 19;
+const REPAIR_FRAME_START = 12;
+
+const LANDMARK_DEFINITIONS: LandmarkDefinition[] = [
+  { frame: 0, edge: 'top', along: 520, size: 288, rotation: -0.08 },
+  { frame: 2, edge: 'top', along: 1700, size: 310, rotation: 0 },
+  { frame: 1, edge: 'top', along: 2860, size: 300, rotation: 0.06 },
+  { frame: 1, edge: 'left', along: 1300, size: 288, rotation: Math.PI / 2 },
+  {
+    frame: 3,
+    edge: 'right',
+    along: 1150,
+    size: 310,
+    rotation: -Math.PI / 2,
+  },
+  { frame: 2, edge: 'bottom', along: 720, size: 300, rotation: Math.PI },
+  { frame: 3, edge: 'bottom', along: 1900, size: 316, rotation: Math.PI },
+  {
+    frame: 0,
+    edge: 'bottom',
+    along: 2860,
+    size: 292,
+    rotation: Math.PI + 0.08,
+  },
+];
+
+const DECAL_DEFINITIONS: DecalDefinition[] = [
+  { x: 1700, y: 1250, size: 184, rotation: -0.04 },
+  { x: 1580, y: 1090, size: 132, rotation: 0.16 },
+  { x: 1820, y: 1420, size: 144, rotation: -0.21 },
+  { x: 820, y: 620, size: 168, rotation: 0.12 },
+  { x: 2580, y: 640, size: 152, rotation: -0.17 },
+  { x: 720, y: 1760, size: 142, rotation: 0.24 },
+  { x: 2690, y: 1780, size: 176, rotation: -0.08 },
+  { x: 1210, y: 2050, size: 154, rotation: 0.19 },
+  { x: 2220, y: 360, size: 138, rotation: -0.14 },
+  { x: 2340, y: 2140, size: 166, rotation: 0.09 },
+];
+
+const ARENA_DECAL_FRAMES: Record<string, readonly number[]> = {
+  'boneyard-bowl': [0, 2, 0, 1, 2, 0, 3, 2, 1, 0],
+  'neon-spillway': [3, 1, 3, 2, 1, 3, 0, 1, 2, 3],
+  'furnace-eight': [0, 1, 0, 2, 1, 0, 3, 1, 2, 0],
+  'dead-mall': [1, 3, 1, 0, 3, 1, 2, 3, 0, 1],
+  'thunder-dome': [0, 2, 3, 0, 2, 0, 1, 2, 3, 0],
+};
+
+const DECORATION_CLUSTERS: ReadonlyArray<readonly [number, number]> = [
+  [520, 430],
+  [1700, 410],
+  [2860, 500],
+  [560, 1260],
+  [2820, 1250],
+  [620, 2020],
+  [1700, 2070],
+  [2780, 1980],
+];
 
 const CREW_COLORS: Record<CrewId, number> = {
   iron: 0xffc928,
@@ -334,7 +456,11 @@ const css = (value: number): string =>
   `#${value.toString(16).padStart(6, '0')}`;
 
 export class Game extends Scene {
+  private arenaFloor: GameObjects.TileSprite;
+  private arenaDecals: ArenaDecal[] = [];
+  private arenaLandmarks: ArenaLandmark[] = [];
   private worldGraphics: GameObjects.Graphics;
+  private worldOverlayGraphics: GameObjects.Graphics;
   private uiGraphics: GameObjects.Graphics;
   private modalGraphics: GameObjects.Graphics;
   private timerText: GameObjects.Text;
@@ -366,7 +492,14 @@ export class Game extends Scene {
   private impactRings: ImpactRing[] = [];
   private skidMarks: SkidMark[] = [];
   private decorations: Decoration[] = [];
+  private blastVisuals: BlastVisual[] = [];
   private enemyGrid = new Map<string, Enemy[]>();
+  private playerVehicleImage: GameObjects.Image | null = null;
+  private enemyVehicleImages = new Map<number, GameObjects.Image>();
+  private wreckVehicleImages = new Map<number, GameObjects.Image>();
+  private barrelImages = new Map<number, GameObjects.Image>();
+  private repairImages = new Map<number, GameObjects.Image>();
+  private blastImages = new Map<number, GameObjects.Image>();
   private upgradeLevels: Record<UpgradeId, number> = {
     ram: 0,
     saws: 0,
@@ -385,6 +518,7 @@ export class Game extends Scene {
   private replayRect = new Phaser.Geom.Rectangle();
   private menuRect = new Phaser.Geom.Rectangle();
   private syncRect = new Phaser.Geom.Rectangle();
+  private resultTicketRect = new Phaser.Geom.Rectangle();
   private voteChoice: BlueprintId | null = null;
   private runSubmitted = false;
   private runSyncState: SyncState = 'idle';
@@ -402,6 +536,10 @@ export class Game extends Scene {
   private accumulator = 0;
   private spawnTimer = 0;
   private nextEnemyId = 1;
+  private nextWreckId = 1;
+  private nextDecorationId = 1;
+  private nextPickupId = 1;
+  private nextBlastId = 1;
   private randomState = 1;
   private cameraX = 0;
   private cameraY = 0;
@@ -418,14 +556,17 @@ export class Game extends Scene {
   private skidCooldown = 0;
   private pickupSoundStep = 0;
   private manualStepping = false;
-  private touchActive = false;
-  private touchPointerId = -1;
-  private touchDriftPointerId = -1;
-  private touchOriginX = 0;
-  private touchOriginY = 0;
-  private touchX = 0;
-  private touchY = 0;
+  private touchSteerPointerId = -1;
+  private touchShifterPointerId = -1;
+  private touchSteer = 0;
+  private touchThrottle = false;
   private touchDrift = false;
+  private touchWheelCenterX = 0;
+  private touchWheelCenterY = 0;
+  private touchShifterCenterX = 0;
+  private touchShifterCenterY = 0;
+  private touchWheelRect = new Phaser.Geom.Rectangle();
+  private touchShifterRect = new Phaser.Geom.Rectangle();
   private previousDrift = false;
   private showTouchControls = false;
   private touchPauseRect = new Phaser.Geom.Rectangle();
@@ -443,10 +584,52 @@ export class Game extends Scene {
     this.meta = data.meta ?? offlineCommunityState();
   }
 
+  preload(): void {
+    this.load.image(
+      'arena-floor-v1',
+      new URL('../../../assets/visuals/arena-floor-v1.webp', import.meta.url)
+        .href
+    );
+    this.load.spritesheet(
+      'scrapyard-landmarks-v1',
+      new URL(
+        '../../../assets/visuals/scrapyard-landmarks-v1.webp',
+        import.meta.url
+      ).href,
+      { frameWidth: 512, frameHeight: 512 }
+    );
+    this.load.spritesheet(
+      'arena-decals-v1',
+      new URL('../../../assets/visuals/arena-decals-v1.webp', import.meta.url)
+        .href,
+      { frameWidth: 512, frameHeight: 512 }
+    );
+    this.load.spritesheet(
+      VEHICLE_ATLAS_KEY,
+      new URL('../../../assets/visuals/vehicle-atlas-v1.webp', import.meta.url)
+        .href,
+      { frameWidth: VEHICLE_FRAME_SIZE, frameHeight: VEHICLE_FRAME_SIZE }
+    );
+    this.load.spritesheet(
+      HAZARDS_ATLAS_KEY,
+      new URL('../../../assets/visuals/hazards-fx-v1.webp', import.meta.url)
+        .href,
+      { frameWidth: 128, frameHeight: 128 }
+    );
+  }
+
   create(): void {
     this.resetRuntime();
     this.cameras.main.setBackgroundColor(0x080b12);
+    this.arenaFloor = this.add
+      .tileSprite(0, 0, this.scale.width, this.scale.height, 'arena-floor-v1')
+      .setOrigin(0)
+      .setDepth(-20)
+      .setAlpha(0.72);
+    this.createArenaDecals();
+    this.createArenaLandmarks();
     this.worldGraphics = this.add.graphics().setDepth(0);
+    this.worldOverlayGraphics = this.add.graphics().setDepth(40);
     this.uiGraphics = this.add.graphics().setDepth(100);
     this.modalGraphics = this.add.graphics().setDepth(200);
 
@@ -546,7 +729,7 @@ export class Game extends Scene {
       .setDepth(125)
       .setVisible(false);
     this.touchDriveText = this.add
-      .text(0, 0, 'DRIVE', {
+      .text(0, 0, 'STEER', {
         fontFamily: monoFont,
         fontSize: '10px',
         color: '#2ef2e2',
@@ -555,7 +738,7 @@ export class Game extends Scene {
       .setDepth(125)
       .setVisible(false);
     this.touchDriftText = this.add
-      .text(0, 0, 'DRIFT', {
+      .text(0, 0, 'THROTTLE', {
         fontFamily: monoFont,
         fontSize: '10px',
         color: '#ffc928',
@@ -630,11 +813,38 @@ export class Game extends Scene {
     this.input.on('pointerupoutside', (pointer: Phaser.Input.Pointer) =>
       this.pointerUp(pointer)
     );
-    this.input.on('gameout', () => this.resetTouchInput());
-    this.scale.on('resize', () => this.layoutUi());
+    const resetTouchHandler = (): void => this.resetTouchInput();
+    const resizeHandler = (): void => {
+      this.resetTouchInput();
+      this.layoutUi();
+    };
+    const visibilityHandler = (): void => {
+      if (document.hidden) this.resetTouchInput();
+    };
+    this.input.on('gameout', resetTouchHandler);
+    this.scale.on('resize', resizeHandler);
+    window.addEventListener('blur', resetTouchHandler);
+    window.addEventListener('resize', resetTouchHandler);
+    window.addEventListener('orientationchange', resetTouchHandler);
+    window.addEventListener('pointercancel', resetTouchHandler, {
+      passive: true,
+    });
+    window.addEventListener('touchcancel', resetTouchHandler, {
+      passive: true,
+    });
+    document.addEventListener('visibilitychange', visibilityHandler);
     this.events.once('shutdown', () => {
       this.runToken += 1;
+      this.resetTouchInput();
+      this.destroyVisualPools();
       window.removeEventListener('keydown', hotkeyHandler);
+      window.removeEventListener('blur', resetTouchHandler);
+      window.removeEventListener('resize', resetTouchHandler);
+      window.removeEventListener('orientationchange', resetTouchHandler);
+      window.removeEventListener('pointercancel', resetTouchHandler);
+      window.removeEventListener('touchcancel', resetTouchHandler);
+      document.removeEventListener('visibilitychange', visibilityHandler);
+      this.scale.off('resize', resizeHandler);
       delete window.__ramageddonState;
       delete window.__ramageddonAdvance;
       delete window.__ramageddonQA;
@@ -721,7 +931,108 @@ export class Game extends Scene {
           this.damagePlayer(99_999, 1);
         },
       };
+      Object.assign(window.__ramageddonQA, {
+        showVehicleDamage: (tier = 1) => this.qaShowVehicleDamage(tier),
+        primeBarrelChain: () => this.qaPrimeBarrelChain(),
+        collectPersistentRepair: () => this.qaCollectPersistentRepair(),
+      });
     }
+  }
+
+  private qaShowVehicleDamage(tier: number): void {
+    const clampedTier = clamp(Math.round(tier), 0, 2);
+    const ratio = clampedTier === 0 ? 0.9 : clampedTier === 1 ? 0.5 : 0.2;
+    const gallery: ReadonlyArray<readonly [EnemyKind, number]> = [
+      ['buggy', 3],
+      ['buggy', 4],
+      ['striker', 5],
+      ['bruiser', 6],
+      ['elite', 7],
+      ['boss', 8],
+    ];
+    const offsets: ReadonlyArray<readonly [number, number]> = [
+      [-250, -125],
+      [-70, -125],
+      [120, -125],
+      [-235, 105],
+      [-25, 105],
+      [225, 105],
+    ];
+    this.mode = 'playing';
+    this.qaGodMode = true;
+    this.spawnTimer = 99;
+    this.bossSpawned = true;
+    this.enemies = [];
+    this.wrecks = [];
+    this.player.x = WORLD_WIDTH / 2;
+    this.player.y = WORLD_HEIGHT / 2;
+    this.player.vx = 0;
+    this.player.vy = 0;
+    this.player.angle = 0;
+    this.player.hp = this.player.maxHp * ratio;
+    this.cameraX = this.player.x - this.scale.width / 2;
+    this.cameraY = this.player.y - this.scale.height / 2;
+    for (let index = 0; index < gallery.length; index += 1) {
+      const [kind, visualRow] = gallery[index]!;
+      this.spawnEnemy(kind, 320);
+      const enemy = this.enemies[this.enemies.length - 1]!;
+      const offset = offsets[index]!;
+      enemy.visualRow = visualRow;
+      enemy.x = this.player.x + offset[0];
+      enemy.y = this.player.y + offset[1];
+      enemy.vx = 0;
+      enemy.vy = 0;
+      enemy.speed = 0;
+      enemy.acceleration = 0;
+      enemy.angle = 0;
+      enemy.chargeCooldown = 99;
+      enemy.hp = enemy.maxHp * ratio;
+    }
+    this.announcementTimer = 0;
+    this.announcementText?.setVisible(false);
+  }
+
+  private qaPrimeBarrelChain(): void {
+    this.mode = 'playing';
+    this.qaGodMode = false;
+    this.spawnTimer = 99;
+    this.enemies = [];
+    this.wrecks = [];
+    this.blastVisuals = [];
+    this.decorations = this.decorations.filter(
+      (decoration) => decoration.kind !== 'barrel'
+    );
+    this.player.x = WORLD_WIDTH / 2;
+    this.player.y = WORLD_HEIGHT / 2;
+    this.player.vx = 0;
+    this.player.vy = 0;
+    this.player.hp = this.player.maxHp;
+    this.player.invulnerable = 0;
+    this.hitStop = 0;
+    this.cameraX = this.player.x - this.scale.width / 2;
+    this.cameraY = this.player.y - this.scale.height / 2;
+    const barrels = [70, 158, 246].map((offset) =>
+      this.makeDecoration('barrel', this.player.x + offset, this.player.y, 0, 1)
+    );
+    this.decorations.push(...barrels);
+    this.primeBarrel(barrels[0]!, 0);
+    this.announcementTimer = 0;
+    this.announcementText?.setVisible(false);
+  }
+
+  private qaCollectPersistentRepair(): void {
+    const repair = this.pickups.find(
+      (pickup) => pickup.kind === 'repair' && pickup.persistent
+    );
+    if (!repair) return;
+    this.mode = 'playing';
+    this.player.hp = Math.min(this.player.hp, this.player.maxHp - 20);
+    this.player.x = repair.x;
+    this.player.y = repair.y;
+    this.player.vx = 0;
+    this.player.vy = 0;
+    this.cameraX = this.player.x - this.scale.width / 2;
+    this.cameraY = this.player.y - this.scale.height / 2;
   }
 
   override update(_time: number, deltaMilliseconds: number): void {
@@ -736,6 +1047,7 @@ export class Game extends Scene {
   }
 
   private resetRuntime(): void {
+    this.destroyVisualPools();
     this.runToken += 1;
     const token = this.runToken;
     const runId = globalThis.crypto.randomUUID();
@@ -770,6 +1082,7 @@ export class Game extends Scene {
     this.impactRings = [];
     this.skidMarks = [];
     this.decorations = [];
+    this.blastVisuals = [];
     this.enemyGrid.clear();
     this.upgradeLevels = {
       ram: 0,
@@ -816,6 +1129,10 @@ export class Game extends Scene {
     this.accumulator = 0;
     this.spawnTimer = 0.3;
     this.nextEnemyId = 1;
+    this.nextWreckId = 1;
+    this.nextDecorationId = 1;
+    this.nextPickupId = 1;
+    this.nextBlastId = 1;
     this.randomState = (this.meta.seed ^ 0x9e3779b9) >>> 0;
     this.cameraX = this.player.x - this.scale.width / 2;
     this.cameraY = this.player.y - this.scale.height / 2;
@@ -832,9 +1149,10 @@ export class Game extends Scene {
     this.skidCooldown = 0;
     this.pickupSoundStep = 0;
     this.manualStepping = false;
-    this.touchActive = false;
-    this.touchPointerId = -1;
-    this.touchDriftPointerId = -1;
+    this.touchSteerPointerId = -1;
+    this.touchShifterPointerId = -1;
+    this.touchSteer = 0;
+    this.touchThrottle = false;
     this.touchDrift = false;
     this.previousDrift = false;
     this.voteChoice = null;
@@ -855,11 +1173,18 @@ export class Game extends Scene {
     this.modalTexts.forEach((text) => text.destroy());
     this.modalTexts = [];
     this.randomizeDecorations();
+    this.createPersistentRepairCases();
   }
 
   private randomizeDecorations(): void {
+    // Consume the original 150-sample budget so combat RNG remains bit-for-bit
+    // aligned, while only retaining a clearer seventy arena details.
     for (let i = 0; i < 150; i += 1) {
       const roll = this.random();
+      const xRoll = this.random();
+      const yRoll = this.random();
+      const rotation = this.random() * Math.PI * 2;
+      const baseSize = 0.65 + this.random() * 0.9;
       const kind: Decoration['kind'] =
         roll < 0.38
           ? 'stain'
@@ -870,30 +1195,240 @@ export class Game extends Scene {
               : roll < 0.9
                 ? 'tyre'
                 : 'barrel';
-      this.decorations.push({
-        x: 90 + this.random() * (WORLD_WIDTH - 180),
-        y: 90 + this.random() * (WORLD_HEIGHT - 180),
-        kind,
-        rotation: this.random() * Math.PI * 2,
-        size: 0.65 + this.random() * 0.9,
-        alive: true,
-      });
+      if (i >= 70) continue;
+
+      const isFloorDetail = kind === 'stain' || kind === 'crack';
+      const cluster = DECORATION_CLUSTERS[i % DECORATION_CLUSTERS.length]!;
+      const clusterAngle = xRoll * Math.PI * 2;
+      const clusterRadius = 36 + yRoll * 190;
+      this.decorations.push(
+        this.makeDecoration(
+          kind,
+          isFloorDetail
+            ? clamp(
+                cluster[0] + Math.cos(clusterAngle) * clusterRadius,
+                90,
+                WORLD_WIDTH - 90
+              )
+            : 90 + xRoll * (WORLD_WIDTH - 180),
+          isFloorDetail
+            ? clamp(
+                cluster[1] + Math.sin(clusterAngle) * clusterRadius * 0.72,
+                90,
+                WORLD_HEIGHT - 90
+              )
+            : 90 + yRoll * (WORLD_HEIGHT - 180),
+          rotation,
+          isFloorDetail ? baseSize * 1.24 : baseSize
+        )
+      );
     }
     if (this.meta.challenge.arena.id === 'dead-mall') {
       const centerX = WORLD_WIDTH / 2;
       const centerY = WORLD_HEIGHT / 2;
       for (const offsetX of [-720, -360, 360, 720]) {
         for (const offsetY of [-420, 420]) {
-          this.decorations.push({
-            x: centerX + offsetX,
-            y: centerY + offsetY,
-            kind: 'pillar',
-            rotation: 0,
-            size: 1,
-            alive: true,
-          });
+          this.decorations.push(
+            this.makeDecoration(
+              'pillar',
+              centerX + offsetX,
+              centerY + offsetY,
+              0,
+              1
+            )
+          );
         }
       }
+    }
+  }
+
+  private makeDecoration(
+    kind: Decoration['kind'],
+    x: number,
+    y: number,
+    rotation: number,
+    size: number
+  ): Decoration {
+    const id = this.nextDecorationId++;
+    const maxHp = kind === 'barrel' ? BARREL_HP : 0;
+    return {
+      id,
+      x,
+      y,
+      kind,
+      rotation,
+      size,
+      alive: true,
+      hp: maxHp,
+      maxHp,
+      fuse: -1,
+      visualFrame:
+        kind === 'barrel' ? this.cosmeticHash(id, 0x4b1d5a77) % 4 : 0,
+    };
+  }
+
+  private makePickup(
+    kind: Pickup['kind'],
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    value: number,
+    persistent = false
+  ): Pickup {
+    const id = this.nextPickupId++;
+    const positionHash =
+      id ^ Math.imul(Math.round(x), 31) ^ Math.imul(Math.round(y), 131);
+    return {
+      id,
+      x,
+      y,
+      vx,
+      vy,
+      value,
+      kind,
+      age: 0,
+      persistent,
+      visualFrame:
+        kind === 'repair'
+          ? REPAIR_FRAME_START +
+            (this.cosmeticHash(positionHash, 0x63a9f12d) % 4)
+          : 0,
+    };
+  }
+
+  private createPersistentRepairCases(): void {
+    const anchors: ReadonlyArray<readonly [number, number]> = [
+      [0.18, 0.22],
+      [0.82, 0.24],
+      [0.22, 0.78],
+      [0.78, 0.76],
+      [0.5, 0.14],
+      [0.5, 0.86],
+    ];
+    const start =
+      this.cosmeticHash(this.meta.seed, 0x2fe86ca1) % anchors.length;
+    for (let index = 0; index < 3; index += 1) {
+      const anchor = anchors[(start + index * 2) % anchors.length]!;
+      const value = 10 + (this.cosmeticHash(index + 1, 0x7d44a93b) % 3);
+      this.pickups.push(
+        this.makePickup(
+          'repair',
+          WORLD_WIDTH * anchor[0],
+          WORLD_HEIGHT * anchor[1],
+          0,
+          0,
+          value,
+          true
+        )
+      );
+    }
+  }
+
+  private cosmeticHash(value: number, salt: number): number {
+    let hash = (value ^ this.meta.seed ^ salt) >>> 0;
+    hash = Math.imul(hash ^ (hash >>> 16), 0x7feb352d);
+    hash = Math.imul(hash ^ (hash >>> 15), 0x846ca68b);
+    return (hash ^ (hash >>> 16)) >>> 0;
+  }
+
+  private destroyVisualPools(): void {
+    this.playerVehicleImage?.destroy();
+    this.playerVehicleImage = null;
+    for (const pool of [
+      this.enemyVehicleImages,
+      this.wreckVehicleImages,
+      this.barrelImages,
+      this.repairImages,
+      this.blastImages,
+    ]) {
+      for (const image of pool.values()) image.destroy();
+      pool.clear();
+    }
+  }
+
+  private createArenaLandmarks(): void {
+    const fenceInset = this.arenaInset();
+    this.arenaLandmarks = LANDMARK_DEFINITIONS.map((definition) => {
+      const outsideFence = definition.size * 0.27;
+      let worldX = definition.along;
+      let worldY = definition.along;
+      if (definition.edge === 'top') {
+        worldY = fenceInset - outsideFence;
+      } else if (definition.edge === 'right') {
+        worldX = WORLD_WIDTH - fenceInset + outsideFence;
+      } else if (definition.edge === 'bottom') {
+        worldY = WORLD_HEIGHT - fenceInset + outsideFence;
+      } else {
+        worldX = fenceInset - outsideFence;
+      }
+
+      const object = this.add
+        .image(0, 0, 'scrapyard-landmarks-v1', definition.frame)
+        .setDisplaySize(definition.size, definition.size)
+        .setRotation(definition.rotation)
+        .setDepth(-10)
+        .setAlpha(0.94);
+      return {
+        object,
+        worldX,
+        worldY,
+        cullRadius: definition.size * 0.72,
+      };
+    });
+  }
+
+  private createArenaDecals(): void {
+    const frames =
+      ARENA_DECAL_FRAMES[this.meta.challenge.arena.id] ??
+      ARENA_DECAL_FRAMES['thunder-dome']!;
+    this.arenaDecals = DECAL_DEFINITIONS.map((definition, index) => {
+      const frame = frames[index] ?? index % 4;
+      const object = this.add
+        .image(0, 0, 'arena-decals-v1', frame)
+        .setDisplaySize(definition.size, definition.size)
+        .setRotation(definition.rotation)
+        .setDepth(-15)
+        .setAlpha(0.82);
+      return {
+        object,
+        worldX: definition.x,
+        worldY: definition.y,
+        cullRadius: definition.size * 0.72,
+      };
+    });
+  }
+
+  private renderArenaEnvironment(cameraX: number, cameraY: number): void {
+    this.arenaFloor.tilePositionX = cameraX;
+    this.arenaFloor.tilePositionY = cameraY;
+    const width = this.scale.width;
+    const height = this.scale.height;
+    for (const decal of this.arenaDecals) {
+      const x = decal.worldX - cameraX;
+      const y = decal.worldY - cameraY;
+      const margin = decal.cullRadius;
+      decal.object
+        .setPosition(x, y)
+        .setVisible(
+          x >= -margin &&
+            x <= width + margin &&
+            y >= -margin &&
+            y <= height + margin
+        );
+    }
+    for (const landmark of this.arenaLandmarks) {
+      const x = landmark.worldX - cameraX;
+      const y = landmark.worldY - cameraY;
+      const margin = landmark.cullRadius;
+      landmark.object
+        .setPosition(x, y)
+        .setVisible(
+          x >= -margin &&
+            x <= width + margin &&
+            y >= -margin &&
+            y <= height + margin
+        );
     }
   }
 
@@ -908,6 +1443,7 @@ export class Game extends Scene {
     if (this.hitStop > 0) {
       this.hitStop -= dt;
       this.updateParticles(dt * 0.25);
+      this.updateBlastVisuals(dt * 0.25);
       return;
     }
     if (this.mode !== 'playing') return;
@@ -926,8 +1462,10 @@ export class Game extends Scene {
     this.resolveEnemySeparation();
     this.resolvePlayerCollisions();
     this.resolvePropCollisions();
+    this.updateBarrels(dt);
     this.updatePickups(dt);
     this.updateParticles(dt);
+    this.updateBlastVisuals(dt);
     this.updateSkidMarks(dt);
     this.updateFloatTexts(dt);
     this.updateComboAndOverdrive(dt);
@@ -956,21 +1494,9 @@ export class Game extends Scene {
     const keyboardSteer =
       (this.keys.right.isDown || this.keys.rightAlt.isDown ? 1 : 0) -
       (this.keys.left.isDown || this.keys.leftAlt.isDown ? 1 : 0);
-    if (this.touchActive) {
-      const dx = clamp((this.touchX - this.touchOriginX) / 64, -1, 1);
-      const dy = clamp((this.touchY - this.touchOriginY) / 64, -1, 1);
-      return {
-        throttle: Math.abs(dy) > 0.12 ? -dy : keyboardThrottle,
-        steer: Math.abs(dx) > 0.12 ? dx : keyboardSteer,
-        drift:
-          this.touchDrift ||
-          this.keys.drift.isDown ||
-          this.keys.driftAlt.isDown,
-      };
-    }
     return {
-      throttle: keyboardThrottle,
-      steer: keyboardSteer,
+      throttle: this.touchThrottle ? 1 : keyboardThrottle,
+      steer: this.touchSteerPointerId >= 0 ? this.touchSteer : keyboardSteer,
       drift:
         this.touchDrift || this.keys.drift.isDown || this.keys.driftAlt.isDown,
     };
@@ -1144,22 +1670,23 @@ export class Game extends Scene {
       for (let index = 0; index < 3; index += 1) {
         const angle = this.random() * Math.PI * 2;
         const distance = 280 + this.random() * 260;
-        this.decorations.push({
-          x: clamp(
-            this.player.x + Math.cos(angle) * distance,
-            80,
-            WORLD_WIDTH - 80
-          ),
-          y: clamp(
-            this.player.y + Math.sin(angle) * distance,
-            80,
-            WORLD_HEIGHT - 80
-          ),
-          kind: 'barrel',
-          rotation: angle,
-          size: 1,
-          alive: true,
-        });
+        this.decorations.push(
+          this.makeDecoration(
+            'barrel',
+            clamp(
+              this.player.x + Math.cos(angle) * distance,
+              80,
+              WORLD_WIDTH - 80
+            ),
+            clamp(
+              this.player.y + Math.sin(angle) * distance,
+              80,
+              WORLD_HEIGHT - 80
+            ),
+            angle,
+            1
+          )
+        );
       }
       this.popScreenText('CRUSHER SHIFT // HAZARDS RELOADED', '#ff6b35');
     }
@@ -1236,9 +1763,11 @@ export class Game extends Scene {
       WORLD_HEIGHT - inset
     );
     const stats = this.enemyStats(kind);
+    const enemyId = this.nextEnemyId++;
     this.enemies.push({
-      id: this.nextEnemyId++,
+      id: enemyId,
       kind,
+      visualRow: this.enemyVisualRow(kind, enemyId),
       x,
       y,
       vx: Math.cos(angle + Math.PI) * stats.speed * 0.4,
@@ -1262,6 +1791,15 @@ export class Game extends Scene {
       chargeAngle: angle + Math.PI,
       alive: true,
     });
+  }
+
+  private enemyVisualRow(kind: EnemyKind, enemyId: number): number {
+    if (kind === 'buggy')
+      return 3 + (this.cosmeticHash(enemyId, 0xb8f34129) % 2);
+    if (kind === 'striker') return 5;
+    if (kind === 'bruiser') return 6;
+    if (kind === 'elite') return 7;
+    return 8;
   }
 
   private enemyStats(kind: EnemyKind): {
@@ -1577,6 +2115,19 @@ export class Game extends Scene {
           break;
         }
       }
+      if (projectile.life <= 0) continue;
+      for (const prop of this.decorations) {
+        if (!prop.alive || prop.kind !== 'barrel' || prop.fuse >= 0) continue;
+        if (
+          distanceSquared(projectile.x, projectile.y, prop.x, prop.y) >=
+          (BARREL_RADIUS + 4) ** 2
+        )
+          continue;
+        this.damageBarrel(prop, projectile.damage, 0.02);
+        this.spawnBurst(projectile.x, projectile.y, 0x2ef2e2, 3, 80);
+        projectile.life = 0;
+        break;
+      }
     }
     this.projectiles = this.projectiles.filter(
       (projectile) =>
@@ -1676,6 +2227,18 @@ export class Game extends Scene {
           wreck.life = Math.min(wreck.life, 0.08);
         }
       }
+      for (const prop of this.decorations) {
+        if (!prop.alive || prop.kind !== 'barrel' || prop.fuse >= 0) continue;
+        const radius = wreck.radius + BARREL_RADIUS;
+        if (
+          distanceSquared(wreck.x, wreck.y, prop.x, prop.y) >=
+          radius * radius
+        )
+          continue;
+        this.damageBarrel(prop, 18 + speed * 0.07, 0.025);
+        wreck.vx *= 0.82;
+        wreck.vy *= 0.82;
+      }
     }
     this.wrecks = this.wrecks.filter((wreck) => wreck.life > 0).slice(-140);
   }
@@ -1704,6 +2267,13 @@ export class Game extends Scene {
             0
           );
         }
+      }
+      for (const prop of this.decorations) {
+        if (!prop.alive || prop.kind !== 'barrel' || prop.fuse >= 0) continue;
+        const radius = fire.radius + BARREL_RADIUS;
+        if (distanceSquared(fire.x, fire.y, prop.x, prop.y) >= radius * radius)
+          continue;
+        this.damageBarrel(prop, BARREL_HP, 0.12);
       }
     }
     this.fires = this.fires.filter((fire) => fire.life > 0);
@@ -1839,11 +2409,10 @@ export class Game extends Scene {
         this.damagePlayer(4, 0.25);
         continue;
       }
-      prop.alive = false;
       if (prop.kind === 'barrel') {
-        this.explode(prop.x, prop.y, 125, 48, true);
-        this.player.score += 80;
+        this.damageBarrel(prop, BARREL_HP, 0);
       } else {
+        prop.alive = false;
         this.spawnBurst(
           prop.x,
           prop.y,
@@ -1856,37 +2425,123 @@ export class Game extends Scene {
     }
   }
 
+  private damageBarrel(
+    barrel: Decoration,
+    amount: number,
+    fuseDelay: number
+  ): void {
+    if (!barrel.alive || barrel.kind !== 'barrel' || barrel.fuse >= 0) return;
+    barrel.hp = Math.max(0, barrel.hp - Math.max(0, amount));
+    if (barrel.hp <= 0) this.primeBarrel(barrel, fuseDelay);
+  }
+
+  private primeBarrel(barrel: Decoration, fuseDelay: number): void {
+    if (!barrel.alive || barrel.kind !== 'barrel' || barrel.fuse >= 0) return;
+    barrel.fuse = Math.max(0, fuseDelay);
+  }
+
+  private updateBarrels(dt: number): void {
+    const due: Decoration[] = [];
+    for (const prop of this.decorations) {
+      if (!prop.alive || prop.kind !== 'barrel' || prop.fuse < 0) continue;
+      prop.fuse -= dt;
+      if (prop.fuse <= 0) due.push(prop);
+    }
+    for (const barrel of due) this.detonateBarrel(barrel);
+  }
+
+  private detonateBarrel(barrel: Decoration): void {
+    if (!barrel.alive || barrel.kind !== 'barrel') return;
+    barrel.alive = false;
+    barrel.fuse = -1;
+    this.player.score += 80;
+    this.explode(barrel.x, barrel.y, 125, 48, {
+      environmental: true,
+      hurtsPlayer: true,
+      chainsBarrels: true,
+    });
+  }
+
   private explode(
     x: number,
     y: number,
     radius: number,
     damage: number,
-    environmental = false
+    options: ExplosionOptions = {}
   ): void {
+    this.blastVisuals.push({
+      id: this.nextBlastId++,
+      x,
+      y,
+      radius,
+      life: 0.44,
+      maxLife: 0.44,
+    });
     this.spawnBurst(x, y, 0xff6b35, 24, 260);
     this.spawnBurst(x, y, 0xffc928, 14, 190);
     this.spawnCrashFx(x, y, this.random() * Math.PI * 2, 0.9, 0xff6b35, true);
     const previousEnvironmental = this.environmentalBlast;
-    this.environmentalBlast = environmental;
-    for (const enemy of this.nearbyEnemies(x, y, radius)) {
-      if (!enemy.alive) continue;
-      const distSq = distanceSquared(x, y, enemy.x, enemy.y);
-      if (distSq > radius * radius) continue;
-      const angle = Math.atan2(enemy.y - y, enemy.x - x);
-      this.damageEnemy(
-        enemy,
-        damage * (1 - (Math.sqrt(distSq) / radius) * 0.45),
-        'explosion',
-        angle,
-        170,
-        0
-      );
-      enemy.vx += (Math.cos(angle) * 150) / enemy.mass;
-      enemy.vy += (Math.sin(angle) * 150) / enemy.mass;
+    this.environmentalBlast = options.environmental ?? false;
+    try {
+      for (const enemy of this.nearbyEnemies(x, y, radius)) {
+        if (!enemy.alive) continue;
+        const distSq = distanceSquared(x, y, enemy.x, enemy.y);
+        if (distSq > radius * radius) continue;
+        const angle = Math.atan2(enemy.y - y, enemy.x - x);
+        this.damageEnemy(
+          enemy,
+          damage * (1 - (Math.sqrt(distSq) / radius) * 0.45),
+          'explosion',
+          angle,
+          170,
+          0
+        );
+        enemy.vx += (Math.cos(angle) * 150) / enemy.mass;
+        enemy.vy += (Math.sin(angle) * 150) / enemy.mass;
+      }
+    } finally {
+      this.environmentalBlast = previousEnvironmental;
     }
-    this.environmentalBlast = previousEnvironmental;
+
+    if (options.chainsBarrels ?? true) {
+      for (const prop of this.decorations) {
+        if (!prop.alive || prop.kind !== 'barrel' || prop.fuse >= 0) continue;
+        const distance = Math.sqrt(distanceSquared(x, y, prop.x, prop.y));
+        if (distance > radius + BARREL_RADIUS) continue;
+        const falloff = 1 - clamp(distance / radius, 0, 1) * 0.45;
+        const delay =
+          0.045 + (this.cosmeticHash(prop.id, 0x521c7ab3) % 4) * 0.028;
+        this.damageBarrel(prop, damage * falloff, delay);
+      }
+    }
+
+    if (options.hurtsPlayer) {
+      const dx = this.player.x - x;
+      const dy = this.player.y - y;
+      const distance = Math.hypot(dx, dy);
+      if (distance < radius + 22) {
+        const falloff = 1 - clamp(distance / radius, 0, 1) * 0.72;
+        const playerDamageMultiplier =
+          this.meta.modifier.id === 'thin-metal' ? 1.35 : 1;
+        this.damagePlayer(
+          (damage * 0.22 * falloff) / playerDamageMultiplier,
+          0.48
+        );
+        const angle = distance > 0.1 ? Math.atan2(dy, dx) : this.player.angle;
+        const knockback = 180 * falloff;
+        this.player.vx += Math.cos(angle) * knockback;
+        this.player.vy += Math.sin(angle) * knockback;
+      }
+    }
     this.heavyFeedback(0.7);
     audio.impact(0.9);
+  }
+
+  private updateBlastVisuals(dt: number): void {
+    for (const blast of this.blastVisuals) blast.life -= dt;
+    this.blastVisuals = this.blastVisuals
+      .filter((blast) => blast.life > 0)
+      .slice(-48);
   }
 
   private damageEnemy(
@@ -1986,6 +2641,8 @@ export class Game extends Scene {
       (enemy.kind === 'elite' ? 0.3 : 0) +
       (this.meta.challenge.arena.id === 'thunder-dome' ? 0.32 : 0);
     this.wrecks.push({
+      id: this.nextWreckId++,
+      visualRow: enemy.visualRow,
       x: enemy.x,
       y: enemy.y,
       vx: Math.cos(impactAngle) * actualLaunch + enemy.vx * 0.3,
@@ -2026,15 +2683,16 @@ export class Game extends Scene {
     for (let index = 0; index < pickupCount; index += 1) {
       const angle = this.random() * Math.PI * 2;
       const value = Math.max(1, Math.ceil(enemy.scrap / pickupCount));
-      this.pickups.push({
-        x: enemy.x,
-        y: enemy.y,
-        vx: Math.cos(angle) * (45 + this.random() * 90),
-        vy: Math.sin(angle) * (45 + this.random() * 90),
-        value,
-        kind: 'scrap',
-        age: 0,
-      });
+      this.pickups.push(
+        this.makePickup(
+          'scrap',
+          enemy.x,
+          enemy.y,
+          Math.cos(angle) * (45 + this.random() * 90),
+          Math.sin(angle) * (45 + this.random() * 90),
+          value
+        )
+      );
     }
     const repairNeeded = player.hp <= player.maxHp * 0.58;
     const repairChance =
@@ -2046,15 +2704,16 @@ export class Game extends Scene {
             ? 0.012
             : 0.003;
     if (repairNeeded && this.random() < repairChance) {
-      this.pickups.push({
-        x: enemy.x,
-        y: enemy.y,
-        vx: 0,
-        vy: -80,
-        value: enemy.kind === 'boss' ? 16 : enemy.kind === 'elite' ? 10 : 6,
-        kind: 'repair',
-        age: 0,
-      });
+      this.pickups.push(
+        this.makePickup(
+          'repair',
+          enemy.x,
+          enemy.y,
+          0,
+          -80,
+          enemy.kind === 'boss' ? 16 : enemy.kind === 'elite' ? 10 : 6
+        )
+      );
     }
     if (this.environmentalBlast && this.meta.modifier.id === 'crusher-shift') {
       player.scrap += 2;
@@ -2162,13 +2821,15 @@ export class Game extends Scene {
   }
 
   private kickCamera(angle: number, strength: number): void {
-    const magnitude = 10 + clamp(strength, 0, 1) * 24;
-    this.cameraKickX += Math.cos(angle) * magnitude;
-    this.cameraKickY += Math.sin(angle) * magnitude;
+    const shapedStrength = clamp(strength, 0, 1);
+    if (shapedStrength <= 0.02) return;
+    const magnitude = 4 + shapedStrength * 16;
+    this.cameraKickX = this.cameraKickX * 0.56 + Math.cos(angle) * magnitude;
+    this.cameraKickY = this.cameraKickY * 0.56 + Math.sin(angle) * magnitude;
     const accumulated = Math.hypot(this.cameraKickX, this.cameraKickY);
-    if (accumulated > 58) {
-      this.cameraKickX = (this.cameraKickX / accumulated) * 58;
-      this.cameraKickY = (this.cameraKickY / accumulated) * 58;
+    if (accumulated > 32) {
+      this.cameraKickX = (this.cameraKickX / accumulated) * 32;
+      this.cameraKickY = (this.cameraKickY / accumulated) * 32;
     }
   }
 
@@ -2183,19 +2844,23 @@ export class Game extends Scene {
       (this.player.overdriveTimer > 0 ? 90 : 0);
     for (const pickup of this.pickups) {
       pickup.age += dt;
-      pickup.vx *= Math.pow(0.93, dt * 60);
-      pickup.vy *= Math.pow(0.93, dt * 60);
       const dx = this.player.x - pickup.x;
       const dy = this.player.y - pickup.y;
       const distance = Math.max(1, Math.hypot(dx, dy));
-      if (distance < radius) {
-        const pull = 380 + (1 - distance / radius) * 920;
-        pickup.vx += (dx / distance) * pull * dt;
-        pickup.vy += (dy / distance) * pull * dt;
+      if (!pickup.persistent) {
+        pickup.vx *= Math.pow(0.93, dt * 60);
+        pickup.vy *= Math.pow(0.93, dt * 60);
+        if (distance < radius) {
+          const pull = 380 + (1 - distance / radius) * 920;
+          pickup.vx += (dx / distance) * pull * dt;
+          pickup.vy += (dy / distance) * pull * dt;
+        }
+        pickup.x += pickup.vx * dt;
+        pickup.y += pickup.vy * dt;
       }
-      pickup.x += pickup.vx * dt;
-      pickup.y += pickup.vy * dt;
       if (distance < 25) {
+        if (pickup.kind === 'repair' && this.player.hp >= this.player.maxHp)
+          continue;
         pickup.age = -999;
         if (pickup.kind === 'repair') {
           this.player.hp = Math.min(
@@ -2222,7 +2887,7 @@ export class Game extends Scene {
       }
     }
     this.pickups = this.pickups.filter(
-      (pickup) => pickup.age > -100 && pickup.age < 26
+      (pickup) => pickup.age > -100 && (pickup.persistent || pickup.age < 26)
     );
   }
 
@@ -2313,6 +2978,7 @@ export class Game extends Scene {
       10 + this.player.level * 7.5 + this.player.level ** 1.34 * 2.2
     );
     this.rollUpgradeChoices();
+    this.resetTouchInput();
     this.mode = 'levelup';
     audio.stopEngine();
     this.buildLevelUpModal();
@@ -2369,6 +3035,7 @@ export class Game extends Scene {
 
   private finishRun(victory: boolean): void {
     if (this.mode === 'ended') return;
+    this.resetTouchInput();
     this.mode = 'ended';
     this.victory = victory;
     this.announcementTimer = 0;
@@ -2631,7 +3298,9 @@ export class Game extends Scene {
         color: 0xf7f3df,
       });
     }
-    this.kickCamera(impactAngle, impact * (destroyed ? 1 : 0.72));
+    const crashDistance = Math.hypot(x - this.player.x, y - this.player.y);
+    const kickFalloff = clamp(1 - Math.max(0, crashDistance - 96) / 720, 0, 1);
+    this.kickCamera(impactAngle, impact * (destroyed ? 1 : 0.72) * kickFalloff);
   }
 
   private popWorldText(
@@ -2710,6 +3379,7 @@ export class Game extends Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     const compact = width < 720;
+    this.arenaFloor?.setSize(width, height);
     this.timerText?.setPosition(width / 2, 13).setScale(compact ? 0.76 : 1);
     this.waveText
       ?.setPosition(width / 2, compact ? 43 : 51)
@@ -2730,8 +3400,25 @@ export class Game extends Scene {
       ?.setPosition(width / 2, height * 0.3)
       .setScale(Math.min(1, width / 900, compact ? 0.72 : 1));
     this.showTouchControls = navigator.maxTouchPoints > 0 || width < 760;
-    this.touchPauseRect.setTo(width - 134, 52, 58, 44);
-    this.touchMuteRect.setTo(width - 68, 52, 58, 44);
+    const touchControlY = height - (height < 560 ? 96 : 112);
+    this.touchWheelCenterX = Math.min(104, width * 0.24);
+    this.touchWheelCenterY = touchControlY;
+    this.touchShifterCenterX = width - Math.min(86, width * 0.22);
+    this.touchShifterCenterY = touchControlY;
+    this.touchWheelRect.setTo(
+      this.touchWheelCenterX - 70,
+      this.touchWheelCenterY - 72,
+      140,
+      148
+    );
+    this.touchShifterRect.setTo(
+      this.touchShifterCenterX - 70,
+      this.touchShifterCenterY - 72,
+      140,
+      148
+    );
+    this.touchPauseRect.setTo(width - 134, 52, 58, 48);
+    this.touchMuteRect.setTo(width - 68, 52, 58, 48);
     this.touchPauseText?.setPosition(
       this.touchPauseRect.centerX,
       this.touchPauseRect.centerY
@@ -2746,12 +3433,19 @@ export class Game extends Scene {
   }
 
   private renderFrame(): void {
-    if (!this.worldGraphics || !this.uiGraphics || !this.modalGraphics) return;
+    if (
+      !this.worldGraphics ||
+      !this.worldOverlayGraphics ||
+      !this.uiGraphics ||
+      !this.modalGraphics
+    )
+      return;
     const shakeAmount = this.trauma * this.trauma * 12;
     const shakeX = Math.sin(this.elapsed * 127.31) * shakeAmount;
     const shakeY = Math.cos(this.elapsed * 93.17) * shakeAmount * 0.72;
     const cameraX = this.cameraX + shakeX + this.cameraKickX;
     const cameraY = this.cameraY + shakeY + this.cameraKickY;
+    this.renderArenaEnvironment(cameraX, cameraY);
     this.renderWorld(cameraX, cameraY);
     this.renderHud();
     this.renderModal();
@@ -2806,32 +3500,235 @@ export class Game extends Scene {
     }
   }
 
+  private damageTier(hp: number, maxHp: number): number {
+    const ratio = maxHp > 0 ? hp / maxHp : 0;
+    if (ratio > 0.66) return 0;
+    if (ratio > 0.33) return 1;
+    return 2;
+  }
+
+  private clearImagePool(pool: Map<number, GameObjects.Image>): void {
+    for (const image of pool.values()) image.destroy();
+    pool.clear();
+  }
+
+  private pruneImagePool(
+    pool: Map<number, GameObjects.Image>,
+    activeIds: Set<number>
+  ): void {
+    for (const [id, image] of pool) {
+      if (activeIds.has(id)) continue;
+      image.destroy();
+      pool.delete(id);
+    }
+  }
+
+  private syncWorldImages(cameraX: number, cameraY: number): void {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const vehicleAtlasReady = this.textures.exists(VEHICLE_ATLAS_KEY);
+    if (vehicleAtlasReady) {
+      const playerRow = this.crew === 'iron' ? 0 : this.crew === 'neon' ? 1 : 2;
+      const playerFrame =
+        playerRow * VEHICLE_DAMAGE_COLUMNS +
+        this.damageTier(this.player.hp, this.player.maxHp);
+      if (!this.playerVehicleImage) {
+        this.playerVehicleImage = this.add
+          .image(0, 0, VEHICLE_ATLAS_KEY, playerFrame)
+          .setOrigin(0.5)
+          .setDepth(30);
+      }
+      const playerX = this.player.x - cameraX;
+      const playerY = this.player.y - cameraY;
+      const playerLength = 52 + this.upgradeLevels.ram * 3;
+      this.playerVehicleImage
+        .setFrame(playerFrame)
+        .setPosition(playerX, playerY)
+        .setRotation(this.player.angle)
+        .setScale(playerLength / VEHICLE_ART_LENGTH)
+        .setAlpha(
+          this.player.invulnerable > 0 &&
+            Math.floor(this.elapsed * 24) % 2 === 0
+            ? 0.34
+            : 1
+        )
+        .setVisible(
+          playerX >= -90 &&
+            playerX <= width + 90 &&
+            playerY >= -90 &&
+            playerY <= height + 90
+        );
+
+      const enemyIds = new Set<number>();
+      for (const enemy of this.enemies) {
+        if (!enemy.alive) continue;
+        enemyIds.add(enemy.id);
+        const frame =
+          enemy.visualRow * VEHICLE_DAMAGE_COLUMNS +
+          this.damageTier(enemy.hp, enemy.maxHp);
+        let image = this.enemyVehicleImages.get(enemy.id);
+        if (!image) {
+          image = this.add
+            .image(0, 0, VEHICLE_ATLAS_KEY, frame)
+            .setOrigin(0.5)
+            .setDepth(20);
+          this.enemyVehicleImages.set(enemy.id, image);
+        }
+        const x = enemy.x - cameraX;
+        const y = enemy.y - cameraY;
+        const length = enemy.radius * (enemy.kind === 'boss' ? 2.25 : 2.05);
+        image
+          .setFrame(frame)
+          .setPosition(x, y)
+          .setRotation(enemy.angle)
+          .setScale(length / VEHICLE_ART_LENGTH)
+          .setAlpha(enemy.flash > 0 ? 0.58 : 1)
+          .setVisible(
+            x >= -110 && x <= width + 110 && y >= -110 && y <= height + 110
+          );
+      }
+      this.pruneImagePool(this.enemyVehicleImages, enemyIds);
+
+      const wreckIds = new Set<number>();
+      for (const wreck of this.wrecks) {
+        wreckIds.add(wreck.id);
+        const frame = wreck.visualRow * VEHICLE_DAMAGE_COLUMNS + 3;
+        let image = this.wreckVehicleImages.get(wreck.id);
+        if (!image) {
+          image = this.add
+            .image(0, 0, VEHICLE_ATLAS_KEY, frame)
+            .setOrigin(0.5)
+            .setDepth(10);
+          this.wreckVehicleImages.set(wreck.id, image);
+        }
+        const x = wreck.x - cameraX;
+        const y = wreck.y - cameraY;
+        image
+          .setFrame(frame)
+          .setPosition(x, y)
+          .setRotation(wreck.angle)
+          .setScale((wreck.radius * 2.05) / VEHICLE_ART_LENGTH)
+          .setAlpha(clamp(wreck.life / 0.18, 0.18, 1))
+          .setVisible(
+            x >= -100 && x <= width + 100 && y >= -100 && y <= height + 100
+          );
+      }
+      this.pruneImagePool(this.wreckVehicleImages, wreckIds);
+    } else {
+      this.playerVehicleImage?.destroy();
+      this.playerVehicleImage = null;
+      this.clearImagePool(this.enemyVehicleImages);
+      this.clearImagePool(this.wreckVehicleImages);
+    }
+
+    const hazardsAtlasReady = this.textures.exists(HAZARDS_ATLAS_KEY);
+    if (!hazardsAtlasReady) {
+      this.clearImagePool(this.barrelImages);
+      this.clearImagePool(this.repairImages);
+      this.clearImagePool(this.blastImages);
+      return;
+    }
+
+    const barrelIds = new Set<number>();
+    for (const barrel of this.decorations) {
+      if (!barrel.alive || barrel.kind !== 'barrel') continue;
+      barrelIds.add(barrel.id);
+      let image = this.barrelImages.get(barrel.id);
+      if (!image) {
+        image = this.add
+          .image(0, 0, HAZARDS_ATLAS_KEY, barrel.visualFrame)
+          .setOrigin(0.5)
+          .setDepth(5);
+        this.barrelImages.set(barrel.id, image);
+      }
+      const x = barrel.x - cameraX;
+      const y = barrel.y - cameraY;
+      const primedPulse =
+        barrel.fuse >= 0 ? 0.66 + Math.sin(this.elapsed * 70) * 0.24 : 1;
+      image
+        .setFrame(barrel.visualFrame)
+        .setPosition(x, y)
+        .setScale(0.48 * barrel.size)
+        .setAlpha(primedPulse * (barrel.hp < barrel.maxHp ? 0.88 : 1))
+        .setVisible(
+          x >= -70 && x <= width + 70 && y >= -70 && y <= height + 70
+        );
+    }
+    this.pruneImagePool(this.barrelImages, barrelIds);
+
+    const repairIds = new Set<number>();
+    for (const pickup of this.pickups) {
+      if (pickup.kind !== 'repair' || pickup.age <= -100) continue;
+      repairIds.add(pickup.id);
+      let image = this.repairImages.get(pickup.id);
+      if (!image) {
+        image = this.add
+          .image(0, 0, HAZARDS_ATLAS_KEY, pickup.visualFrame)
+          .setOrigin(0.5)
+          .setDepth(6);
+        this.repairImages.set(pickup.id, image);
+      }
+      const x = pickup.x - cameraX;
+      const y = pickup.y - cameraY;
+      const pulse = 0.94 + Math.sin(this.elapsed * 6 + pickup.id) * 0.055;
+      image
+        .setFrame(pickup.visualFrame)
+        .setPosition(x, y)
+        .setScale(0.46 * pulse)
+        .setAlpha(this.player.hp >= this.player.maxHp ? 0.72 : 1)
+        .setVisible(
+          x >= -80 && x <= width + 80 && y >= -80 && y <= height + 80
+        );
+    }
+    this.pruneImagePool(this.repairImages, repairIds);
+
+    const blastIds = new Set<number>();
+    for (const blast of this.blastVisuals) {
+      blastIds.add(blast.id);
+      const progress = clamp(1 - blast.life / blast.maxLife, 0, 0.999);
+      const frame = 4 + Math.floor(progress * 8);
+      let image = this.blastImages.get(blast.id);
+      if (!image) {
+        image = this.add
+          .image(0, 0, HAZARDS_ATLAS_KEY, frame)
+          .setOrigin(0.5)
+          .setDepth(35);
+        this.blastImages.set(blast.id, image);
+      }
+      const x = blast.x - cameraX;
+      const y = blast.y - cameraY;
+      const displaySize = blast.radius * 1.72;
+      image
+        .setFrame(frame)
+        .setPosition(x, y)
+        .setDisplaySize(displaySize, displaySize)
+        .setVisible(
+          x >= -displaySize &&
+            x <= width + displaySize &&
+            y >= -displaySize &&
+            y <= height + displaySize
+        );
+    }
+    this.pruneImagePool(this.blastImages, blastIds);
+  }
+
   private renderWorld(cameraX: number, cameraY: number): void {
     const graphics = this.worldGraphics;
+    const overlay = this.worldOverlayGraphics;
     const width = this.scale.width;
     const height = this.scale.height;
     graphics.clear();
-    graphics.fillStyle(0x111722, 1).fillRect(0, 0, width, height);
-
-    const grid = 128;
-    const startX = -((cameraX % grid) + grid) % grid;
-    const startY = -((cameraY % grid) + grid) % grid;
-    graphics.lineStyle(1, 0x26303b, 0.43);
-    for (let x = startX; x <= width; x += grid)
-      graphics.lineBetween(x, 0, x, height);
-    for (let y = startY; y <= height; y += grid)
-      graphics.lineBetween(0, y, width, y);
-    graphics.lineStyle(2, 0x353f48, 0.24);
-    for (let x = startX + grid / 2; x <= width; x += grid)
-      graphics.lineBetween(x, 0, x, height);
-    for (let y = startY + grid / 2; y <= height; y += grid)
-      graphics.lineBetween(0, y, width, y);
+    overlay.clear();
+    this.syncWorldImages(cameraX, cameraY);
+    const vehicleAtlasReady = this.textures.exists(VEHICLE_ATLAS_KEY);
+    const hazardsAtlasReady = this.textures.exists(HAZARDS_ATLAS_KEY);
+    graphics.fillStyle(0x050a12, 0.28).fillRect(0, 0, width, height);
 
     const arenaId = this.meta.challenge.arena.id;
     const centerX = WORLD_WIDTH / 2 - cameraX;
     const centerY = WORLD_HEIGHT / 2 - cameraY;
     if (arenaId === 'neon-spillway') {
-      graphics.lineStyle(5, 0x2ef2e2, 0.18);
+      graphics.lineStyle(5, 0x2ef2e2, 0.12);
       for (const offset of [-420, -140, 140, 420]) {
         graphics.lineBetween(
           -cameraX,
@@ -2840,27 +3737,27 @@ export class Game extends Scene {
           WORLD_HEIGHT / 2 + offset - cameraY
         );
       }
-      graphics.lineStyle(2, 0xf7f3df, 0.15);
+      graphics.lineStyle(2, 0xf7f3df, 0.1);
       for (let x = -cameraX; x < WORLD_WIDTH - cameraX; x += 180) {
         graphics.lineBetween(x, centerY - 18, x + 90, centerY - 18);
         graphics.lineBetween(x, centerY + 18, x + 90, centerY + 18);
       }
     } else if (arenaId === 'furnace-eight') {
-      graphics.fillStyle(0xff6b35, 0.055).fillCircle(centerX, centerY, 430);
+      graphics.fillStyle(0xff6b35, 0.04).fillCircle(centerX, centerY, 430);
       graphics
-        .lineStyle(12, 0xff6b35, 0.12)
+        .lineStyle(12, 0xff6b35, 0.09)
         .strokeCircle(centerX - 220, centerY, 260);
       graphics.strokeCircle(centerX + 220, centerY, 260);
       graphics
-        .lineStyle(3, 0xffc928, 0.22)
+        .lineStyle(3, 0xffc928, 0.14)
         .lineBetween(centerX - 520, centerY, centerX + 520, centerY);
       graphics.lineBetween(centerX, centerY - 520, centerX, centerY + 520);
     } else if (arenaId === 'thunder-dome') {
-      graphics.lineStyle(4, 0xf15bb5, 0.1);
+      graphics.lineStyle(4, 0xf15bb5, 0.07);
       for (const radius of [360, 700, 1040])
         graphics.strokeCircle(centerX, centerY, radius);
     } else if (arenaId === 'dead-mall') {
-      graphics.lineStyle(3, 0x8fa3b8, 0.1);
+      graphics.lineStyle(3, 0x8fa3b8, 0.07);
       graphics.strokeRect(centerX - 900, centerY - 600, 1800, 1200);
       graphics.lineBetween(centerX - 900, centerY, centerX + 900, centerY);
       graphics.lineBetween(centerX, centerY - 600, centerX, centerY + 600);
@@ -2883,7 +3780,14 @@ export class Game extends Scene {
       const x = decoration.x - cameraX;
       const y = decoration.y - cameraY;
       if (x < -60 || x > width + 60 || y < -60 || y > height + 60) continue;
-      this.drawDecoration(graphics, x, y, decoration);
+      if (decoration.kind !== 'barrel' || !hazardsAtlasReady)
+        this.drawDecoration(graphics, x, y, decoration);
+      if (decoration.kind === 'barrel' && decoration.fuse >= 0) {
+        const pulse = 23 + Math.sin(this.elapsed * 70) * 4;
+        overlay
+          .lineStyle(3, 0xffc928, 0.8)
+          .strokeCircle(x, y, pulse * decoration.size);
+      }
     }
 
     graphics.lineStyle(4, 0x020305, 0.52);
@@ -2932,8 +3836,10 @@ export class Game extends Scene {
       const pulse = 0.86 + Math.sin(this.elapsed * 8 + pickup.x * 0.03) * 0.14;
       if (pickup.kind === 'repair') {
         graphics.fillStyle(0x6ee7a8, 0.18).fillCircle(x, y, 17 * pulse);
-        graphics.fillStyle(0x6ee7a8, 1).fillRect(x - 4, y - 11, 8, 22);
-        graphics.fillRect(x - 11, y - 4, 22, 8);
+        if (!hazardsAtlasReady) {
+          graphics.fillStyle(0x6ee7a8, 1).fillRect(x - 4, y - 11, 8, 22);
+          graphics.fillRect(x - 11, y - 4, 22, 8);
+        }
       } else {
         graphics.fillStyle(0x2ef2e2, 0.16).fillCircle(x, y, 13 * pulse);
         this.drawPolygon(
@@ -2959,58 +3865,44 @@ export class Game extends Scene {
           .fillStyle(wreck.chain > 0 ? 0xf15bb5 : 0xffc928, 0.14)
           .fillCircle(x, y, wreck.radius * 1.85 * pulse);
       }
-      this.drawCar(
-        graphics,
-        x,
-        y,
-        wreck.angle,
-        wreck.radius * 2.05,
-        wreck.radius * 1.2,
-        wreck.color,
-        0x2b2020,
-        false,
-        'wreck'
-      );
-      this.drawPolygon(
-        graphics,
-        x,
-        y,
-        wreck.angle,
-        [
-          wreck.radius * 0.05,
-          -wreck.radius * 0.46,
-          wreck.radius * 0.86,
-          -wreck.radius * 0.24,
-          wreck.radius * 0.58,
-          wreck.radius * 0.08,
-          wreck.radius * 0.92,
-          wreck.radius * 0.34,
-          wreck.radius * 0.04,
-          wreck.radius * 0.42,
-        ],
-        0x191d22,
-        wreck.chain > 0 ? 0xf15bb5 : 0x080b12,
-        2
-      );
-      const forwardX = Math.cos(wreck.angle);
-      const forwardY = Math.sin(wreck.angle);
-      const rightX = -forwardY;
-      const rightY = forwardX;
       graphics
-        .lineStyle(3, 0x080b12, 0.9)
-        .lineBetween(
-          x - forwardX * wreck.radius * 0.65 - rightX * wreck.radius * 0.42,
-          y - forwardY * wreck.radius * 0.65 - rightY * wreck.radius * 0.42,
-          x + forwardX * wreck.radius * 0.18 - rightX * wreck.radius * 0.5,
-          y + forwardY * wreck.radius * 0.18 - rightY * wreck.radius * 0.5
+        .fillStyle(0x020305, 0.52)
+        .fillEllipse(x + 4, y + 7, wreck.radius * 2.08, wreck.radius * 1.2);
+      if (!vehicleAtlasReady) {
+        this.drawCar(
+          graphics,
+          x,
+          y,
+          wreck.angle,
+          wreck.radius * 2.05,
+          wreck.radius * 1.2,
+          wreck.color,
+          0x2b2020,
+          false,
+          'wreck'
         );
-      graphics
-        .fillStyle(0x080b12, 1)
-        .fillCircle(
-          x - forwardX * wreck.radius * 0.48 + rightX * wreck.radius * 0.58,
-          y - forwardY * wreck.radius * 0.48 + rightY * wreck.radius * 0.58,
-          Math.max(2.5, wreck.radius * 0.2)
+        this.drawPolygon(
+          graphics,
+          x,
+          y,
+          wreck.angle,
+          [
+            wreck.radius * 0.05,
+            -wreck.radius * 0.46,
+            wreck.radius * 0.86,
+            -wreck.radius * 0.24,
+            wreck.radius * 0.58,
+            wreck.radius * 0.08,
+            wreck.radius * 0.92,
+            wreck.radius * 0.34,
+            wreck.radius * 0.04,
+            wreck.radius * 0.42,
+          ],
+          0x191d22,
+          wreck.chain > 0 ? 0xf15bb5 : 0x080b12,
+          2
         );
+      }
     }
 
     for (const enemy of this.enemies) {
@@ -3022,6 +3914,14 @@ export class Game extends Scene {
         enemy.flash > 0 ? 0xf7f3df : this.enemyColor(enemy.kind);
       const accent =
         enemy.kind === 'elite' || enemy.kind === 'boss' ? 0xf15bb5 : 0xffc928;
+      graphics
+        .fillStyle(0x020305, 0.5)
+        .fillEllipse(
+          x + 4,
+          y + 7,
+          enemy.radius * (enemy.kind === 'boss' ? 2.28 : 2.08),
+          enemy.radius * 1.24
+        );
       if (enemy.kind === 'boss' && enemy.chargeTelegraph > 0) {
         const windup = clamp(1 - enemy.chargeTelegraph / 0.72, 0, 1);
         const pulse = 0.45 + Math.sin(this.elapsed * 42) * 0.2;
@@ -3039,28 +3939,29 @@ export class Game extends Scene {
           .fillStyle(0xff365e, 0.08 + windup * 0.12)
           .fillCircle(x, y, enemy.radius * 1.65);
       }
-      this.drawCar(
-        graphics,
-        x,
-        y,
-        enemy.angle,
-        enemy.radius * (enemy.kind === 'boss' ? 2.25 : 2.05),
-        enemy.radius * 1.25,
-        bodyColor,
-        accent,
-        false,
-        enemy.kind
-      );
+      if (!vehicleAtlasReady)
+        this.drawCar(
+          graphics,
+          x,
+          y,
+          enemy.angle,
+          enemy.radius * (enemy.kind === 'boss' ? 2.25 : 2.05),
+          enemy.radius * 1.25,
+          bodyColor,
+          accent,
+          false,
+          enemy.kind
+        );
       if (
         enemy.kind === 'elite' ||
         enemy.kind === 'boss' ||
         enemy.hp < enemy.maxHp
       ) {
         const barWidth = enemy.radius * 2.2;
-        graphics
+        overlay
           .fillStyle(0x080b12, 0.9)
           .fillRect(x - barWidth / 2, y - enemy.radius - 16, barWidth, 5);
-        graphics
+        overlay
           .fillStyle(enemy.kind === 'boss' ? 0xf15bb5 : 0xff365e, 1)
           .fillRect(
             x - barWidth / 2,
@@ -3074,9 +3975,9 @@ export class Game extends Scene {
     for (const projectile of this.projectiles) {
       const x = projectile.x - cameraX;
       const y = projectile.y - cameraY;
-      graphics.fillStyle(0x2ef2e2, 0.22).fillCircle(x, y, 7);
-      graphics.fillStyle(0xf7f3df, 1).fillCircle(x, y, 2.5);
-      graphics
+      overlay.fillStyle(0x2ef2e2, 0.22).fillCircle(x, y, 7);
+      overlay.fillStyle(0xf7f3df, 1).fillCircle(x, y, 2.5);
+      overlay
         .lineStyle(2, 0x2ef2e2, 0.7)
         .lineBetween(
           x,
@@ -3097,21 +3998,30 @@ export class Game extends Scene {
         .fillStyle(0x2ef2e2, 0.08)
         .fillCircle(playerX, playerY, pulse * 1.3);
     }
-    this.drawCar(
-      graphics,
-      playerX,
-      playerY,
-      this.player.angle,
-      52 + this.upgradeLevels.ram * 3,
-      30 + this.upgradeLevels.armor * 1.5,
-      this.player.invulnerable > 0 && Math.floor(this.elapsed * 24) % 2 === 0
-        ? 0xf7f3df
-        : CREW_COLORS[this.crew],
-      this.player.overdriveTimer > 0 ? 0x2ef2e2 : 0xf7f3df,
-      true,
-      'player'
-    );
-    this.drawPlayerAttachments(graphics, playerX, playerY);
+    graphics
+      .fillStyle(0x020305, 0.54)
+      .fillEllipse(
+        playerX + 4,
+        playerY + 7,
+        54 + this.upgradeLevels.ram * 3,
+        31 + this.upgradeLevels.armor * 1.5
+      );
+    if (!vehicleAtlasReady)
+      this.drawCar(
+        graphics,
+        playerX,
+        playerY,
+        this.player.angle,
+        52 + this.upgradeLevels.ram * 3,
+        30 + this.upgradeLevels.armor * 1.5,
+        this.player.invulnerable > 0 && Math.floor(this.elapsed * 24) % 2 === 0
+          ? 0xf7f3df
+          : CREW_COLORS[this.crew],
+        this.player.overdriveTimer > 0 ? 0x2ef2e2 : 0xf7f3df,
+        true,
+        'player'
+      );
+    this.drawPlayerAttachments(overlay, playerX, playerY);
 
     for (const particle of this.particles) {
       const x = particle.x - cameraX;
@@ -3121,7 +4031,7 @@ export class Game extends Scene {
       if (particle.kind === 'spark') {
         const velocity = Math.max(1, Math.hypot(particle.vx, particle.vy));
         const streak = 6 + particle.size * 2.4;
-        graphics
+        overlay
           .lineStyle(Math.max(1, particle.size * 0.52), particle.color, alpha)
           .lineBetween(
             x,
@@ -3131,13 +4041,13 @@ export class Game extends Scene {
           );
       } else if (particle.kind === 'smoke') {
         const bloom = 1 + (1 - alpha) * 1.15;
-        graphics
+        overlay
           .fillStyle(particle.color, alpha * 0.24)
           .fillCircle(x, y, Math.max(1, particle.size * bloom));
       } else if (particle.kind === 'chunk') {
         const size = particle.size * (0.62 + alpha * 0.38);
         this.drawPolygon(
-          graphics,
+          overlay,
           x,
           y,
           particle.rotation ?? 0,
@@ -3156,11 +4066,11 @@ export class Game extends Scene {
           1.5
         );
       } else if (particle.kind === 'tyre') {
-        graphics
+        overlay
           .lineStyle(Math.max(2, particle.size * 0.42), particle.color, alpha)
           .strokeCircle(x, y, Math.max(2, particle.size * alpha));
       } else {
-        graphics
+        overlay
           .fillStyle(particle.color, alpha)
           .fillCircle(x, y, Math.max(0.7, particle.size * alpha));
       }
@@ -3592,9 +4502,9 @@ export class Game extends Scene {
     }
     if (this.showTouchControls && this.mode === 'playing') {
       this.hintText
-        .setText('DRAG LEFT TO DRIVE  •  HOLD RIGHT TO DRIFT')
-        .setPosition(width / 2, height - 176)
-        .setScale(width < 400 ? 0.72 : 0.9)
+        .setText('LEFT WHEEL STEERS\nHOLD SHIFTER • TICK LEFT TO DRIFT')
+        .setPosition(width / 2, height - (height < 560 ? 174 : 190))
+        .setScale(width < 400 ? 0.7 : 0.86)
         .setVisible(this.elapsed < 7);
       this.touchPauseText.setVisible(true);
       this.touchMuteText.setVisible(true);
@@ -3617,42 +4527,117 @@ export class Game extends Scene {
   }
 
   private drawTouchControls(graphics: GameObjects.Graphics): void {
-    const height = this.scale.height;
-    const baseX = this.touchActive
-      ? this.touchOriginX
-      : Math.min(105, this.scale.width * 0.22);
-    const baseY = this.touchActive ? this.touchOriginY : height - 112;
-    graphics.fillStyle(0x080b12, 0.35).fillCircle(baseX, baseY, 58);
-    graphics.lineStyle(2, 0xf7f3df, 0.18).strokeCircle(baseX, baseY, 58);
-    const knobX = this.touchActive
-      ? baseX + clamp(this.touchX - baseX, -44, 44)
-      : baseX;
-    const knobY = this.touchActive
-      ? baseY + clamp(this.touchY - baseY, -44, 44)
-      : baseY;
-    graphics.fillStyle(0x2ef2e2, 0.34).fillCircle(knobX, knobY, 24);
-    const driftX = this.scale.width - Math.min(86, this.scale.width * 0.18);
-    const driftY = height - 106;
-    this.touchDriveText.setPosition(baseX, baseY + 68);
-    this.touchDriftText.setPosition(driftX, driftY + 58);
+    const wheelX = this.touchWheelCenterX;
+    const wheelY = this.touchWheelCenterY;
+    const shifterX = this.touchShifterCenterX;
+    const shifterY = this.touchShifterCenterY;
+    const wheelHeld = this.touchSteerPointerId >= 0;
+    const shifterHeld = this.touchShifterPointerId >= 0;
+    this.drawScrapPlate(
+      graphics,
+      new Phaser.Geom.Rectangle(wheelX - 68, wheelY - 66, 136, 136),
+      0x07090a,
+      0x2ef2e2,
+      0,
+      wheelHeld ? 0.94 : 0.84
+    );
+    this.drawScrapPlate(
+      graphics,
+      new Phaser.Geom.Rectangle(shifterX - 68, shifterY - 66, 136, 136),
+      0x07090a,
+      this.touchDrift ? 0xf15bb5 : 0xffc928,
+      1,
+      shifterHeld ? 0.96 : 0.86
+    );
+
+    graphics.fillStyle(0x050608, 0.78).fillCircle(wheelX, wheelY - 4, 51);
+    graphics.lineStyle(7, 0x141c22, 0.95).strokeCircle(wheelX, wheelY - 4, 44);
+    graphics
+      .lineStyle(3, 0x2ef2e2, wheelHeld ? 0.95 : 0.52)
+      .strokeCircle(wheelX, wheelY - 4, 47);
+    const wheelRotation = this.touchSteer * Math.PI * 0.48;
+    graphics.lineStyle(7, 0x8fa3b8, wheelHeld ? 0.9 : 0.66);
+    for (let index = 0; index < 3; index += 1) {
+      const angle = wheelRotation - Math.PI / 2 + (index * Math.PI * 2) / 3;
+      graphics.beginPath();
+      graphics.moveTo(
+        wheelX + Math.cos(angle) * 11,
+        wheelY - 4 + Math.sin(angle) * 11
+      );
+      graphics.lineTo(
+        wheelX + Math.cos(angle) * 39,
+        wheelY - 4 + Math.sin(angle) * 39
+      );
+      graphics.strokePath();
+    }
+    graphics
+      .fillStyle(wheelHeld ? 0x2ef2e2 : 0x26343d, 1)
+      .fillCircle(wheelX, wheelY - 4, 13);
+    graphics.lineStyle(2, 0xf7f3df, 0.65).strokeCircle(wheelX, wheelY - 4, 13);
+    const steerIndicatorX = wheelX + this.touchSteer * 35;
+    graphics
+      .fillStyle(0x2ef2e2, wheelHeld ? 1 : 0.42)
+      .fillTriangle(
+        steerIndicatorX - 6,
+        wheelY - 58,
+        steerIndicatorX + 6,
+        wheelY - 58,
+        steerIndicatorX,
+        wheelY - 50
+      );
+
+    const mainGateX = shifterX + 20;
+    const driftGateX = shifterX - 31;
+    const throttleY = shifterY - 25;
+    const idleY = shifterY + 28;
+    graphics.lineStyle(16, 0x020304, 0.96).beginPath();
+    graphics.moveTo(mainGateX, idleY);
+    graphics.lineTo(mainGateX, throttleY);
+    graphics.lineTo(driftGateX, throttleY);
+    graphics.strokePath();
+    graphics
+      .lineStyle(4, this.touchDrift ? 0xf15bb5 : 0xffc928, 0.76)
+      .beginPath();
+    graphics.moveTo(mainGateX, idleY);
+    graphics.lineTo(mainGateX, throttleY);
+    graphics.lineTo(driftGateX, throttleY);
+    graphics.strokePath();
+    graphics
+      .fillStyle(0xf15bb5, this.touchDrift ? 1 : 0.4)
+      .fillCircle(driftGateX, throttleY, 8);
+    const shifterKnobX = this.touchDrift ? driftGateX : mainGateX;
+    const shifterKnobY = shifterHeld ? throttleY : idleY;
     graphics
       .fillStyle(
-        this.touchDrift ? 0xffc928 : 0x080b12,
-        this.touchDrift ? 0.7 : 0.4
+        this.touchDrift ? 0xf15bb5 : shifterHeld ? 0xffc928 : 0x26343d,
+        1
       )
-      .fillCircle(driftX, driftY, 46);
+      .fillCircle(shifterKnobX, shifterKnobY, 20);
     graphics
-      .lineStyle(3, 0xffc928, this.touchDrift ? 1 : 0.4)
-      .strokeCircle(driftX, driftY, 46);
-    graphics.lineStyle(4, 0xf7f3df, 0.7).beginPath();
-    graphics.arc(driftX, driftY, 21, -0.4, Math.PI * 1.3, false).strokePath();
-    for (const rect of [this.touchPauseRect, this.touchMuteRect]) {
-      graphics
-        .fillStyle(0x080b12, 0.5)
-        .fillRoundedRect(rect.x, rect.y, rect.width, rect.height, 6);
-      graphics
-        .lineStyle(1, 0x8fa3b8, 0.65)
-        .strokeRoundedRect(rect.x, rect.y, rect.width, rect.height, 6);
+      .lineStyle(3, 0xf7f3df, shifterHeld ? 0.92 : 0.55)
+      .strokeCircle(shifterKnobX, shifterKnobY, 20);
+    graphics
+      .lineStyle(3, 0x080b12, 0.72)
+      .strokeCircle(shifterKnobX, shifterKnobY, 8);
+    this.touchDriveText.setText('STEER').setPosition(wheelX, wheelY + 54);
+    this.touchDriftText
+      .setText(
+        this.touchDrift ? 'DRIFT LOCK' : shifterHeld ? 'THROTTLE' : 'HOLD TO GO'
+      )
+      .setColor(this.touchDrift ? '#f15bb5' : '#ffc928')
+      .setPosition(shifterX, shifterY + 54);
+    for (const [index, rect] of [
+      this.touchPauseRect,
+      this.touchMuteRect,
+    ].entries()) {
+      this.drawScrapPlate(
+        graphics,
+        rect,
+        0x080b12,
+        index === 0 ? 0xffc928 : 0x8fa3b8,
+        index,
+        0.9
+      );
     }
   }
 
@@ -3663,154 +4648,680 @@ export class Game extends Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     graphics
-      .fillStyle(0x05070b, this.mode === 'paused' ? 0.76 : 0.9)
+      .fillStyle(0x05070b, this.mode === 'paused' ? 0.68 : 0.82)
       .fillRect(0, 0, width, height);
+    this.drawModalWorkbench(graphics, width, height);
 
     if (this.mode === 'levelup') {
       for (let index = 0; index < this.upgradeRects.length; index += 1) {
         const rect = this.upgradeRects[index];
         const choice = this.upgradeChoices[index];
         if (!rect || !choice) continue;
-        graphics
-          .fillStyle(0x111722, 0.98)
-          .fillRoundedRect(rect.x, rect.y, rect.width, rect.height, 9);
-        graphics
-          .lineStyle(4, choice.color, 0.95)
-          .strokeRoundedRect(rect.x, rect.y, rect.width, rect.height, 9);
-        graphics
-          .fillStyle(choice.color, 1)
-          .fillRect(rect.x, rect.y, Math.min(95, rect.width * 0.35), 7);
-        graphics
-          .fillStyle(choice.color, 0.12)
-          .fillCircle(rect.right - 32, rect.y + 34, 26);
+        this.drawPartTag(graphics, rect, choice, index, width < 720);
       }
     } else if (this.mode === 'ended') {
+      this.drawResultTicket(graphics);
       for (let index = 0; index < this.voteRects.length; index += 1) {
         const rect = this.voteRects[index];
         if (!rect) continue;
         const ids: BlueprintId[] = ['magnet', 'armor', 'nitro'];
         const colors = [0x2ef2e2, 0x8fa3b8, 0xffc928];
         const selected = this.voteChoice === ids[index];
-        graphics
-          .fillStyle(
-            selected ? (colors[index] ?? 0xf7f3df) : 0x111722,
-            selected ? 0.23 : 0.96
-          )
-          .fillRoundedRect(rect.x, rect.y, rect.width, rect.height, 7);
-        graphics
-          .lineStyle(
-            selected ? 4 : 2,
-            colors[index] ?? 0xf7f3df,
-            selected ? 1 : 0.55
-          )
-          .strokeRoundedRect(rect.x, rect.y, rect.width, rect.height, 7);
+        this.drawBlueprintSlip(
+          graphics,
+          rect,
+          ids[index] ?? 'magnet',
+          colors[index] ?? 0xf7f3df,
+          index,
+          selected
+        );
       }
-      graphics
-        .fillStyle(0xffc928, 1)
-        .fillRoundedRect(
-          this.replayRect.x,
-          this.replayRect.y,
-          this.replayRect.width,
-          this.replayRect.height,
-          7
-        );
-      graphics
-        .lineStyle(2, 0xf7f3df, 0.9)
-        .strokeRoundedRect(
-          this.replayRect.x,
-          this.replayRect.y,
-          this.replayRect.width,
-          this.replayRect.height,
-          7
-        );
-      graphics
-        .fillStyle(0x111722, 1)
-        .fillRoundedRect(
-          this.menuRect.x,
-          this.menuRect.y,
-          this.menuRect.width,
-          this.menuRect.height,
-          7
-        );
-      graphics
-        .lineStyle(2, 0x8fa3b8, 0.7)
-        .strokeRoundedRect(
-          this.menuRect.x,
-          this.menuRect.y,
-          this.menuRect.width,
-          this.menuRect.height,
-          7
-        );
+      this.drawIgnitionButton(graphics, this.replayRect, 0xffc928);
+      this.drawScrapPlate(graphics, this.menuRect, 0x101315, 0x8fa3b8, 1, 1);
       if (this.syncRect.width > 0) {
-        graphics
-          .fillStyle(0x2ef2e2, 0.16)
-          .fillRoundedRect(
-            this.syncRect.x,
-            this.syncRect.y,
-            this.syncRect.width,
-            this.syncRect.height,
-            7
-          );
-        graphics
-          .lineStyle(2, 0x2ef2e2, 0.9)
-          .strokeRoundedRect(
-            this.syncRect.x,
-            this.syncRect.y,
-            this.syncRect.width,
-            this.syncRect.height,
-            7
-          );
+        this.drawScrapPlate(
+          graphics,
+          this.syncRect,
+          0x102126,
+          0x2ef2e2,
+          2,
+          0.98
+        );
       }
     }
+  }
+
+  private drawModalWorkbench(
+    graphics: GameObjects.Graphics,
+    width: number,
+    height: number
+  ): void {
+    let board: Phaser.Geom.Rectangle;
+    let accent = 0xffc928;
+    if (this.mode === 'paused') {
+      const boardWidth = Math.min(width - 28, 570);
+      const boardHeight = Math.min(height - 32, 230);
+      board = new Phaser.Geom.Rectangle(
+        (width - boardWidth) / 2,
+        (height - boardHeight) / 2,
+        boardWidth,
+        boardHeight
+      );
+    } else if (this.mode === 'levelup') {
+      const lastRect = this.upgradeRects[this.upgradeRects.length - 1];
+      const firstRect = this.upgradeRects[0];
+      const boardX = width < 720 ? 6 : Math.max(22, (width - 1140) / 2);
+      const boardY = Math.max(
+        8,
+        (firstRect?.y ?? 90) - (width < 720 ? 70 : 118)
+      );
+      const boardBottom = Math.min(
+        height - 8,
+        (lastRect?.bottom ?? height - 30) + 18
+      );
+      board = new Phaser.Geom.Rectangle(
+        boardX,
+        boardY,
+        width - boardX * 2,
+        boardBottom - boardY
+      );
+      accent = 0xff6b35;
+    } else {
+      const inset = width < 720 ? 7 : 25;
+      board = new Phaser.Geom.Rectangle(
+        inset,
+        Math.max(7, inset * 0.7),
+        width - inset * 2,
+        height - Math.max(14, inset * 1.4)
+      );
+      accent = this.victory ? 0xffc928 : 0xff365e;
+    }
+
+    this.drawScrapPlate(graphics, board, 0x17191a, accent, 2, 0.96);
+    graphics.lineStyle(5, 0x070809, 0.42);
+    graphics.lineBetween(
+      board.x + 18,
+      board.y + board.height * 0.68,
+      board.right - 24,
+      board.y + board.height * 0.64
+    );
+    graphics.lineStyle(1, 0xd7c8a7, 0.12);
+    graphics.lineBetween(
+      board.x + board.width * 0.14,
+      board.y + 18,
+      board.x + board.width * 0.72,
+      board.bottom - 14
+    );
+    graphics.lineBetween(
+      board.x + board.width * 0.31,
+      board.y + 14,
+      board.x + board.width * 0.84,
+      board.bottom - 20
+    );
+    const seamWidth = Math.min(110, board.width * 0.28);
+    graphics
+      .fillStyle(accent, 0.9)
+      .fillRect(board.x + 18, board.y + 7, seamWidth, 4);
+    for (let index = 0; index < 5; index += 1) {
+      const x = board.right - 18 - index * 13;
+      graphics.lineStyle(4, index % 2 === 0 ? accent : 0x08090a, 0.76);
+      graphics.lineBetween(x - 8, board.y + 7, x, board.y + 15);
+    }
+  }
+
+  private drawPartTag(
+    graphics: GameObjects.Graphics,
+    rect: Phaser.Geom.Rectangle,
+    choice: UpgradeDefinition,
+    index: number,
+    compactRow: boolean
+  ): void {
+    this.drawScrapPlate(graphics, rect, 0x111416, choice.color, index, 0.98);
+    graphics
+      .fillStyle(choice.color, 0.94)
+      .fillRect(rect.x + 12, rect.y + 5, Math.min(68, rect.width * 0.26), 4);
+
+    if (!compactRow) {
+      this.drawScrapPlate(
+        graphics,
+        new Phaser.Geom.Rectangle(rect.x + 14, rect.y + 14, 48, 38),
+        0x07090a,
+        choice.color,
+        index + 1,
+        1
+      );
+    }
+
+    const iconWell = compactRow
+      ? new Phaser.Geom.Rectangle(
+          rect.x + 8,
+          rect.y + 9,
+          Math.min(rect.height - 18, this.scale.width < 400 ? 64 : 78),
+          rect.height - 18
+        )
+      : new Phaser.Geom.Rectangle(rect.centerX - 48, rect.y + 20, 96, 92);
+    this.drawScrapPlate(
+      graphics,
+      iconWell,
+      0x080a0b,
+      choice.color,
+      index + 1,
+      1
+    );
+    const iconSize = compactRow
+      ? Math.min(iconWell.width, iconWell.height) * 0.66
+      : 62;
+    this.drawUpgradeIcon(
+      graphics,
+      choice.id,
+      iconWell.centerX,
+      iconWell.centerY,
+      iconSize,
+      choice.color
+    );
+
+    const stampWidth = compactRow
+      ? Math.min(108, Math.max(80, rect.width * 0.25))
+      : 122;
+    const stampX = compactRow
+      ? iconWell.right + 11
+      : rect.centerX - stampWidth / 2;
+    const stampY = compactRow ? rect.bottom - 26 : rect.bottom - 35;
+    graphics
+      .fillStyle(choice.color, 0.11)
+      .fillRect(stampX, stampY, stampWidth, compactRow ? 17 : 21);
+    graphics
+      .lineStyle(1, choice.color, 0.5)
+      .strokeRect(stampX, stampY, stampWidth, compactRow ? 17 : 21);
+  }
+
+  private drawResultTicket(graphics: GameObjects.Graphics): void {
+    if (this.resultTicketRect.width <= 0) return;
+    const accent = this.victory ? 0xffc928 : 0xff365e;
+    this.drawScrapPlate(
+      graphics,
+      this.resultTicketRect,
+      0x24211b,
+      accent,
+      0,
+      0.98
+    );
+    const rect = this.resultTicketRect;
+    graphics.lineStyle(1, 0xd9c9a4, 0.25);
+    graphics.lineBetween(
+      rect.x + 15,
+      rect.y + rect.height * 0.34,
+      rect.right - 15,
+      rect.y + rect.height * 0.34
+    );
+    for (let index = 0; index < 7; index += 1) {
+      const y = rect.y + 10 + index * Math.max(7, (rect.height - 20) / 6);
+      graphics.fillStyle(0x070809, 0.92).fillRect(rect.x - 1, y, 7, 3);
+      graphics.fillStyle(0x070809, 0.92).fillRect(rect.right - 6, y, 7, 3);
+    }
+  }
+
+  private drawBlueprintSlip(
+    graphics: GameObjects.Graphics,
+    rect: Phaser.Geom.Rectangle,
+    id: BlueprintId,
+    color: number,
+    index: number,
+    selected: boolean
+  ): void {
+    const fills = [0x102327, 0x202429, 0x282313];
+    this.drawScrapPlate(
+      graphics,
+      rect,
+      fills[index] ?? 0x151719,
+      color,
+      index + 1,
+      selected ? 1 : 0.95
+    );
+    if (selected) {
+      graphics.lineStyle(7, color, 0.15);
+      this.strokeModalPolygon(graphics, this.scrapPlatePoints(rect, index + 1));
+    }
+    graphics
+      .fillStyle(color, selected ? 1 : 0.7)
+      .fillRect(rect.x + 9, rect.y + 5, Math.min(52, rect.width * 0.2), 3);
+    const portrait = this.scale.width < 660;
+    const iconSize = portrait ? Math.min(38, rect.height * 0.56) : 52;
+    this.drawBlueprintIcon(
+      graphics,
+      id,
+      rect.x + (portrait ? 32 : 46),
+      rect.centerY,
+      iconSize,
+      color
+    );
+  }
+
+  private drawIgnitionButton(
+    graphics: GameObjects.Graphics,
+    rect: Phaser.Geom.Rectangle,
+    color: number
+  ): void {
+    const points: ModalPoint[] = [
+      { x: rect.x + 11, y: rect.y },
+      { x: rect.right - 11, y: rect.y },
+      { x: rect.right, y: rect.centerY },
+      { x: rect.right - 11, y: rect.bottom },
+      { x: rect.x + 11, y: rect.bottom },
+      { x: rect.x, y: rect.centerY },
+    ];
+    graphics.fillStyle(0x000000, 0.62);
+    this.fillModalPolygon(
+      graphics,
+      points.map((point) => ({ x: point.x + 4, y: point.y + 5 }))
+    );
+    graphics.fillStyle(color, 1);
+    this.fillModalPolygon(graphics, points);
+    graphics.lineStyle(3, 0xf7f3df, 0.88);
+    this.strokeModalPolygon(graphics, points);
+    graphics.lineStyle(2, 0x080b12, 0.82);
+    graphics.strokeRect(
+      rect.x + 13,
+      rect.y + 6,
+      rect.width - 26,
+      rect.height - 12
+    );
+  }
+
+  private drawScrapPlate(
+    graphics: GameObjects.Graphics,
+    rect: Phaser.Geom.Rectangle,
+    fill: number,
+    border: number,
+    variant = 0,
+    alpha = 1
+  ): void {
+    const points = this.scrapPlatePoints(rect, variant);
+    graphics.fillStyle(0x000000, Math.min(0.68, alpha * 0.65));
+    this.fillModalPolygon(
+      graphics,
+      points.map((point) => ({ x: point.x + 4, y: point.y + 5 }))
+    );
+    graphics.fillStyle(fill, alpha);
+    this.fillModalPolygon(graphics, points);
+    graphics.lineStyle(rect.height > 80 ? 2 : 1, border, 0.78);
+    this.strokeModalPolygon(graphics, points);
+    if (rect.height > 32) {
+      graphics.lineStyle(1, 0xf7f3df, 0.1);
+      graphics.lineBetween(
+        rect.x + 10,
+        rect.bottom - Math.min(10, rect.height * 0.12),
+        rect.right - 12,
+        rect.bottom - Math.min(12, rect.height * 0.14)
+      );
+    }
+    const boltRadius = clamp(
+      Math.min(rect.width, rect.height) * 0.035,
+      1.3,
+      2.8
+    );
+    this.drawPanelBolt(graphics, rect.x + 8, rect.y + 8, boltRadius);
+    this.drawPanelBolt(graphics, rect.right - 8, rect.y + 8, boltRadius);
+    this.drawPanelBolt(graphics, rect.x + 8, rect.bottom - 8, boltRadius);
+    this.drawPanelBolt(graphics, rect.right - 8, rect.bottom - 8, boltRadius);
+  }
+
+  private scrapPlatePoints(
+    rect: Phaser.Geom.Rectangle,
+    variant: number
+  ): ModalPoint[] {
+    const cut = clamp(Math.min(rect.width, rect.height) * 0.12, 4, 13);
+    if (variant % 3 === 1) {
+      return [
+        { x: rect.x, y: rect.y + cut },
+        { x: rect.x + cut, y: rect.y },
+        { x: rect.right - 3, y: rect.y + 2 },
+        { x: rect.right, y: rect.bottom - cut },
+        { x: rect.right - cut, y: rect.bottom },
+        { x: rect.x + 3, y: rect.bottom - 2 },
+      ];
+    }
+    if (variant % 3 === 2) {
+      return [
+        { x: rect.x + cut, y: rect.y },
+        { x: rect.right - cut * 0.5, y: rect.y + 2 },
+        { x: rect.right, y: rect.y + cut },
+        { x: rect.right - 3, y: rect.bottom - 3 },
+        { x: rect.x + cut * 0.7, y: rect.bottom },
+        { x: rect.x, y: rect.bottom - cut },
+        { x: rect.x + 2, y: rect.y + 4 },
+      ];
+    }
+    return [
+      { x: rect.x + cut, y: rect.y },
+      { x: rect.right - 2, y: rect.y + 2 },
+      { x: rect.right, y: rect.y + cut },
+      { x: rect.right - cut, y: rect.bottom },
+      { x: rect.x + 2, y: rect.bottom - 2 },
+      { x: rect.x, y: rect.y + cut },
+    ];
+  }
+
+  private drawPanelBolt(
+    graphics: GameObjects.Graphics,
+    x: number,
+    y: number,
+    radius: number
+  ): void {
+    graphics.fillStyle(0x050607, 1).fillCircle(x, y, radius + 1);
+    graphics.fillStyle(0xa49374, 0.92).fillCircle(x, y, radius);
+    graphics.lineStyle(1, 0x332d23, 0.9);
+    graphics.lineBetween(x - radius * 0.65, y, x + radius * 0.65, y);
+  }
+
+  private fillModalPolygon(
+    graphics: GameObjects.Graphics,
+    points: ModalPoint[]
+  ): void {
+    if (points.length < 3) return;
+    graphics.beginPath();
+    graphics.moveTo(points[0]!.x, points[0]!.y);
+    for (let index = 1; index < points.length; index += 1) {
+      graphics.lineTo(points[index]!.x, points[index]!.y);
+    }
+    graphics.closePath();
+    graphics.fillPath();
+  }
+
+  private strokeModalPolygon(
+    graphics: GameObjects.Graphics,
+    points: ModalPoint[]
+  ): void {
+    if (points.length < 2) return;
+    graphics.beginPath();
+    graphics.moveTo(points[0]!.x, points[0]!.y);
+    for (let index = 1; index < points.length; index += 1) {
+      graphics.lineTo(points[index]!.x, points[index]!.y);
+    }
+    graphics.closePath();
+    graphics.strokePath();
+  }
+
+  private drawUpgradeIcon(
+    graphics: GameObjects.Graphics,
+    id: UpgradeId,
+    x: number,
+    y: number,
+    size: number,
+    color: number
+  ): void {
+    const half = size / 2;
+    const stroke = Math.max(2, size * 0.075);
+    graphics.lineStyle(stroke, color, 0.96);
+    if (id === 'ram') {
+      graphics.lineBetween(
+        x - half * 0.72,
+        y - half * 0.45,
+        x - half * 0.72,
+        y + half * 0.42
+      );
+      graphics.lineBetween(
+        x + half * 0.72,
+        y - half * 0.45,
+        x + half * 0.72,
+        y + half * 0.42
+      );
+      graphics.lineBetween(
+        x - half * 0.74,
+        y - half * 0.12,
+        x + half * 0.74,
+        y - half * 0.12
+      );
+      graphics.lineBetween(x - half * 0.5, y + half * 0.42, x, y + half * 0.05);
+      graphics.lineBetween(x + half * 0.5, y + half * 0.42, x, y + half * 0.05);
+    } else if (id === 'saws') {
+      graphics.strokeCircle(x, y, half * 0.52);
+      for (let index = 0; index < 10; index += 1) {
+        const angle = (index / 10) * Math.PI * 2;
+        graphics.lineBetween(
+          x + Math.cos(angle) * half * 0.48,
+          y + Math.sin(angle) * half * 0.48,
+          x + Math.cos(angle) * half * 0.76,
+          y + Math.sin(angle) * half * 0.76
+        );
+      }
+      graphics.fillStyle(0x080a0b, 1).fillCircle(x, y, half * 0.16);
+    } else if (id === 'nailgun') {
+      graphics.fillStyle(color, 0.9);
+      this.fillModalPolygon(graphics, [
+        { x: x - half * 0.72, y: y - half * 0.4 },
+        { x: x + half * 0.62, y: y - half * 0.28 },
+        { x: x + half * 0.72, y: y + half * 0.04 },
+        { x: x - half * 0.52, y: y + half * 0.08 },
+      ]);
+      this.fillModalPolygon(graphics, [
+        { x: x - half * 0.3, y: y },
+        { x: x + half * 0.05, y: y },
+        { x: x - half * 0.02, y: y + half * 0.68 },
+        { x: x - half * 0.42, y: y + half * 0.62 },
+      ]);
+      graphics.lineStyle(Math.max(1, stroke * 0.45), 0xf7f3df, 0.8);
+      for (let index = 0; index < 3; index += 1) {
+        graphics.lineBetween(
+          x + half * (0.55 + index * 0.12),
+          y - half * 0.1,
+          x + half * (0.88 + index * 0.12),
+          y - half * 0.1
+        );
+      }
+    } else if (id === 'exhaust') {
+      graphics.lineBetween(
+        x - half * 0.5,
+        y + half * 0.55,
+        x - half * 0.22,
+        y - half * 0.42
+      );
+      graphics.lineBetween(
+        x + half * 0.12,
+        y + half * 0.55,
+        x + half * 0.4,
+        y - half * 0.42
+      );
+      graphics.strokeCircle(x - half * 0.22, y - half * 0.52, half * 0.18);
+      graphics.strokeCircle(x + half * 0.4, y - half * 0.52, half * 0.18);
+      graphics.fillStyle(0xffc928, 0.92);
+      graphics.fillTriangle(
+        x - half * 0.64,
+        y + half * 0.5,
+        x - half * 0.28,
+        y + half * 0.18,
+        x - half * 0.08,
+        y + half * 0.67
+      );
+    } else if (id === 'engine') {
+      graphics
+        .fillStyle(color, 0.22)
+        .fillRect(x - half * 0.62, y - half * 0.2, half * 1.24, half * 0.75);
+      graphics.strokeRect(
+        x - half * 0.62,
+        y - half * 0.2,
+        half * 1.24,
+        half * 0.75
+      );
+      graphics.lineBetween(x - half * 0.66, y - half * 0.65, x, y - half * 0.1);
+      graphics.lineBetween(x + half * 0.66, y - half * 0.65, x, y - half * 0.1);
+      graphics
+        .fillStyle(0x080a0b, 1)
+        .fillCircle(x, y + half * 0.3, half * 0.18);
+    } else if (id === 'magnet') {
+      graphics.lineStyle(stroke * 1.35, color, 0.96).beginPath();
+      graphics
+        .arc(x, y + half * 0.04, half * 0.52, 0, Math.PI, false)
+        .strokePath();
+      graphics
+        .fillStyle(0xf7f3df, 0.92)
+        .fillRect(x - half * 0.64, y - half * 0.6, stroke * 1.25, half * 0.62);
+      graphics
+        .fillStyle(0xf7f3df, 0.92)
+        .fillRect(x + half * 0.43, y - half * 0.6, stroke * 1.25, half * 0.62);
+    } else if (id === 'armor') {
+      graphics.beginPath();
+      graphics.moveTo(x - half * 0.68, y + half * 0.62);
+      graphics.lineTo(x - half * 0.52, y - half * 0.52);
+      graphics.lineTo(x + half * 0.52, y - half * 0.52);
+      graphics.lineTo(x + half * 0.68, y + half * 0.62);
+      graphics.strokePath();
+      graphics.lineBetween(
+        x - half * 0.52,
+        y - half * 0.08,
+        x + half * 0.58,
+        y - half * 0.08
+      );
+      graphics.lineBetween(
+        x - half * 0.5,
+        y - half * 0.5,
+        x + half * 0.55,
+        y + half * 0.58
+      );
+      graphics.lineBetween(
+        x + half * 0.5,
+        y - half * 0.5,
+        x - half * 0.55,
+        y + half * 0.58
+      );
+    } else if (id === 'chain') {
+      graphics.strokeEllipse(
+        x - half * 0.25,
+        y - half * 0.12,
+        half * 0.96,
+        half * 0.5
+      );
+      graphics.strokeEllipse(
+        x + half * 0.25,
+        y + half * 0.12,
+        half * 0.96,
+        half * 0.5
+      );
+      graphics.lineBetween(
+        x - half * 0.15,
+        y - half * 0.1,
+        x + half * 0.15,
+        y + half * 0.1
+      );
+    } else if (id === 'overdrive') {
+      graphics.beginPath();
+      graphics
+        .arc(x, y + half * 0.2, half * 0.66, Math.PI, Math.PI * 2, false)
+        .strokePath();
+      graphics.lineBetween(x, y + half * 0.2, x + half * 0.48, y - half * 0.28);
+      graphics.fillStyle(color, 1).fillCircle(x, y + half * 0.2, half * 0.12);
+      for (let index = 0; index < 5; index += 1) {
+        const angle = Math.PI + (index / 4) * Math.PI;
+        graphics.lineBetween(
+          x + Math.cos(angle) * half * 0.5,
+          y + half * 0.2 + Math.sin(angle) * half * 0.5,
+          x + Math.cos(angle) * half * 0.68,
+          y + half * 0.2 + Math.sin(angle) * half * 0.68
+        );
+      }
+    } else {
+      graphics.strokeCircle(x - half * 0.12, y - half * 0.08, half * 0.48);
+      graphics
+        .fillStyle(0x080a0b, 1)
+        .fillCircle(x - half * 0.12, y - half * 0.08, half * 0.2);
+      graphics.fillStyle(color, 0.9);
+      this.fillModalPolygon(graphics, [
+        { x: x + half * 0.05, y: y + half * 0.18 },
+        { x: x + half * 0.72, y: y + half * 0.02 },
+        { x: x + half * 0.56, y: y + half * 0.52 },
+        { x: x + half * 0.14, y: y + half * 0.68 },
+      ]);
+    }
+  }
+
+  private drawBlueprintIcon(
+    graphics: GameObjects.Graphics,
+    id: BlueprintId,
+    x: number,
+    y: number,
+    size: number,
+    color: number
+  ): void {
+    if (id === 'magnet' || id === 'armor') {
+      this.drawUpgradeIcon(graphics, id, x, y, size, color);
+      return;
+    }
+    const half = size / 2;
+    graphics
+      .fillStyle(color, 0.9)
+      .fillRect(x - half * 0.28, y - half * 0.42, half * 0.56, half * 0.9);
+    graphics
+      .fillStyle(0xf7f3df, 0.9)
+      .fillRect(x - half * 0.15, y - half * 0.68, half * 0.3, half * 0.28);
+    graphics.lineStyle(Math.max(2, size * 0.06), 0x080b12, 0.9);
+    graphics.lineBetween(x - half * 0.22, y, x + half * 0.22, y);
+    graphics.fillStyle(0xff6b35, 0.95);
+    graphics.fillTriangle(
+      x - half * 0.3,
+      y + half * 0.48,
+      x,
+      y + half * 0.82,
+      x + half * 0.3,
+      y + half * 0.48
+    );
   }
 
   private buildLevelUpModal(): void {
     this.clearModal();
     const width = this.scale.width;
     const height = this.scale.height;
-    const portrait = width < 660;
     const shortNarrow = width < 360 && height < 650;
-    const titleSize = shortNarrow ? 26 : portrait ? 34 : 48;
+    const compactRows = width < 720;
+    const titleSize = shortNarrow ? 24 : compactRows ? 32 : 48;
+    const titleY = shortNarrow
+      ? 33
+      : compactRows
+        ? height < 600
+          ? 38
+          : 48
+        : height * 0.12;
     this.modalTexts.push(
       this.add
-        .text(
-          width / 2,
-          portrait ? 40 : height * 0.13,
-          'BOLT SOMETHING STUPID ON',
-          {
-            fontFamily: 'Impact, Haettenschweiler, sans-serif',
-            fontSize: `${titleSize}px`,
-            color: '#f7f3df',
-            stroke: '#080b12',
-            strokeThickness: 8,
-            align: 'center',
-            ...(shortNarrow
-              ? { wordWrap: { width: width - 20, useAdvancedWrap: true } }
-              : {}),
-          }
-        )
+        .text(width / 2, titleY, 'BOLT SOMETHING STUPID ON', {
+          fontFamily: 'Impact, Haettenschweiler, sans-serif',
+          fontSize: `${titleSize}px`,
+          color: '#f7f3df',
+          stroke: '#080b12',
+          strokeThickness: 8,
+          align: 'center',
+          ...(shortNarrow
+            ? { wordWrap: { width: width - 20, useAdvancedWrap: true } }
+            : {}),
+        })
         .setOrigin(0.5)
         .setDepth(220)
     );
-    const gap = portrait ? 10 : 18;
-    if (portrait) {
-      const cardWidth = width - 36;
-      const cardHeight = Math.min(150, (height - 128 - gap * 2) / 3);
+    const gap = compactRows ? (shortNarrow ? 6 : 8) : 18;
+    if (compactRows) {
+      const sideInset = width < 400 ? 11 : 16;
+      const startY = shortNarrow ? 78 : height < 600 ? 86 : 128;
+      const bottomInset = height < 600 ? 18 : 48;
+      const maxHeight = shortNarrow ? 104 : height < 600 ? 112 : 118;
+      const cardHeight = clamp(
+        (height - startY - bottomInset - gap * 2) / 3,
+        82,
+        maxHeight
+      );
       this.upgradeRects = this.upgradeChoices.map(
         (_choice, index) =>
           new Phaser.Geom.Rectangle(
-            18,
-            86 + index * (cardHeight + gap),
-            cardWidth,
+            sideInset,
+            startY + index * (cardHeight + gap),
+            width - sideInset * 2,
             cardHeight
           )
       );
     } else {
       const totalWidth = Math.min(width - 60, 1030);
       const cardWidth = (totalWidth - gap * 2) / 3;
-      const cardHeight = Math.min(330, height * 0.48);
+      const cardHeight = Math.min(270, height * 0.4);
       const startX = (width - totalWidth) / 2;
-      const y = height * 0.27;
+      const y = height * 0.28;
       this.upgradeRects = this.upgradeChoices.map(
         (_choice, index) =>
           new Phaser.Geom.Rectangle(
@@ -3826,25 +5337,96 @@ export class Game extends Scene {
       const rect = this.upgradeRects[index];
       if (!rect) return;
       const current = this.upgradeLevels[choice.id];
-      const label = this.add
-        .text(
-          rect.centerX,
-          rect.centerY,
-          `${index + 1}  //  ${choice.title}\n\n${choice.promise}\n\n${choice.id === 'repair' ? 'FIELD REPAIR' : `MARK ${current + 1} / ${choice.max}`}`,
-          {
-            fontFamily: 'Impact, Haettenschweiler, sans-serif',
-            fontSize: `${portrait ? 20 : 25}px`,
-            color: choice.colorCss,
-            stroke: '#080b12',
-            strokeThickness: 5,
-            align: 'center',
-            lineSpacing: portrait ? 2 : 8,
-            wordWrap: { width: rect.width - 24 },
-          }
-        )
-        .setOrigin(0.5)
-        .setDepth(220);
-      this.modalTexts.push(label);
+      const mark =
+        choice.id === 'repair'
+          ? 'FIELD REPAIR'
+          : `MARK ${current + 1} / ${choice.max}`;
+      if (compactRows) {
+        const iconWellWidth = Math.min(rect.height - 18, width < 400 ? 64 : 78);
+        const contentX = rect.x + 8 + iconWellWidth + 12;
+        const narrow = width < 400;
+        const titleFont = narrow ? 16 : 21;
+        const copyWidth = Math.max(80, rect.right - contentX - 10);
+        this.modalTexts.push(
+          this.add
+            .text(
+              contentX,
+              rect.y + rect.height * 0.27,
+              `${index + 1} · ${choice.title}`,
+              {
+                fontFamily: 'Impact, Haettenschweiler, sans-serif',
+                fontSize: `${titleFont}px`,
+                color: choice.colorCss,
+                stroke: '#080b12',
+                strokeThickness: narrow ? 3 : 4,
+                wordWrap: { width: copyWidth, useAdvancedWrap: true },
+              }
+            )
+            .setOrigin(0, 0.5)
+            .setDepth(220),
+          this.add
+            .text(contentX, rect.y + rect.height * 0.52, choice.promise, {
+              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontSize: `${narrow ? 10 : 12}px`,
+              color: '#f7f3df',
+              wordWrap: { width: copyWidth, useAdvancedWrap: true },
+            })
+            .setOrigin(0, 0.5)
+            .setDepth(220),
+          this.add
+            .text(contentX + 4, rect.bottom - 17.5, mark, {
+              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontSize: `${narrow ? 9 : 10}px`,
+              color: choice.colorCss,
+            })
+            .setOrigin(0, 0.5)
+            .setDepth(220)
+        );
+      } else {
+        this.modalTexts.push(
+          this.add
+            .text(rect.x + 38, rect.y + 33, `[${index + 1}]`, {
+              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontSize: '18px',
+              fontStyle: 'bold',
+              color: '#f7f3df',
+              stroke: '#080b12',
+              strokeThickness: 3,
+            })
+            .setOrigin(0.5)
+            .setDepth(220),
+          this.add
+            .text(rect.centerX, rect.y + 138, choice.title, {
+              fontFamily: 'Impact, Haettenschweiler, sans-serif',
+              fontSize: '25px',
+              color: choice.colorCss,
+              stroke: '#080b12',
+              strokeThickness: 5,
+              align: 'center',
+              wordWrap: { width: rect.width - 24, useAdvancedWrap: true },
+            })
+            .setOrigin(0.5)
+            .setDepth(220),
+          this.add
+            .text(rect.centerX, rect.y + 178, choice.promise, {
+              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontSize: '14px',
+              color: '#f7f3df',
+              align: 'center',
+              wordWrap: { width: rect.width - 30, useAdvancedWrap: true },
+            })
+            .setOrigin(0.5)
+            .setDepth(220),
+          this.add
+            .text(rect.centerX, rect.bottom - 24.5, mark, {
+              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontSize: '11px',
+              color: choice.colorCss,
+            })
+            .setOrigin(0.5)
+            .setDepth(220)
+        );
+      }
     });
   }
 
@@ -3852,11 +5434,12 @@ export class Game extends Scene {
     this.clearModal();
     const width = this.scale.width;
     const height = this.scale.height;
+    const compact = width < 500;
     this.modalTexts.push(
       this.add
         .text(width / 2, height / 2 - 30, 'ENGINE STALLED', {
           fontFamily: 'Impact, Haettenschweiler, sans-serif',
-          fontSize: `${Math.min(62, width * 0.1)}px`,
+          fontSize: `${Math.min(62, width * (compact ? 0.12 : 0.1))}px`,
           color: '#ffc928',
           stroke: '#080b12',
           strokeThickness: 8,
@@ -3867,9 +5450,10 @@ export class Game extends Scene {
       this.add
         .text(width / 2, height / 2 + 45, 'PRESS P OR TAP TO GET BACK IN IT', {
           fontFamily: 'ui-monospace, Menlo, monospace',
-          fontSize: '16px',
+          fontSize: `${compact ? 11 : 16}px`,
           color: '#f7f3df',
           align: 'center',
+          wordWrap: { width: Math.max(180, width - 56), useAdvancedWrap: true },
         })
         .setOrigin(0.5)
         .setDepth(220)
@@ -3952,6 +5536,13 @@ export class Game extends Scene {
         .setDepth(220)
     );
     const voteHeadingY = portrait ? 158 : height * 0.37;
+    const ticketInset = portrait ? 12 : Math.max(46, width * 0.08);
+    this.resultTicketRect.setTo(
+      ticketInset,
+      statsY - 10,
+      width - ticketInset * 2,
+      Math.max(58, voteHeadingY - statsY - (portrait ? 14 : 16))
+    );
     this.modalTexts.push(
       this.add
         .text(
@@ -3979,15 +5570,22 @@ export class Game extends Scene {
     const names = ['MAG-CRANE', 'ROLL CAGE', 'NITRO KIT'];
     const promises = ['MORE SCRAP REACH', '+15 STARTING BODY', '+35 TOP SPEED'];
     const colors = ['#2ef2e2', '#8fa3b8', '#ffc928'];
-    const gap = shortNarrow ? 6 : portrait ? 8 : 14;
+    const tightSyncRetry =
+      this.runSyncState === 'failed' && portrait && height < 620;
+    const gap = tightSyncRetry ? 6 : shortNarrow ? 6 : portrait ? 8 : 14;
     if (portrait) {
       const cardWidth = width - 34;
-      const cardHeight = shortNarrow ? 60 : Math.min(86, (height - 300) / 3);
+      const cardHeight = tightSyncRetry
+        ? 58
+        : shortNarrow
+          ? 60
+          : Math.min(86, (height - 300) / 3);
+      const voteTop = voteHeadingY + (tightSyncRetry ? 24 : 28);
       this.voteRects = ids.map(
         (_id, index) =>
           new Phaser.Geom.Rectangle(
             17,
-            voteHeadingY + 28 + index * (cardHeight + gap),
+            voteTop + index * (cardHeight + gap),
             cardWidth,
             cardHeight
           )
@@ -4019,10 +5617,11 @@ export class Game extends Scene {
             : this.voteSyncState === 'failed'
               ? '\nMISSED — TAP TO RETRY'
               : '';
+      const labelX = rect.x + (portrait ? 60 : 82);
       this.modalTexts.push(
         this.add
           .text(
-            rect.centerX,
+            labelX,
             rect.centerY,
             `${index + 1}  ${names[index]}\n${promises[index]}${voteStatus}`,
             {
@@ -4031,11 +5630,15 @@ export class Game extends Scene {
               color: colors[index] ?? '#f7f3df',
               stroke: '#080b12',
               strokeThickness: 4,
-              align: 'center',
+              align: 'left',
               lineSpacing: shortNarrow ? 2 : 5,
+              wordWrap: {
+                width: Math.max(80, rect.right - labelX - 8),
+                useAdvancedWrap: true,
+              },
             }
           )
-          .setOrigin(0.5)
+          .setOrigin(0, 0.5)
           .setDepth(220)
       );
     });
@@ -4050,7 +5653,13 @@ export class Game extends Scene {
     this.menuRect.setTo(width / 2 + 7, bottomY, buttonWidth, 48);
     if (this.runSyncState === 'failed') {
       const syncWidth = Math.min(width - 44, 420);
-      this.syncRect.setTo((width - syncWidth) / 2, bottomY - 58, syncWidth, 42);
+      const syncHeight = tightSyncRetry ? 36 : 42;
+      this.syncRect.setTo(
+        (width - syncWidth) / 2,
+        bottomY - (tightSyncRetry ? 48 : 58),
+        syncWidth,
+        syncHeight
+      );
       this.modalTexts.push(
         this.add
           .text(
@@ -4059,7 +5668,7 @@ export class Game extends Scene {
             'RETRY PIT RADIO  [S]',
             {
               fontFamily: 'Impact, Haettenschweiler, sans-serif',
-              fontSize: `${portrait ? 16 : 20}px`,
+              fontSize: `${tightSyncRetry ? 14 : portrait ? 16 : 20}px`,
               color: '#2ef2e2',
             }
           )
@@ -4100,6 +5709,7 @@ export class Game extends Scene {
     this.upgradeRects = [];
     this.voteRects = [];
     this.syncRect.setTo(0, 0, 0, 0);
+    this.resultTicketRect.setTo(0, 0, 0, 0);
     this.modalGraphics?.clear();
   }
 
@@ -4178,46 +5788,76 @@ export class Game extends Scene {
       this.popScreenText(muted ? 'SOUND OFF' : 'SOUND ON', '#8fa3b8');
       return;
     }
-    if (pointer.x > this.scale.width * 0.63) {
-      this.touchDrift = true;
-      this.touchDriftPointerId = pointer.id;
+    if (this.touchWheelRect.contains(pointer.x, pointer.y)) {
+      if (
+        this.touchSteerPointerId < 0 ||
+        this.touchSteerPointerId === pointer.id
+      ) {
+        this.touchSteerPointerId = pointer.id;
+        this.updateTouchSteering(pointer.x);
+      }
       return;
     }
-    this.touchActive = true;
-    this.touchPointerId = pointer.id;
-    this.touchOriginX = pointer.x;
-    this.touchOriginY = pointer.y;
-    this.touchX = pointer.x;
-    this.touchY = pointer.y;
+    if (this.touchShifterRect.contains(pointer.x, pointer.y)) {
+      if (
+        this.touchShifterPointerId < 0 ||
+        this.touchShifterPointerId === pointer.id
+      ) {
+        this.touchShifterPointerId = pointer.id;
+        this.touchThrottle = true;
+        this.updateTouchShifter(pointer.x);
+      }
+    }
   }
 
   private pointerMove(pointer: Phaser.Input.Pointer): void {
-    if (this.touchActive && pointer.id === this.touchPointerId) {
-      this.touchX = pointer.x;
-      this.touchY = pointer.y;
-    }
+    if (pointer.id === this.touchSteerPointerId)
+      this.updateTouchSteering(pointer.x);
+    if (pointer.id === this.touchShifterPointerId)
+      this.updateTouchShifter(pointer.x);
   }
 
   private pointerUp(pointer: Phaser.Input.Pointer): void {
-    if (pointer.id === this.touchPointerId) {
-      this.touchActive = false;
-      this.touchPointerId = -1;
+    if (pointer.id === this.touchSteerPointerId) {
+      this.touchSteerPointerId = -1;
+      this.touchSteer = 0;
     }
-    if (pointer.id === this.touchDriftPointerId) {
+    if (pointer.id === this.touchShifterPointerId) {
+      this.touchShifterPointerId = -1;
+      this.touchThrottle = false;
       this.touchDrift = false;
-      this.touchDriftPointerId = -1;
+    }
+  }
+
+  private updateTouchSteering(pointerX: number): void {
+    const raw = clamp((pointerX - this.touchWheelCenterX) / 52, -1, 1);
+    const deadzone = 0.08;
+    this.touchSteer =
+      Math.abs(raw) <= deadzone
+        ? 0
+        : Math.sign(raw) * ((Math.abs(raw) - deadzone) / (1 - deadzone));
+  }
+
+  private updateTouchShifter(pointerX: number): void {
+    this.touchThrottle = true;
+    if (this.touchDrift) {
+      if (pointerX >= this.touchShifterCenterX + 2) this.touchDrift = false;
+    } else if (pointerX <= this.touchShifterCenterX - 14) {
+      this.touchDrift = true;
     }
   }
 
   private resetTouchInput(): void {
-    this.touchActive = false;
-    this.touchPointerId = -1;
+    this.touchSteerPointerId = -1;
+    this.touchShifterPointerId = -1;
+    this.touchSteer = 0;
+    this.touchThrottle = false;
     this.touchDrift = false;
-    this.touchDriftPointerId = -1;
   }
 
   private togglePause(): void {
     if (this.mode === 'playing') {
+      this.resetTouchInput();
       this.mode = 'paused';
       audio.stopEngine();
       this.buildPauseModal();
@@ -4254,6 +5894,8 @@ export class Game extends Scene {
       .map(({ enemy, distance }) => ({
         id: enemy.id,
         kind: enemy.kind,
+        visualRow: enemy.visualRow,
+        damageTier: this.damageTier(enemy.hp, enemy.maxHp),
         x: Math.round(enemy.x),
         y: Math.round(enemy.y),
         relativeX: Math.round(enemy.x - this.player.x),
@@ -4279,6 +5921,18 @@ export class Game extends Scene {
         inset: this.arenaInset(),
         activeBarrels: this.decorations.filter(
           (decoration) => decoration.alive && decoration.kind === 'barrel'
+        ).length,
+        primedBarrels: this.decorations.filter(
+          (decoration) =>
+            decoration.alive &&
+            decoration.kind === 'barrel' &&
+            decoration.fuse >= 0
+        ).length,
+        damagedBarrels: this.decorations.filter(
+          (decoration) =>
+            decoration.alive &&
+            decoration.kind === 'barrel' &&
+            decoration.hp < decoration.maxHp
         ).length,
         pillars: this.decorations.filter(
           (decoration) => decoration.alive && decoration.kind === 'pillar'
@@ -4309,6 +5963,8 @@ export class Game extends Scene {
         speed: Math.round(Math.hypot(this.player.vx, this.player.vy)),
         hp: Math.ceil(this.player.hp),
         maxHp: this.player.maxHp,
+        visualRow: this.crew === 'iron' ? 0 : this.crew === 'neon' ? 1 : 2,
+        damageTier: this.damageTier(this.player.hp, this.player.maxHp),
         level: this.player.level,
         xp: this.player.xp,
         nextXp: this.player.nextXp,
@@ -4330,6 +5986,36 @@ export class Game extends Scene {
           distanceSquared(this.player.x, this.player.y, pickup.x, pickup.y) <
           500 * 500
       ).length,
+      repairs: {
+        active: this.pickups.filter((pickup) => pickup.kind === 'repair')
+          .length,
+        persistent: this.pickups.filter(
+          (pickup) => pickup.kind === 'repair' && pickup.persistent
+        ).length,
+        collectible: this.player.hp < this.player.maxHp,
+        cases: this.pickups
+          .filter((pickup) => pickup.kind === 'repair')
+          .slice(0, 6)
+          .map((pickup) => ({
+            id: pickup.id,
+            x: Math.round(pickup.x),
+            y: Math.round(pickup.y),
+            value: pickup.value,
+            persistent: pickup.persistent,
+            visualFrame: pickup.visualFrame,
+          })),
+      },
+      visuals: {
+        vehicleAtlasLoaded: this.textures.exists(VEHICLE_ATLAS_KEY),
+        hazardsAtlasLoaded: this.textures.exists(HAZARDS_ATLAS_KEY),
+        playerImages: this.playerVehicleImage ? 1 : 0,
+        enemyImages: this.enemyVehicleImages.size,
+        wreckImages: this.wreckVehicleImages.size,
+        barrelImages: this.barrelImages.size,
+        repairImages: this.repairImages.size,
+        blastImages: this.blastImages.size,
+        activeBlastAnimations: this.blastVisuals.length,
+      },
       upgrades: this.upgradeLevels,
       upgradeChoices:
         this.mode === 'levelup'
@@ -4348,7 +6034,16 @@ export class Game extends Scene {
         choose: '1, 2, 3 or pointer',
         touchControlsVisible: this.showTouchControls,
         touch: this.showTouchControls
-          ? 'left virtual stick, right drift pad, top pause and sound buttons'
+          ? 'fixed left steering wheel, hold right shifter for throttle, slide it left for drift'
+          : null,
+        touchState: this.showTouchControls
+          ? {
+              wheelHeld: this.touchSteerPointerId >= 0,
+              shifterHeld: this.touchShifterPointerId >= 0,
+              steer: Number(this.touchSteer.toFixed(3)),
+              throttle: this.touchThrottle ? 1 : 0,
+              drift: this.touchDrift,
+            }
           : null,
       },
     };

@@ -1,4 +1,4 @@
-# RAMAGEDDON — Devpost Submission Kit
+# WRECKCADE — Devpost Submission Kit
 
 This document is the copy desk for the competition entry. Text marked
 **ready to paste** assumes the corresponding feature is visible and functional
@@ -7,18 +7,24 @@ build or remove that claim before submission.
 
 ## Competition links
 
-| Devpost field                      | Value                                                                                       |
-| ---------------------------------- | ------------------------------------------------------------------------------------------- |
-| App listing                        | `https://developers.reddit.com/apps/ramageddon-game`                                        |
-| Demo subreddit                     | `https://www.reddit.com/r/ramageddon_game_dev`                                              |
-| Running demo post                  | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uws1an/ramageddon_daily_wreckpile/` |
-| Public demo video                  | `[DEMO_VIDEO_URL]`                                                                          |
-| Public source repository, optional | `https://github.com/BoneShaman/RAMAGEDDON`                                                  |
-| Privacy policy                     | `https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/PRIVACY.md`                        |
-| Terms                              | `https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/TERMS.md`                          |
+| Devpost field                     | Value                                                                                      |
+| --------------------------------- | ------------------------------------------------------------------------------------------ |
+| Technical app listing             | `https://developers.reddit.com/apps/ramageddon-game`                                       |
+| Demo subreddit                    | `https://www.reddit.com/r/ramageddon_game_dev`                                             |
+| Running WRECKCADE post            | `https://www.reddit.com/r/ramageddon_game_dev/comments/1uwzwl3/wreckcade_daily_wreckpile/` |
+| Public demo video                 | `[DEMO_VIDEO_URL]`                                                                         |
+| Verified public source repository | `https://github.com/BoneShaman/WRECKCADE`                                                  |
+| Privacy policy after current push | `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/PRIVACY.md`                        |
+| Terms after current push          | `https://github.com/BoneShaman/WRECKCADE/blob/main/docs/TERMS.md`                          |
 
 Do not replace the running demo post with a standalone web-hosting link. Judges
 need the game running as a Reddit Interactive Post.
+
+The WRECKCADE repository is public and verified at the URL above; both origin
+fetch and push point to it. The current WRECKCADE tree, including the policy
+revisions, still requires a push before those exact file URLs are treated as
+release evidence. The WRECKCADE Reddit post above is the verified demonstration
+URL to use in the refreshed submission.
 
 ## Current release evidence
 
@@ -26,33 +32,44 @@ need the game running as a Reddit Interactive Post.
   The project page displays **Project submitted!** and **SUBMITTED TO**, remains
   editable until the deadline, and is publicly reachable without session
   cookies at `https://devpost.com/software/ramageddon`.
-- Devvit 0.0.5 is uploaded, installed, and serving the existing demo post.
-- Live desktop-browser validation loaded real daily/community state, entered the
-  expanded game, and confirmed the final `0-0-5-webview` URL and signed Devvit
-  token. The production run started with active audio and produced an x7 opening
-  wreck cascade; the preceding 0.0.2 gameplay audit reached the first upgrade
-  without a visible client error.
-- Exact 613×512 feed and 333×515 expanded browser layouts pass without clipping
-  or inline scrolling. Desktop keyboard and simulated touch
-  steering/drift/pause/sound/card/replay paths pass the focused release suite.
+- Devvit 0.0.8 is uploaded and installed to `r/ramageddon_game_dev`; the CLI
+  install listing confirms 0.0.8 is active.
+- A visibly signed-out in-app browser opened the exact **WRECKCADE: Daily
+  Wreckpile** post, confirmed its iframe source contains `0-0-8-webview`, rendered
+  the WRECKCADE splash, activated **WRECK THE HORDE**, and rendered the
+  generated-car Crew Garage inside the Reddit modal. The new live Reddit shell
+  and modal captures are stored as `docs/media/10-live-reddit-feed.png` and
+  `docs/media/09-live-reddit-result.png`.
+- A prior live desktop-browser validation loaded real daily/community state,
+  entered the expanded 0.0.5 game, and confirmed its `0-0-5-webview` URL and
+  signed Devvit token. That production run started with active audio and
+  produced an x7 opening wreck cascade; the preceding 0.0.2 gameplay audit
+  reached the first upgrade without a visible client error.
+- Current 0.0.8 local QA covers the generated scrapyard environment, nine
+  vehicle models with four damage states, barrel chains, sparse repair cases,
+  restart-safe sprite pools, exact 613×512 and 333×515 layouts, desktop input
+  parity, visible `1`/`2`/`3` upgrade shortcuts, and two-thumb steering-wheel /
+  throttle-drift-shifter input without console or page errors.
 - A prior natural 180-second local run defeated the Road King and remained
   playable at approximately 54 fps under 4× CPU throttling. In the final harder
   balance, an offense-prioritized active policy destroyed the Road King at
   175.03 seconds; a focused final QA branch confirms that destroying the boss
   now resolves victory immediately.
-- Reddit approved the demo community as Public. A fresh Firefox Private Browsing
-  session, visibly signed out, loaded the exact post and its embedded RAMAGEDDON
-  feed card.
-- A final live mobile-sized 0.0.5 run completed at 1,778 score, 12 wrecks, x7
+- Reddit approved the demo community as Public. Signed-out desktop exact-link
+  verification now covers the new WRECKCADE post and its expanded Reddit modal.
+- A prior live mobile-sized 0.0.5 run completed at 1,778 score, 12 wrecks, x7
   best combo, and 24 scrap; its result synced and rendered the Wreckpile and
   Blueprint Vote flow without a corresponding production error log entry.
+- The Devvit app-profile display name still exposes the legacy title and must be
+  changed manually to **WRECKCADE: Wrecks Become Weapons**. This document does
+  not treat the profile rebrand as complete.
 - A complete ordinary-user run, native Reddit mobile, and two-account
   shared-state testing remain recommended evidence rather than submission
   blockers.
 
 ## Submission metadata
 
-- **Project title:** RAMAGEDDON
+- **Project title:** WRECKCADE
 - **Tagline:** The horde is the weapon. Wrecks become weapons.
 - **Primary category:** Best App with a Hook
 - **Also relevant:** Best Use of Phaser; Best Use of Retention Mechanics; Best
@@ -62,7 +79,7 @@ need the game running as a Reddit Interactive Post.
 
 ## Short description — ready to paste
 
-> RAMAGEDDON is a top-down destruction-derby survivor where a clean ram launches
+> WRECKCADE is a top-down destruction-derby survivor where a clean ram launches
 > the destroyed car as a high-speed hot wreck that can smash through the rest of
 > the horde. Fast three-minute runs feed a daily Wreckpile, crew competition,
 > leaderboards, and a Blueprint Vote that changes tomorrow's starting upgrade.
@@ -76,11 +93,11 @@ need the game running as a Reddit Interactive Post.
 > opposite magic: one impact causes another, and a bad traffic jam can become a
 > spectacular plan.
 >
-> RAMAGEDDON fuses those ideas around one rule: **the horde is the weapon.**
+> WRECKCADE fuses those ideas around one rule: **the horde is the weapon.**
 
 ### What it does
 
-> RAMAGEDDON is a compact top-down survival run inside a Reddit Interactive Post.
+> WRECKCADE is a compact top-down survival run inside a Reddit Interactive Post.
 > The player drives through escalating waves of hostile vehicles while weapons
 > fire automatically. A clean ram launches the defeated vehicle as a hot wreck
 > along the impact line. If that wreck destroys another enemy, the new wreck
@@ -118,10 +135,17 @@ need the game running as a Reddit Interactive Post.
 > bests, streaks, and Wreckpile progress. Reddit provides identity and post
 > context, so players do not need a second account or an off-platform profile.
 >
-> The visual identity is drawn procedurally with Phaser Graphics. Audio combines
-> responsive WebAudio synthesis with original SFX generated locally using Stable
-> Audio 3 and edited specifically for the game; exact prompts, seeds, processing,
-> and rejected-clip policy are recorded in `docs/AUDIO_PROVENANCE.md`. Collision
+> Phaser keeps hitboxes, weapon attachments, damage rules, debris, HUD,
+> controls, and semantic text live and truthful. An entrant-directed generated
+> art pack supplies nine distinct top-down vehicles with healthy, battered,
+> critical, and wrecked bodies; tangible barrels; an eight-stage blast; sparse
+> repair cases; and the tactile scrapyard environment of patched asphalt, tyre
+> walls, crushers, floodlights, welded plates, and wreck mountains. Exact visual
+> prompts and processing are recorded in `docs/VISUAL_PROVENANCE.md`.
+> Audio combines responsive WebAudio synthesis with original SFX generated
+> locally using Stable Audio 3 and edited specifically for the game; exact
+> prompts, seeds, processing, and rejected-clip policy are recorded in
+> `docs/AUDIO_PROVENANCE.md`. Collision
 > response, threat readability, spawn pressure, upgrade cadence, hit-stop, camera
 > trauma, particles, audio, and score presentation are tuned as one impact
 > system.
@@ -142,7 +166,7 @@ need the game running as a Reddit Interactive Post.
 
 ### What we are proud of
 
-> RAMAGEDDON's strongest moment is when a bad situation becomes a plan: the
+> WRECKCADE's strongest moment is when a bad situation becomes a plan: the
 > player lines up a front-corner ram and watches the pursuing swarm collapse into
 > a chain reaction. That is not just spectacle. The launch direction, enemy
 > density, upgrades, and timing all come from the player's driving.
@@ -159,13 +183,13 @@ need the game running as a Reddit Interactive Post.
 
 ## Judging alignment
 
-| Criterion         | What to show, not merely tell                                                                                                                                                                                                     |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Delightful UX     | Start from the Reddit post, reach movement in seconds, show a clear upgrade choice, legible HUD, strong impact feedback, and a one-action retry.                                                                                  |
-| Polish            | Show the uploaded build on desktop and mobile, responsive layouts, no inline scroll, no starter assets, no clipping, no console errors, and graceful API failure states.                                                          |
-| Reddit-y          | Show the Wreckpile, crews, daily/community totals, and Blueprint Vote changing shared state for the demo subreddit.                                                                                                               |
-| Hook              | Show today's seed/goal, daily board reset language, persistent personal goals, Blueprint Vote confirmation/tomorrow consequence, and an explicit reason to return.                                                                |
-| Phaser Innovation | Show ram-launched, momentum-carrying hot wrecks propagating through a large readable swarm, fixed-step simulation, procedural rendering, particles/hit-stop/camera/WebAudio response, responsive scaling, and stable performance. |
+| Criterion         | What to show, not merely tell                                                                                                                                                                                                                                               |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Delightful UX     | Start from the Reddit post, reach movement in seconds, show a clear upgrade choice, legible HUD, strong impact feedback, and a one-action retry.                                                                                                                            |
+| Polish            | Show the uploaded build on desktop and mobile, responsive layouts, no inline scroll, no starter assets, no clipping, no console errors, and graceful API failure states.                                                                                                    |
+| Reddit-y          | Show the Wreckpile, crews, daily/community totals, and Blueprint Vote changing shared state for the demo subreddit.                                                                                                                                                         |
+| Hook              | Show today's seed/goal, daily board reset language, persistent personal goals, Blueprint Vote confirmation/tomorrow consequence, and an explicit reason to return.                                                                                                          |
+| Phaser Innovation | Show ram-launched, momentum-carrying hot wrecks propagating through a large readable swarm, fixed-step simulation, damage-responsive sprite staging with code-controlled overlays, particles/hit-stop/camera/WebAudio response, responsive scaling, and stable performance. |
 
 The first judging stage is pass/fail: the project must visibly fit the community
 retention theme and meaningfully use Devvit. Do not make judges infer the social
@@ -194,7 +218,9 @@ Check each claim against the uploaded build before pasting the description:
       are implemented.
 - [x] Type-check, lint, and production build pass.
 - [ ] All shared systems work from at least two separate Reddit accounts.
-- [ ] The final uploaded post is exercised on Reddit mobile and desktop.
+- [x] The final 0.0.8 WRECKCADE post launches through the exact link in a
+      signed-out desktop browser and reaches the Crew Garage.
+- [ ] The final 0.0.8 WRECKCADE post is exercised on Reddit mobile.
 - [ ] Every visual in the video is captured from the actual uploaded build.
 
 If an unchecked item cannot be repaired before the deadline, remove the feature
@@ -209,7 +235,7 @@ the Reddit-post context is intentionally being demonstrated.
 1. **Hero / thumbnail:** player car breaking through a dense wreck cascade;
    title and “Wrecks become weapons” remain readable at small size.
 2. **Reddit proof:** the demo post in-feed with a clear play call to action and
-   original RAMAGEDDON branding.
+   original WRECKCADE branding.
 3. **First five seconds:** readable HUD, immediate driving, enemy intent, and the
    first confirmed impact.
 4. **The signature mechanic:** one hot wreck launched down a pursuit line,
@@ -237,17 +263,17 @@ Target 56–58 seconds. Judges are not required to watch beyond one minute. Use
 actual footage from the submitted Reddit post and show the pointer/touch input
 sparingly so cause and effect remain obvious.
 
-| Time      | Picture                                                           | Voice-over / on-screen copy                                                              |
-| --------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| 0:00–0:04 | Live Reddit post, click **Play**, immediate RAMAGEDDON title      | “The horde is the weapon. Wrecks become weapons.”                                        |
-| 0:04–0:11 | First movement, enemies converge, auto-weapon lands               | “RAMAGEDDON is a destruction-derby survivor built inside Reddit with Phaser and Devvit.” |
-| 0:11–0:21 | Ram one car; its hot wreck launches through the pursuit line      | “Every clean ram carries its momentum forward as a hot wreck.”                           |
-| 0:21–0:29 | Show the x21 wreck combo/cascade and simultaneous hot wrecks      | “Aim one impact well, and the entire swarm becomes ammunition.”                          |
-| 0:29–0:36 | Pick one upgrade; show the changed behavior immediately           | “Fast upgrade choices reshape ramming, handling, defense, and weapons.”                  |
-| 0:36–0:44 | Late-run escalation, Road King, then result transition            | “Survive the swarm, dethrone the Road King, and bank one glorious run.”                  |
-| 0:44–0:51 | Best result submits to the board and raises crew/Wreckpile totals | “Your best result feeds today's Wreckpile, crew showdown, and leaderboard.”              |
-| 0:51–0:56 | Blueprint Vote selection and tomorrow confirmation                | “Then the community votes on what comes next.”                                           |
-| 0:56–0:59 | Hero end card and Reddit post URL/QR only if legible              | “RAMAGEDDON. Today's wrecks build tomorrow's mayhem.”                                    |
+| Time      | Picture                                                           | Voice-over / on-screen copy                                                             |
+| --------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 0:00–0:04 | Live Reddit post, click **Play**, immediate WRECKCADE title       | “The horde is the weapon. Wrecks become weapons.”                                       |
+| 0:04–0:11 | First movement, enemies converge, auto-weapon lands               | “WRECKCADE is a destruction-derby survivor built inside Reddit with Phaser and Devvit.” |
+| 0:11–0:21 | Ram one car; its hot wreck launches through the pursuit line      | “Every clean ram carries its momentum forward as a hot wreck.”                          |
+| 0:21–0:29 | Show the x21 wreck combo/cascade and simultaneous hot wrecks      | “Aim one impact well, and the entire swarm becomes ammunition.”                         |
+| 0:29–0:36 | Pick one upgrade; show the changed behavior immediately           | “Fast upgrade choices reshape ramming, handling, defense, and weapons.”                 |
+| 0:36–0:44 | Late-run escalation, Road King, then result transition            | “Survive the swarm, dethrone the Road King, and bank one glorious run.”                 |
+| 0:44–0:51 | Best result submits to the board and raises crew/Wreckpile totals | “Your best result feeds today's Wreckpile, crew showdown, and leaderboard.”             |
+| 0:51–0:56 | Blueprint Vote selection and tomorrow confirmation                | “Then the community votes on what comes next.”                                          |
+| 0:56–0:59 | Hero end card and Reddit post URL/QR only if legible              | “WRECKCADE. Today's wrecks build tomorrow's mayhem.”                                    |
 
 ### Capture and edit rules
 
@@ -277,4 +303,4 @@ sparingly so cause and effect remain obvious.
 - [Official rules](https://redditgameswithahook.devpost.com/rules)
 - [Devvit Rules](https://developers.reddit.com/docs/devvit_rules)
 - [Building Community Games](https://developers.reddit.com/docs/guides/best-practices/community_games)
-- [RAMAGEDDON asset and license ledger](https://github.com/BoneShaman/RAMAGEDDON/blob/main/docs/ASSET_LEDGER.md)
+- [WRECKCADE asset and license ledger](ASSET_LEDGER.md)

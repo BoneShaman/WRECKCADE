@@ -18,6 +18,8 @@ type CrewDefinition = {
   colorCss: string;
 };
 
+type PlatePoint = { x: number; y: number };
+
 const CREWS: CrewDefinition[] = [
   {
     id: 'iron',
@@ -45,6 +47,20 @@ const CREWS: CrewDefinition[] = [
   },
 ];
 
+const GARAGE_BACKDROP_KEY = 'garage-backdrop-v1';
+const GARAGE_BACKDROP_URL = new URL(
+  '../../../assets/visuals/garage-backdrop-v1.webp',
+  import.meta.url
+).href;
+const GARAGE_BACKDROP_WIDTH = 1536;
+const GARAGE_BACKDROP_HEIGHT = 1024;
+const GARAGE_BAY_CENTERS = [260, 768, 1276] as const;
+const VEHICLE_ATLAS_KEY = 'vehicle-atlas-v1';
+const VEHICLE_ATLAS_URL = new URL(
+  '../../../assets/visuals/vehicle-atlas-v1.webp',
+  import.meta.url
+).href;
+
 const textStyle = (
   size: number,
   color: string,
@@ -59,7 +75,9 @@ const textStyle = (
 });
 
 export class MainMenu extends Scene {
+  private backdrop: GameObjects.Image;
   private graphics: GameObjects.Graphics;
+  private crewCarImages: GameObjects.Image[] = [];
   private title: GameObjects.Text;
   private subtitle: GameObjects.Text;
   private dailyTitle: GameObjects.Text;
@@ -85,13 +103,31 @@ export class MainMenu extends Scene {
     super('MainMenu');
   }
 
+  preload(): void {
+    this.load.image(GARAGE_BACKDROP_KEY, GARAGE_BACKDROP_URL);
+    this.load.spritesheet(VEHICLE_ATLAS_KEY, VEHICLE_ATLAS_URL, {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+  }
+
   create(): void {
     this.alive = true;
     this.metaReady = false;
     this.cameras.main.setBackgroundColor(0x080b12);
+    this.backdrop = this.add
+      .image(0, 0, GARAGE_BACKDROP_KEY)
+      .setOrigin(0.5)
+      .setDepth(-10);
     this.graphics = this.add.graphics();
+    this.crewCarImages = CREWS.map((_crew, index) =>
+      this.add
+        .image(0, 0, VEHICLE_ATLAS_KEY, index * 4)
+        .setDepth(2)
+        .setVisible(false)
+    );
     this.title = this.add
-      .text(0, 0, 'RAMAGEDDON', textStyle(84, '#f7f3df'))
+      .text(0, 0, 'WRECKCADE', textStyle(84, '#f7f3df'))
       .setOrigin(0.5);
     this.subtitle = this.add
       .text(0, 0, 'WRECKS BECOME WEAPONS', textStyle(26, '#ffc928', 'center'))
@@ -141,6 +177,7 @@ export class MainMenu extends Scene {
             lineSpacing: 8,
           })
           .setOrigin(0.5)
+          .setDepth(3)
       );
     }
 
@@ -159,9 +196,11 @@ export class MainMenu extends Scene {
     this.input.keyboard?.on('keydown-ENTER', () => this.startRun());
     this.input.keyboard?.on('keydown-SPACE', () => this.startRun());
     this.input.keyboard?.on('keydown-D', () => this.handleDataDelete());
-    this.scale.on('resize', () => this.layout());
+    const resizeHandler = (): void => this.layout();
+    this.scale.on('resize', resizeHandler);
     this.events.once('shutdown', () => {
       this.alive = false;
+      this.scale.off('resize', resizeHandler);
       delete window.__ramageddonState;
       delete window.__ramageddonAdvance;
     });
@@ -225,7 +264,7 @@ export class MainMenu extends Scene {
   private selectCrew(index: number): void {
     if (!this.metaReady || this.meta.profile.dailyRuns > 0) return;
     this.selectedCrew = (index + CREWS.length) % CREWS.length;
-    this.draw();
+    this.layout();
   }
 
   private handlePointer(pointer: Phaser.Input.Pointer): void {
@@ -394,7 +433,7 @@ export class MainMenu extends Scene {
         .setPosition(textX, panelY + 160)
         .setScale(portraitScale);
       this.profileText
-        .setPosition(textX, panelY + 244)
+        .setPosition(textX, panelY + 282)
         .setScale(portraitScale * 0.88);
     } else {
       this.dailyTitle.setPosition(36, panelY).setScale(scale);
@@ -452,14 +491,35 @@ export class MainMenu extends Scene {
     this.crewTexts.forEach((label, index) => {
       const rect = this.cardRects[index]!;
       const labelScale = shortNarrow
-        ? shortScale * (index === this.selectedCrew ? 0.95 : 0.84)
+        ? shortScale *
+          (width < 360 ? 0.82 : index === this.selectedCrew ? 0.95 : 0.84)
         : portrait
           ? portraitScale * (index === this.selectedCrew ? 0.72 : 0.64)
           : scale * (index === this.selectedCrew ? 1.04 : 0.9);
       label
-        .setPosition(rect.centerX, rect.centerY)
+        .setPosition(rect.centerX, rect.y + rect.height * 0.73)
         .setScale(labelScale)
         .setWordWrapWidth(Math.max(80, rect.width / labelScale - 16), true);
+      const selected = index === this.selectedCrew;
+      const shortNarrowCarScale = Phaser.Math.Clamp(
+        cardWidth / 220,
+        0.52,
+        0.78
+      );
+      const carScale =
+        (shortNarrow
+          ? shortNarrowCarScale
+          : portrait
+            ? 0.6
+            : compact
+              ? 0.65
+              : 0.82) * (selected ? 1.08 : 0.92);
+      this.crewCarImages[index]
+        ?.setPosition(rect.centerX, rect.y + rect.height * 0.29)
+        .setScale(carScale)
+        .setAlpha(selected ? 1 : 0.68)
+        .setRotation(index === 0 ? -0.035 : index === 2 ? 0.035 : 0)
+        .setVisible(true);
     });
 
     const actionWidth = Math.min(430, width - (shortNarrow ? 36 : 60));
@@ -472,6 +532,7 @@ export class MainMenu extends Scene {
     this.actionText
       .setPosition(width / 2, height - 37)
       .setScale(shortNarrow ? 0.62 : portrait ? 0.72 : Math.max(0.75, scale));
+    this.layoutBackdrop(width, height);
     this.draw();
   }
 
@@ -480,85 +541,438 @@ export class MainMenu extends Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     graphics.clear();
-    graphics.fillStyle(0x080b12, 1).fillRect(0, 0, width, height);
+    this.layoutBackdrop(width, height);
 
-    graphics.lineStyle(1, 0x26303b, 0.45);
-    const offset = (this.elapsed * 26) % 64;
-    for (let x = -height + offset; x < width + height; x += 64) {
-      graphics.lineBetween(x, 0, x - height, height);
-    }
+    // Let the garage remain a place rather than a wallpaper. These restrained
+    // masks reserve contrast for live text while leaving the three crew bays
+    // and their practical lighting legible.
+    graphics.fillStyle(0x050608, 0.28).fillRect(0, 0, width, height);
     graphics
-      .fillStyle(0xff6b35, 0.08)
-      .fillCircle(width * 0.12, height * 0.15, Math.min(width, height) * 0.28);
+      .fillStyle(0x050608, 0.34)
+      .fillRect(0, 0, width, Math.min(172, height * 0.27));
     graphics
-      .fillStyle(0x2ef2e2, 0.06)
-      .fillCircle(width * 0.88, height * 0.75, Math.min(width, height) * 0.34);
+      .fillStyle(0x050608, 0.2)
+      .fillRect(
+        0,
+        Math.max(0, this.cardRects[0]?.y ?? height * 0.68),
+        width,
+        height
+      );
 
     const skidY = Math.min(height * 0.7, 430);
-    graphics.lineStyle(9, 0x010204, 0.72);
+    graphics.lineStyle(10, 0x010204, 0.58);
     graphics.beginPath();
     this.traceSkidCurve(graphics, width, skidY + 36, -40, 70, -24);
     graphics.strokePath();
-    graphics.lineStyle(2, 0xffc928, 0.22);
+    graphics.lineStyle(3, 0x2a2116, 0.5);
     graphics.beginPath();
     this.traceSkidCurve(graphics, width, skidY + 20, -58, 54, -42);
     graphics.strokePath();
+
+    this.drawInformationPanels(graphics, width, height);
 
     for (let index = 0; index < this.cardRects.length; index += 1) {
       const rect = this.cardRects[index]!;
       const crew = CREWS[index]!;
       const selected = index === this.selectedCrew;
-      graphics
-        .fillStyle(selected ? crew.color : 0x111722, selected ? 0.18 : 0.92)
-        .fillRoundedRect(rect.x, rect.y, rect.width, rect.height, 8);
-      graphics
-        .lineStyle(
-          selected ? 4 : 2,
-          selected ? crew.color : 0x3b4653,
-          selected ? 1 : 0.65
-        )
-        .strokeRoundedRect(rect.x, rect.y, rect.width, rect.height, 8);
-      if (selected) {
-        graphics
-          .fillStyle(crew.color, 1)
-          .fillRect(rect.x, rect.y, Math.min(92, rect.width * 0.32), 5);
-      }
+      this.drawCrewPlate(graphics, rect, crew, index, selected, height);
     }
 
+    const dataAlert = this.deleteConfirmUntil > this.elapsed;
     graphics
-      .fillStyle(0x111722, 0.88)
-      .fillRoundedRect(
+      .fillStyle(0x050608, 0.78)
+      .fillRect(
         this.dataRect.x,
         this.dataRect.y,
         this.dataRect.width,
-        this.dataRect.height,
-        5
+        this.dataRect.height
       );
     graphics
-      .lineStyle(
-        1,
-        this.deleteConfirmUntil > this.elapsed ? 0xff365e : 0x3b4653,
-        0.8
-      )
-      .strokeRoundedRect(
+      .lineStyle(1, dataAlert ? 0xff365e : 0x6b6253, dataAlert ? 1 : 0.8)
+      .strokeRect(
         this.dataRect.x,
         this.dataRect.y,
         this.dataRect.width,
-        this.dataRect.height,
-        5
+        this.dataRect.height
       );
+    graphics
+      .fillStyle(dataAlert ? 0xff365e : 0x8f7d5d, 0.95)
+      .fillRect(this.dataRect.x, this.dataRect.y, 4, this.dataRect.height);
+    this.drawBolt(graphics, this.dataRect.x + 8, this.dataRect.centerY, 1.7);
+    this.drawBolt(
+      graphics,
+      this.dataRect.right - 8,
+      this.dataRect.centerY,
+      1.7
+    );
 
     const action = this.actionRect;
     const pulse = 0.88 + Math.sin(this.elapsed * 4.5) * 0.12;
+    const ignitionColor = this.metaReady ? 0xffc928 : 0x5b6470;
+    const ignitionPoints = this.ignitionPlatePoints(action);
+    graphics.fillStyle(0x000000, 0.52);
+    this.fillPolygon(
+      graphics,
+      ignitionPoints.map((point) => ({ x: point.x + 5, y: point.y + 6 }))
+    );
+    graphics.fillStyle(ignitionColor, this.metaReady ? pulse : 0.76);
+    this.fillPolygon(graphics, ignitionPoints);
+    graphics.lineStyle(3, 0xf7f3df, 0.9);
+    this.strokePolygon(graphics, ignitionPoints);
+    graphics.lineStyle(2, 0x080b12, 0.84);
+    graphics.strokeRect(
+      action.x + 13,
+      action.y + 6,
+      action.width - 26,
+      action.height - 12
+    );
+    this.drawIgnitionEnd(graphics, action.x + 9, action.centerY, -1);
+    this.drawIgnitionEnd(graphics, action.right - 9, action.centerY, 1);
+  }
+
+  private layoutBackdrop(width: number, height: number): void {
+    const coverScale = Math.max(
+      width / GARAGE_BACKDROP_WIDTH,
+      height / GARAGE_BACKDROP_HEIGHT
+    );
+    const halfWidth = (GARAGE_BACKDROP_WIDTH * coverScale) / 2;
+    let x = width / 2;
+
+    // A true cover crop can only show one bay on a phone. Make that crop
+    // intentional: the chosen crew's workshop owns the frame.
+    if (width / Math.max(1, height) < 0.82) {
+      const sourceX = GARAGE_BAY_CENTERS[this.selectedCrew] ?? 768;
+      x = width / 2 - (sourceX - GARAGE_BACKDROP_WIDTH / 2) * coverScale;
+      x = Phaser.Math.Clamp(x, width - halfWidth, halfWidth);
+    }
+
+    this.backdrop.setPosition(x, height / 2).setScale(coverScale);
+  }
+
+  private drawInformationPanels(
+    graphics: GameObjects.Graphics,
+    width: number,
+    height: number
+  ): void {
+    const portrait = width < 660 && height >= 650;
+    const shortNarrow = width < 660 && height < 650;
+    if (shortNarrow) {
+      const panel = this.textPanelBounds(
+        [this.dailyTitle, this.dailyBody, this.communityText, this.profileText],
+        width,
+        height,
+        10,
+        8
+      );
+      if (panel) this.drawRivetedPanel(graphics, panel, 0x2ef2e2, 0);
+      return;
+    }
+
+    if (portrait) {
+      const radioPanel = this.textPanelBounds(
+        [
+          this.dailyTitle,
+          this.dailyBody,
+          this.communityText,
+          this.leaderboardText,
+        ],
+        width,
+        height,
+        12,
+        10
+      );
+      const reportPanel = this.textPanelBounds(
+        [this.profileText],
+        width,
+        height,
+        12,
+        10
+      );
+      if (radioPanel) this.drawRivetedPanel(graphics, radioPanel, 0x2ef2e2, 0);
+      if (reportPanel)
+        this.drawRivetedPanel(graphics, reportPanel, 0xffc928, 1);
+      return;
+    }
+
+    const dailyPanel = this.textPanelBounds(
+      [this.dailyTitle, this.dailyBody, this.communityText],
+      width,
+      height,
+      14,
+      12
+    );
+    const pitPanel = this.textPanelBounds(
+      [this.leaderboardText, this.profileText],
+      width,
+      height,
+      14,
+      12
+    );
+    if (dailyPanel) this.drawRivetedPanel(graphics, dailyPanel, 0x2ef2e2, 0);
+    if (pitPanel) this.drawRivetedPanel(graphics, pitPanel, 0xffc928, 1);
+  }
+
+  private textPanelBounds(
+    texts: GameObjects.Text[],
+    width: number,
+    height: number,
+    padX: number,
+    padY: number
+  ): Phaser.Geom.Rectangle | null {
+    let left = Number.POSITIVE_INFINITY;
+    let top = Number.POSITIVE_INFINITY;
+    let right = Number.NEGATIVE_INFINITY;
+    let bottom = Number.NEGATIVE_INFINITY;
+    for (const label of texts) {
+      if (!label.visible || label.text.length === 0) continue;
+      const bounds = label.getBounds();
+      left = Math.min(left, bounds.left);
+      top = Math.min(top, bounds.top);
+      right = Math.max(right, bounds.right);
+      bottom = Math.max(bottom, bounds.bottom);
+    }
+    if (!Number.isFinite(left)) return null;
+
+    const x = Math.max(5, left - padX);
+    const y = Math.max(5, top - padY);
+    return new Phaser.Geom.Rectangle(
+      x,
+      y,
+      Math.max(40, Math.min(width - 5, right + padX) - x),
+      Math.max(28, Math.min(height - 5, bottom + padY) - y)
+    );
+  }
+
+  private drawRivetedPanel(
+    graphics: GameObjects.Graphics,
+    rect: Phaser.Geom.Rectangle,
+    accent: number,
+    variant: number
+  ): void {
+    const points = this.rivetedPanelPoints(rect, variant);
+    graphics.fillStyle(0x000000, 0.58);
+    this.fillPolygon(
+      graphics,
+      points.map((point) => ({ x: point.x + 6, y: point.y + 7 }))
+    );
+    graphics.fillStyle(0x151719, 0.9);
+    this.fillPolygon(graphics, points);
+    graphics.lineStyle(2, 0x7b6e5c, 0.9);
+    this.strokePolygon(graphics, points);
+    graphics.lineStyle(1, 0xd9c9a4, 0.16);
+    graphics.lineBetween(
+      rect.x + 10,
+      rect.y + rect.height * 0.58,
+      rect.right - 12,
+      rect.y + rect.height * 0.55
+    );
     graphics
-      .fillStyle(
-        this.metaReady ? 0xffc928 : 0x5b6470,
-        this.metaReady ? pulse : 0.76
-      )
-      .fillRoundedRect(action.x, action.y, action.width, action.height, 7);
+      .fillStyle(accent, 0.95)
+      .fillRect(rect.x + 13, rect.y + 5, Math.min(86, rect.width * 0.3), 4);
+
+    const stripeWidth = Math.min(11, Math.max(6, rect.width * 0.035));
+    for (let index = 0; index < 4; index += 1) {
+      const stripeX = rect.right - 12 - stripeWidth * (index + 1);
+      const stripe = [
+        { x: stripeX, y: rect.y + 5 },
+        { x: stripeX + stripeWidth * 0.56, y: rect.y + 5 },
+        { x: stripeX + stripeWidth, y: rect.y + 9 },
+        { x: stripeX + stripeWidth * 0.44, y: rect.y + 9 },
+      ];
+      graphics.fillStyle(index % 2 === 0 ? accent : 0x090a0b, 0.78);
+      this.fillPolygon(graphics, stripe);
+    }
+
+    this.drawBolt(graphics, rect.x + 8, rect.y + 9, 2.4);
+    this.drawBolt(graphics, rect.right - 8, rect.y + 9, 2.4);
+    this.drawBolt(graphics, rect.x + 8, rect.bottom - 8, 2.4);
+    this.drawBolt(graphics, rect.right - 8, rect.bottom - 8, 2.4);
+  }
+
+  private drawCrewPlate(
+    graphics: GameObjects.Graphics,
+    rect: Phaser.Geom.Rectangle,
+    crew: CrewDefinition,
+    index: number,
+    selected: boolean,
+    height: number
+  ): void {
+    const platePoints = this.crewPlatePoints(rect, index);
+    if (selected) {
+      const beamTop = Math.max(height * 0.34, rect.y - 190);
+      graphics.fillStyle(crew.color, 0.055);
+      this.fillPolygon(graphics, [
+        { x: rect.centerX - rect.width * 0.16, y: beamTop },
+        { x: rect.centerX + rect.width * 0.16, y: beamTop },
+        { x: rect.right + 10, y: rect.bottom + 4 },
+        { x: rect.x - 10, y: rect.bottom + 4 },
+      ]);
+      graphics.lineStyle(10, crew.color, 0.12);
+      this.strokePolygon(graphics, platePoints);
+    }
+
+    graphics.fillStyle(0x000000, 0.65);
+    this.fillPolygon(
+      graphics,
+      platePoints.map((point) => ({ x: point.x + 4, y: point.y + 5 }))
+    );
+    graphics.fillStyle(selected ? crew.color : 0x121518, selected ? 0.2 : 0.92);
+    this.fillPolygon(graphics, platePoints);
+    graphics.lineStyle(selected ? 4 : 2, crew.color, selected ? 1 : 0.52);
+    this.strokePolygon(graphics, platePoints);
+
     graphics
-      .lineStyle(3, 0xf7f3df, 0.9)
-      .strokeRoundedRect(action.x, action.y, action.width, action.height, 7);
+      .fillStyle(crew.color, selected ? 1 : 0.7)
+      .fillRect(rect.x + 12, rect.y + 5, Math.min(64, rect.width * 0.32), 4);
+    graphics.lineStyle(1, 0xf7f3df, selected ? 0.28 : 0.1);
+    graphics.lineBetween(
+      rect.x + 12,
+      rect.bottom - 8,
+      rect.right - 12,
+      rect.bottom - 10
+    );
+    this.drawBolt(graphics, rect.x + 9, rect.y + 10, 2.3);
+    this.drawBolt(graphics, rect.right - 10, rect.y + 10, 2.3);
+    this.drawBolt(graphics, rect.right - 10, rect.bottom - 10, 2.3);
+
+    if (!selected) return;
+    const flicker = 0.55 + Math.sin(this.elapsed * 11 + index * 2.1) * 0.28;
+    graphics
+      .fillStyle(0x050608, 0.94)
+      .fillRect(rect.centerX - 16, rect.y - 10, 32, 6);
+    graphics
+      .fillStyle(crew.color, 0.72 + flicker * 0.25)
+      .fillRect(rect.centerX - 10, rect.y - 8, 20, 2.5);
+    graphics.lineStyle(2, crew.color, flicker);
+    graphics.lineBetween(
+      rect.centerX,
+      rect.y - 3,
+      rect.centerX - 8 - flicker * 5,
+      rect.y - 12 - flicker * 5
+    );
+    graphics.lineBetween(
+      rect.centerX + 2,
+      rect.y - 3,
+      rect.centerX + 9 + flicker * 4,
+      rect.y - 9 - flicker * 7
+    );
+  }
+
+  private crewPlatePoints(
+    rect: Phaser.Geom.Rectangle,
+    index: number
+  ): PlatePoint[] {
+    if (index === 0) {
+      return [
+        { x: rect.x + 9, y: rect.y },
+        { x: rect.right, y: rect.y + 3 },
+        { x: rect.right - 7, y: rect.bottom },
+        { x: rect.x, y: rect.bottom - 5 },
+      ];
+    }
+    if (index === 1) {
+      return [
+        { x: rect.x, y: rect.y + 4 },
+        { x: rect.right - 7, y: rect.y },
+        { x: rect.right, y: rect.bottom - 5 },
+        { x: rect.x + 8, y: rect.bottom },
+      ];
+    }
+    return [
+      { x: rect.x + 6, y: rect.y },
+      { x: rect.right, y: rect.y + 5 },
+      { x: rect.right - 3, y: rect.bottom },
+      { x: rect.x, y: rect.bottom - 2 },
+    ];
+  }
+
+  private rivetedPanelPoints(
+    rect: Phaser.Geom.Rectangle,
+    variant: number
+  ): PlatePoint[] {
+    const cut = Math.min(12, Math.max(6, rect.height * 0.12));
+    return variant === 0
+      ? [
+          { x: rect.x + cut, y: rect.y },
+          { x: rect.right - 4, y: rect.y + 2 },
+          { x: rect.right, y: rect.y + cut },
+          { x: rect.right - 3, y: rect.bottom - cut },
+          { x: rect.right - cut, y: rect.bottom },
+          { x: rect.x + 3, y: rect.bottom - 2 },
+          { x: rect.x, y: rect.y + cut },
+        ]
+      : [
+          { x: rect.x + 3, y: rect.y + cut },
+          { x: rect.x + cut, y: rect.y },
+          { x: rect.right - 2, y: rect.y + 3 },
+          { x: rect.right, y: rect.bottom - cut },
+          { x: rect.right - cut, y: rect.bottom },
+          { x: rect.x, y: rect.bottom - 4 },
+        ];
+  }
+
+  private ignitionPlatePoints(rect: Phaser.Geom.Rectangle): PlatePoint[] {
+    const cut = Math.min(12, rect.height * 0.28);
+    return [
+      { x: rect.x + cut, y: rect.y },
+      { x: rect.right - cut, y: rect.y },
+      { x: rect.right, y: rect.centerY },
+      { x: rect.right - cut, y: rect.bottom },
+      { x: rect.x + cut, y: rect.bottom },
+      { x: rect.x, y: rect.centerY },
+    ];
+  }
+
+  private drawIgnitionEnd(
+    graphics: GameObjects.Graphics,
+    x: number,
+    y: number,
+    direction: -1 | 1
+  ): void {
+    graphics.fillStyle(0x080b12, 0.88).fillRect(x - 4, y - 10, 8, 20);
+    graphics.lineStyle(2, 0xf7f3df, 0.62);
+    graphics.lineBetween(x, y - 7, x + direction * 3, y - 3);
+    graphics.lineBetween(x, y, x + direction * 3, y + 4);
+  }
+
+  private drawBolt(
+    graphics: GameObjects.Graphics,
+    x: number,
+    y: number,
+    radius: number
+  ): void {
+    graphics.fillStyle(0x08090a, 1).fillCircle(x, y, radius + 1);
+    graphics.fillStyle(0xa89779, 0.9).fillCircle(x, y, radius);
+    graphics.lineStyle(1, 0x302a21, 0.9);
+    graphics.lineBetween(x - radius * 0.65, y, x + radius * 0.65, y);
+  }
+
+  private fillPolygon(
+    graphics: GameObjects.Graphics,
+    points: PlatePoint[]
+  ): void {
+    if (points.length < 3) return;
+    graphics.beginPath();
+    graphics.moveTo(points[0]!.x, points[0]!.y);
+    for (let index = 1; index < points.length; index += 1) {
+      graphics.lineTo(points[index]!.x, points[index]!.y);
+    }
+    graphics.closePath();
+    graphics.fillPath();
+  }
+
+  private strokePolygon(
+    graphics: GameObjects.Graphics,
+    points: PlatePoint[]
+  ): void {
+    if (points.length < 2) return;
+    graphics.beginPath();
+    graphics.moveTo(points[0]!.x, points[0]!.y);
+    for (let index = 1; index < points.length; index += 1) {
+      graphics.lineTo(points[index]!.x, points[index]!.y);
+    }
+    graphics.closePath();
+    graphics.strokePath();
   }
 
   private traceSkidCurve(

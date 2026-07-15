@@ -1,5 +1,9 @@
 import { Hono } from 'hono';
-import type { OnAppInstallRequest, TriggerResponse } from '@devvit/web/shared';
+import type {
+  OnAppInstallRequest,
+  OnAppUpgradeRequest,
+  TriggerResponse,
+} from '@devvit/web/shared';
 import { context, redis } from '@devvit/web/server';
 import { createPost } from '../core/post';
 
@@ -7,9 +11,12 @@ export const triggers = new Hono();
 
 triggers.post('/on-app-install', async (c) => {
   try {
-    const input = await c.req.json<OnAppInstallRequest>();
+    const input = await c.req.json<OnAppInstallRequest | OnAppUpgradeRequest>();
     const subreddit = context.subredditName ?? 'unknown';
-    const markerKey = `ramageddon:v1:install:${subreddit.toLowerCase()}`;
+    // The rebrand needs one fresh WRECKCADE post on existing installations.
+    // A dedicated marker preserves the original post record while keeping every
+    // subsequent install/upgrade idempotent.
+    const markerKey = `ramageddon:v1:install:wreckcade:${subreddit.toLowerCase()}`;
     const claim = `creating:${Date.now()}:${Math.random().toString(36).slice(2)}`;
     const claimed = await redis.set(markerKey, claim, {
       nx: true,
@@ -21,8 +28,8 @@ triggers.post('/on-app-install', async (c) => {
         {
           status: 'success',
           message: existingPostId?.startsWith('creating:')
-            ? `RAMAGEDDON post creation is already in progress in ${subreddit} (trigger: ${input.type})`
-            : `RAMAGEDDON post ${existingPostId ?? 'unknown'} already exists in ${subreddit} (trigger: ${input.type})`,
+            ? `WRECKCADE post creation is already in progress in ${subreddit} (trigger: ${input.type})`
+            : `WRECKCADE post ${existingPostId ?? 'unknown'} already exists in ${subreddit} (trigger: ${input.type})`,
         },
         200
       );

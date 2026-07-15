@@ -1,4 +1,4 @@
-# RAMAGEDDON Terms of Use
+# WRECKCADE Terms of Use
 
 Effective: July 15, 2026
 
@@ -8,7 +8,7 @@ and the rules of the subreddit hosting the game.
 
 ## The game
 
-RAMAGEDDON is an entertainment game with daily seeded runs, scoreboards, crews,
+WRECKCADE is an entertainment game with daily seeded runs, scoreboards, crews,
 shared contribution totals, and community votes. Features, balance, daily
 modifiers, and availability may change. No purchase is required, and the app
 does not award cash or items of real-world value.
@@ -22,7 +22,7 @@ protect the shared competition.
 
 ## Player conduct
 
-RAMAGEDDON does not require players to create posts or comments. If you choose
+WRECKCADE does not require players to create posts or comments. If you choose
 to discuss or share the game on Reddit, your content remains subject to Reddit
 and subreddit rules. Do not use the app to harass others, violate rights, or
 break applicable law.
@@ -42,13 +42,13 @@ excluded under applicable consumer law.
 
 Access may be limited when necessary for safety, platform compliance, abuse
 prevention, maintenance, or discontinuation. Players may stop using the game at
-any time and can delete retained RAMAGEDDON player data from the Crew Garage as
+any time and can delete retained WRECKCADE player data from the Crew Garage as
 described in the [Privacy Notice](PRIVACY.md).
 
 ## Contact
 
 Questions or reports can be sent by Modmail to the subreddit hosting the
-official RAMAGEDDON post:
+official WRECKCADE post:
 <https://www.reddit.com/message/compose?to=r/ramageddon_game_dev>.
 
 Reddit is a separate platform provider. Its terms are available in the
